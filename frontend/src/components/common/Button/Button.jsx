@@ -2,8 +2,8 @@ import './button.css'
 
 export default function Button() {
   return (
-    <div>
-      <button type="button">Button</button>
-    </div>
+    <>
+      <button type="button">Log In</button>
+    </>
   )
 }
