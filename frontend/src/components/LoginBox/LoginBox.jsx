@@ -16,7 +16,6 @@ export default function LoginBox() {
             <input className='border-b pb-1 border-gray-light focus:outline-none text-center' type="password" name="password" id="password" placeholder='Password' required />
           <input className='border py-1 px-1 border-gray-light min-w-[100px] rounded-sm' type="submit" value="Log In" />
         </form>
-
       </div>
     </div>  
   );
