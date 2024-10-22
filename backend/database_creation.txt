@@ -12,3 +12,7 @@ CREATE TABLE users (
 
 INSERT INTO users (email, password, first_name, last_name) 
 VALUES ('henri@ebmaa.co.za', 'test', 'Henri', 'Edwards');
+
+
+root user password reset if needed -> local dev
+ALTER USER 'root'@'localhost' IDENTIFIED BY 'justlogin';
