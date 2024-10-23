@@ -1,9 +1,11 @@
 import './loginbox.css';
-import { useState } from 'react';
+import { useState, useContext } from 'react';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
+import { UserContext } from '../../context/UserContext';
 
 export default function LoginBox() {
+  const { setUser } = useContext(UserContext);
   const [error, setError] = useState(null);
   const navigate = useNavigate();
 
@@ -23,6 +25,7 @@ export default function LoginBox() {
     });
 
       console.log(response.data.user);
+      setUser(response.data.user); 
 
       // Navigate to the dashboard
       navigate('/dashboard');
