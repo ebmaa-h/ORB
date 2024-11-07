@@ -3,6 +3,10 @@ import { useState, useContext } from 'react';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 import { UserContext } from '../../context/UserContext';
+import { Button } from '../common/index'
+
+// Set Axios to include cookies by default
+axios.defaults.withCredentials = true;
 
 export default function LoginBox() {
   const { setUser } = useContext(UserContext);
@@ -25,12 +29,14 @@ export default function LoginBox() {
     });
 
       console.log(response.data.user);
+
+      // User logged in, set user in context
       setUser(response.data.user); 
 
       // Navigate to the dashboard
       navigate('/dashboard');
-    // eslint-disable-next-line no-unused-vars
     } catch (error) {
+      console.log("LOGIN ERROR: ",error);
       setError('Invalid email or password');
     }
   };
@@ -56,10 +62,9 @@ export default function LoginBox() {
             placeholder='Password' 
             required 
           />
-          <input 
-            className='border py-1 px-1 border-gray-light min-w-[100px] rounded-sm' 
-            type="submit" 
-            value="Log In" 
+          <Button 
+            btnName="Log In" 
+            type="submit"
           />
           {error && <p style={{ color: 'red' }}>{error}</p>}
         </form>

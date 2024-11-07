@@ -1,18 +1,29 @@
 import './App.css';
-import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
+import { useContext } from 'react';
+import { BrowserRouter as Router, Route, Routes, Navigate } from 'react-router-dom';
 import { Login, Dashboard } from './pages/index';
-import { UserProvider } from './context/UserContext';
+import { UserContext } from './context/UserContext';
 
 function App() {
+  const { user } = useContext(UserContext); // Access user state from UserContext
+
   return (
-    <UserProvider>
+
       <Router>
         <Routes>
-          <Route path="/" element={<Login />} />
-          <Route path="/dashboard" element={<Dashboard />}/>
-        </Routes>
+            {/* Redirect to /dashboard if the user is logged in */}
+            <Route 
+              path="/" 
+              element={user ? <Navigate to="/dashboard" /> : <Login />} 
+            />
+            {/* Redirect to / if not logged in */}
+            <Route 
+              path="/dashboard" 
+              element={user ? <Dashboard /> : <Navigate to="/" />} 
+            />
+          </Routes>
       </Router>
-    </UserProvider>
+
   );
 }
 

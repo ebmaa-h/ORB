@@ -1,41 +1,38 @@
 require('dotenv').config();
 
-// Require
+// Require necessary modules
 const express = require('express');
 const cors = require('cors');
-
-
-// Routes
 const authRoutes = require('./routes/auth');
 
 // Express app
 const app = express();
 
+const cookieParser = require('cookie-parser');
+
+// Add cookie-parser middleware to handle cookies
+app.use(cookieParser());
+
 app.use(cors({
-  origin: 'http://localhost:5173', // Your frontend URL
-  methods: ['GET', 'POST', 'OPTIONS'], // Allowed methods
-  credentials: true, // Allow credentials if needed
+  origin: 'http://localhost:5173', // Frontend URL
+  methods: ['GET', 'POST', 'OPTIONS'],
+  credentials: true,
 }));
 
-// Handle preflight request for /login route
-app.options('/login', cors()); // This handles preflight requests for the /login route
-
-// Retrieve port via .env file or set a default
-const PORT = process.env.PORT;
-
-// Middleware to parse JSON requests
+// Middleware to parse JSON
 app.use(express.json());
 
-// Output all requests
+// Output all requests (logging middleware)
 app.use((req, res, next) => {
   console.log(req.path, req.method, 'all-requests-output');
   next();
 });
 
-// Handle auth related routes
+// Auth-related routes
 app.use('/', authRoutes);
 
 // Listen for requests
+const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
-  console.log(`Listening on port ${PORT}...`);
+  console.log(`Server is listening on port ${PORT}...`);
 });
