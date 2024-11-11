@@ -18,6 +18,7 @@ export const UserProvider = ({ children }) => {
         });
         setUser(response.data.user); // Set user data if logged in
       } catch (error) {
+        console.log(error);
         setUser(null); // Set user to null if not logged in or token expired
       }
     };
