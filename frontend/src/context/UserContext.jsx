@@ -9,6 +9,7 @@ export const UserProvider = ({ children }) => {
 
   useEffect(() => {
     const fetchUser = async () => {
+      console.log('user refreshed');
       try {
         // Check if the user is logged in by calling the /verify route
         const response = await axios.get('http://localhost:4000/verify', {

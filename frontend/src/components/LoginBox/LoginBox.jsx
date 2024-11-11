@@ -10,7 +10,7 @@ axios.defaults.withCredentials = true;
 
 export default function LoginBox() {
   const { setUser } = useContext(UserContext);
-  const [error, setError] = useState(null);
+  const [loginError, setLoginError] = useState(false);
   const navigate = useNavigate();
 
   const handleLogin = async (event) => {
@@ -36,8 +36,8 @@ export default function LoginBox() {
       // Navigate to the dashboard
       navigate('/dashboard');
     } catch (error) {
-      console.log("LOGIN ERROR: ",error);
-      setError('Invalid email or password');
+      console.log("LOGIN ERROR: ", error);
+      setLoginError(true);
     }
   };
 
@@ -47,26 +47,29 @@ export default function LoginBox() {
         <img className='max-w-[190px] h-auto translate-x-[-15px]' src="/ebmaa-orb-logo.svg" alt="" />
         <form className="flex flex-col justify-center items-center gap-6" onSubmit={handleLogin}>
           <input 
-            className='border-b pb-1 border-gray-light focus:outline-none text-center' 
+            style={{ borderColor: loginError ? 'red' : 'silver' }}
+            className={'border-b border-gray-light focus:outline-none text-center'}
             type="text" 
             name="email" 
             id="email" 
             placeholder='Email' 
             required 
+            onFocus={() => setLoginError(false)} // Reset error when refocusing
           />
           <input 
-            className='border-b pb-1 border-gray-light focus:outline-none text-center' 
+            style={{ borderColor: loginError ? 'red' : 'silver' }}
+            className={'border-b border-gray-light focus:outline-none text-center'}
             type="password" 
             name="password" 
             id="password" 
             placeholder='Password' 
             required 
+            onFocus={() => setLoginError(false)} // Reset error when refocusing
           />
           <Button 
             btnName="Log In" 
             type="submit"
           />
-          {error && <p style={{ color: 'red' }}>{error}</p>}
         </form>
       </div>
     </div>  
