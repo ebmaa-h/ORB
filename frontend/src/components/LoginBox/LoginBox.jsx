@@ -19,7 +19,8 @@ export default function LoginBox() {
     const password = event.target.password.value;
 
     try {
-      const response = await axios.post('http://localhost:4000/login', {
+      const response = await axios.post('http://167.99.196.172:4000/login', {
+      // const response = await axios.post('http://localhost:4000/login', {
         email: email,
         password: password,
       }, {
