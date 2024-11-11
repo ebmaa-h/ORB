@@ -24,7 +24,7 @@ app.use(express.json());
 
 // Output all requests (logging middleware)
 app.use((req, res, next) => {
-  console.log(req.path, req.method, 'all-requests-output');
+  console.log(`A ${req.method} request has been made from ${req.method}`);
   next();
 });
 
