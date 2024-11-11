@@ -16,11 +16,19 @@ const verifyToken = (token) => {
   const secretKey = process.env.JWT_SECRET;
 
   try {
-    
-    return jwt.verify(token, secretKey); // Returns decoded user data if valid, or throws an error
+    // return jwt.verify(token, secretKey); // Returns decoded user data if valid, or throws an error
+
+    const decoded = jwt.verify(token, secretKey);
+
+    // Log successful verification
+    console.log(`JWT verified for ${decoded.email}`);
+    console.log(`JWT VERIFIED for ${JSON.stringify(decoded, null, 2)}`);
+
+
+    return decoded;
   } catch (err) {
     return null; // Return null if the token is invalid
-  }
+  } 
 };
 
 module.exports = { generateToken, verifyToken };
