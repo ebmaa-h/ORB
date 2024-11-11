@@ -2,7 +2,8 @@ const mysql = require('mysql2');
 
 // Create a connection pool to manage MySQL connections
 const db = mysql.createPool({
-  host: 'localhost',
+  host: '127.0.0.1',  // Use IPv4 explicitly
+  // host: 'localhost',
   user: 'root',
   password: 'justlogin',
   database: 'orb',
