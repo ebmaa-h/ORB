@@ -59,10 +59,17 @@ const authController = {
         return res.status(500).json({ message: 'Error hashing password' });
       }
   
+      console.log('Attempting to create user with email:', email);
+
+
       User.createUser(email, hashedPassword, first_name, last_name, (err, result) => {
         if (err) {
+          console.error('Database Error:', err);  // Log the full error to help debug
+
           return res.status(500).json({ message: 'Error creating user' });
         }
+        console.log('User created successfully with ID:', result.insertId);
+
         res.status(201).json({ message: 'User registered', userId: result.insertId });
       });
     });
