@@ -14,7 +14,7 @@ const cookieParser = require('cookie-parser');
 app.use(cookieParser());
 
 app.use(cors({
-  origin: 'http://localhost:5173', // Frontend URL
+  origin: ['http://localhost:5173', 'http://167.99.196.172'], // Local and dev server
   methods: ['GET', 'POST', 'OPTIONS'],
   credentials: true,
 }));
@@ -32,7 +32,7 @@ app.use((req, res, next) => {
 app.use('/', authRoutes);
 
 // Listen for requests
-const PORT = process.env.PORT || 5000;
+const PORT = process.env.PORT;
 app.listen(PORT, () => {
   console.log(`Server is listening on port ${PORT}...`);
 });
