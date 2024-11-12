@@ -4,7 +4,7 @@ const jwt = require('jsonwebtoken');
 // Create a JWT token
 const generateToken = (user) => {
 
-  const payload = { id: user.id, email: user.email };
+  const payload = { id: user.id, first_name: user.first_name };
   const secretKey = process.env.JWT_SECRET;
   const options = { expiresIn: '1h' };
   
@@ -21,7 +21,6 @@ const verifyToken = (token) => {
     const decoded = jwt.verify(token, secretKey);
 
     // Log successful verification
-    console.log(`JWT verified for ${decoded.email}`);
     console.log(`JWT VERIFIED for ${JSON.stringify(decoded, null, 2)}`);
 
 

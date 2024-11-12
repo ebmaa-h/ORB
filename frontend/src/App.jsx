@@ -11,12 +11,10 @@ function App() {
 
       <Router>
         <Routes>
-            {/* Redirect to /dashboard if the user is logged in */}
             <Route 
               path="/" 
               element={user ? <Navigate to="/dashboard" /> : <Login />} 
             />
-            {/* Redirect to / if not logged in */}
             <Route 
               path="/dashboard" 
               element={user ? <Dashboard /> : <Navigate to="/" />} 

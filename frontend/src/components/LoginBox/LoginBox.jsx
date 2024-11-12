@@ -19,8 +19,8 @@ export default function LoginBox() {
     const password = event.target.password.value;
 
     try {
-      const response = await axios.post('http://167.99.196.172:4000/login', {
-      // const response = await axios.post('http://localhost:4000/login', {
+      // const response = await axios.post('http://167.99.196.172:4000/login', {
+      const response = await axios.post('http://localhost:4000/login', {
         email: email,
         password: password,
       }, {
@@ -29,15 +29,17 @@ export default function LoginBox() {
         },
     });
 
-      console.log(response.data.user);
-
       // User logged in, set user in context
       setUser(response.data.user); 
 
       // Navigate to the dashboard
       navigate('/dashboard');
     } catch (error) {
-      console.log("LOGIN ERROR: ", error);
+      if (error.response.data.message) {
+        console.log(error.response.data.message); // Log the error message from the server
+      } else {
+        console.log('An unknown login error occurred.'); // Catch-all for unexpected errors
+      }
       setLoginError(true);
     }
   };
