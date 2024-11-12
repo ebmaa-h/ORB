@@ -12,8 +12,8 @@ export const UserProvider = ({ children }) => {
       console.log('Attempting user verify.');
       try {
         // Check if the user is logged in by calling the /verify route
-        // const response = await axios.get('http://167.99.196.172:4000/verify', {
-        const response = await axios.get('http://localhost:4000/verify', {
+        const response = await axios.get('http://167.99.196.172:4000/verify', {
+        // const response = await axios.get('http://localhost:4000/verify', {
           withCredentials: true, // Make sure cookies are sent with the request
         });
         console.log(response.data.user);

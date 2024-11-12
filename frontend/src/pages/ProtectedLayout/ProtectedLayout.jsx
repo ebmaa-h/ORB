@@ -1,14 +1,26 @@
 import { Outlet } from 'react-router-dom';
-import { SideNav, Nav } from '../../components/index';
+import { useState } from 'react';
+import { SideNav } from '../../components/index';
 
 function ProtectedLayout() {
+  const [navWidth, setNavWidth] = useState('4rem'); // Default width of the SideNav
+
   return (
-    <div>
-      <Nav />  {/* Always shows on authenticated pages */}
-      <div className="layout-container">
-        <SideNav />  {/* Side navigation on the side */}
-        <main className="content">
-          <Outlet />  {/* Render the main content based on the selected route */}
+    <div className="flex h-screen">
+      {/* SideNav with dynamic width */}
+      <SideNav setNavWidth={setNavWidth} />
+
+      {/* Main content area */}
+      <div
+        className="flex-1 flex flex-col"
+        style={{
+          marginLeft: navWidth, // Dynamic margin
+          transition: 'margin-left 0.2s ease',
+        }}
+      >
+        {/* <Nav /> */}
+        <main className="p-6 overflow-y-auto">
+          <Outlet />
         </main>
       </div>
     </div>
@@ -16,3 +28,4 @@ function ProtectedLayout() {
 }
 
 export default ProtectedLayout;
+
