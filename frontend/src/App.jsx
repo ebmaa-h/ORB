@@ -1,7 +1,7 @@
 import './App.css';
 import { useContext } from 'react';
 import { BrowserRouter as Router, Route, Routes, Navigate } from 'react-router-dom';
-import { Login, Dashboard } from './pages/index';
+import { Login, Dashboard, ProtectedLayout, Profile } from './pages/index';
 import { UserContext } from './context/UserContext';
 
 function App() {
@@ -9,18 +9,33 @@ function App() {
 
   return (
 
+      // <Router>
+      //   <Routes>
+      //       <Route 
+      //         path="/" 
+      //         element={user ? <Navigate to="/dashboard" /> : <Login />} 
+      //       />
+      //       <Route 
+      //         path="/dashboard" 
+      //         element={user ? <Dashboard /> : <Navigate to="/" />} 
+      //       />
+      //     </Routes>
+      // </Router>
+
       <Router>
-        <Routes>
-            <Route 
-              path="/" 
-              element={user ? <Navigate to="/dashboard" /> : <Login />} 
-            />
-            <Route 
-              path="/dashboard" 
-              element={user ? <Dashboard /> : <Navigate to="/" />} 
-            />
-          </Routes>
-      </Router>
+      <Routes>
+        <Route 
+          path="/" 
+          element={user ? <Navigate to="/dashboard" /> : <Login />} 
+        />
+        {/* Routes under ProtectedLayout will include Nav and SideNav */}
+        <Route element={user ? <ProtectedLayout /> : <Navigate to="/" />}>
+          <Route path="/dashboard" element={<Dashboard />} />
+          <Route path="/profile" element={<Profile />} />  {/* New Account route */}
+          {/* Add additional authenticated routes here */}
+        </Route>
+      </Routes>
+    </Router>
 
   );
 }

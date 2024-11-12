@@ -1,6 +1,5 @@
 import { useContext } from 'react';
 import { UserContext } from '../../context/UserContext'; 
-import { Nav } from '../../components/index';
 import './dashboard.css';
 
 export default function Dashboard() {
@@ -8,7 +7,6 @@ export default function Dashboard() {
 
   return (
     <div>
-      <Nav />
       <h1>Dashboard</h1>
       {user ? (
         <div>
