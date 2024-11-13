@@ -9,11 +9,11 @@ export const UserProvider = ({ children }) => {
 
   useEffect(() => {
     const fetchUser = async () => {
-      console.log('Attempting user verify.');
+
       try {
-        // Check if the user is logged in by calling the /verify route
-        const response = await axios.get('http://167.99.196.172:4000/verify', {
-        // const response = await axios.get('http://localhost:4000/verify', {
+        // Get user data
+        const response = await axios.get('http://167.99.196.172:4000/getUserData', {
+
           withCredentials: true, // Make sure cookies are sent with the request
         });
         console.log(response.data.user);
@@ -24,11 +24,11 @@ export const UserProvider = ({ children }) => {
         } else {
           console.log('An unknown error occurred.'); // Catch-all for unexpected errors
         }
-        setUser(null); // Set user to null if not logged in or token expired
+        setUser(null); 
       }
     };
 
-    fetchUser(); // Verify JWT when the app loads or page refreshes
+    fetchUser(); // get user data on refresh/page laod
   }, []);
 
   return (
