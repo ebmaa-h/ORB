@@ -36,6 +36,7 @@ const userController = {
       // Exclude the password from the response
       const { password, ...userWithoutPassword } = user;
 
+      console.log("User data retrieved...", userWithoutPassword);
       // Send the response after successfully retrieving user data
       res.status(200).json({
         message: 'User Info Retrieved.',

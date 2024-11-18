@@ -19,11 +19,11 @@ const authController = {
       // Compare the password with the hashed password
       bcrypt.compare(password, user.password, (err, isMatch) => {
         if (err) {
-          console.error('Error comparing passwords:', err);
+          console.error('Error comparing passwords...');
           return res.status(500).json({ message: 'Internal server error' });
         }
         if (!isMatch) {
-          console.log(`Invalid login attempt for user ${email}`);
+          console.log('Wrong password...');
           return res.status(401).json({ message: 'Invalid credentials' });
         }
 
@@ -43,7 +43,7 @@ const authController = {
           expires: new Date(Date.now() + 3600000),  // 1 hour
         });
 
-        console.log("userWithoutPassword:",userWithoutPassword);
+        console.log("User Created:",userWithoutPassword);
         res.status(200).json({
           message: 'Login successful',
           user: userWithoutPassword,
@@ -53,20 +53,20 @@ const authController = {
   },
 
   register: (req, res) => {
+    console.log("Registering User...");
     const { email, password, first_name, last_name } = req.body;
   
     bcrypt.hash(password, 10, (err, hashedPassword) => {
       if (err) {
+        console.log("Error hashing password:", err);
         return res.status(500).json({ message: 'Error hashing password' });
       }
   
-      console.log('Attempting to create user with email:', email);
-
+      console.log('Password hashed & registering:', email);
 
       User.createUser(email, hashedPassword, first_name, last_name, (err, result) => {
         if (err) {
-          console.error('Database Error:', err);  // Log the full error to help debug
-
+          console.error('Database Error:', err);
           return res.status(500).json({ message: 'Error creating user' });
         }
         console.log('User created successfully with ID:', result.insertId);
@@ -86,7 +86,8 @@ const authController = {
   },
 
   verify: (req, res) => {
-    const token = req.cookies.authToken; // JWT from the 'authToken' cookie
+    console.log("Verifying JWT...");
+    const token = req.cookies.authToken; 
     console.log('Received token:', token);
 
     if (!token) {
@@ -98,14 +99,15 @@ const authController = {
       const user = verifyToken(token);  // Verify the token
   
       if (!user) {
-        console.log('Token verification failed. Invalid or expired token.');
+        console.log('JWT verification failed...');
         return res.status(401).json({ message: 'Invalid or expired token' });
       }
   
       // If the token is valid, return the user data
+      console.log('JWT Verified...');
       res.status(200).json({ user });
     } catch (err) {
-      console.error('Error verifying token:', err);
+      console.error('Error verifying token: ', err);
       res.status(500).json({ message: 'Error verifying token' });
     }
   },

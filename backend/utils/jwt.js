@@ -21,10 +21,11 @@ const verifyToken = (token) => {
 
   try {
     const decoded = jwt.verify(token, secretKey);
-    console.log(`JWT VERIFIED for user: ${JSON.stringify(decoded, null, 2)}`);
+    console.log("JWT verified...");
+    // console.log(`JWT verification success: ${JSON.stringify(decoded, null, 2)}`);
     return decoded;
   } catch (err) {
-    console.error(`JWT verification failed: ${err.message}`); 
+    console.error(`JWT verification failure: ${err.message}`); 
     return null;
   }
 };
