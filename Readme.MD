@@ -7,6 +7,8 @@ db.js
   'http://167.99.196.172:4000/verify' // Server
   'http://localhost:4000/verify' // Local
 
+  so replace '167.99.196.172' with 'localhost' -> vice versa
+
 This is the same for any requests ^^
 
 vps:

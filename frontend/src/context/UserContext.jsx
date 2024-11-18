@@ -9,27 +9,33 @@ export const UserProvider = ({ children }) => {
 
   useEffect(() => {
     const fetchUser = async () => {
+      if (user !== null) {
+        // If user is already set, no need to make another request
+        console.log("User already loaded");
+        return;
+      }
 
       try {
-        // Get user data
-        const response = await axios.get('http://167.99.196.172:4000/getUserData', {
-
-          withCredentials: true, // Make sure cookies are sent with the request
+        // Fetch user data
+        const response = await axios.get('http://localhost:4000/user/getUserData', {
+          withCredentials: true, // Send cookies with the request
         });
-        console.log(response.data.user);
-        setUser(response.data.user); // Set user data if logged in
-      } catch (error) {
-        if (error.response.data.message) {
-          console.log(error.response.data.message); // Log the error message from the server
+
+        if (response.data.user) {
+          console.log("User fetched and in context: ", response.data.user);
+          setUser(response.data.user); // Set user data if valid
         } else {
-          console.log('An unknown error occurred.'); // Catch-all for unexpected errors
+          console.log("User not logged in. Redirecting to login.");
+          setUser(null); // In case no user data is returned
         }
-        setUser(null); 
+      } catch (error) {
+        console.log("Error fetching user data or verifying JWT:", error);
+        setUser(null); // If an error occurs, ensure user state is cleared
       }
     };
 
-    fetchUser(); // get user data on refresh/page laod
-  }, []);
+    fetchUser();
+  }, [user]); // Run the effect whenever the user state changes
 
   return (
     <UserContext.Provider value={{ user, setUser }}>
