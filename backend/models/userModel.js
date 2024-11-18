@@ -2,7 +2,7 @@ const db = require('../config/db');
 
 const User = {
 
-  // 
+  // Find user by email
   findByEmail: (email, callback) => {
     let query = `SELECT * FROM users WHERE email = ?`;
     db.query(query, [email], (err, results) => {
@@ -14,6 +14,7 @@ const User = {
     });
   },
 
+  // Create new user
   createUser: (email, password, first_name, last_name, callback) => {
     let query = `INSERT INTO users (email, password, first_name, last_name) VALUES (?, ?, ?, ?)`;
     db.query(query, [email, password, first_name, last_name], (err, result) => {
@@ -24,6 +25,8 @@ const User = {
       }
     });
   }
+
+  
 }
 
 module.exports = User;

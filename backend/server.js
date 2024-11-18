@@ -4,6 +4,7 @@ require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
 const authRoutes = require('./routes/auth');
+const userRoutes = require('./routes/user');
 
 // Express app
 const app = express();
@@ -28,8 +29,16 @@ app.use((req, res, next) => {
   next();
 });
 
-// Auth-related routes
-app.use('/', authRoutes);
+// Routes
+app.use('/', authRoutes);   // Authentication routes
+app.use('/user', userRoutes); // User-related routes
+
+// Error Handling Middleware
+app.use((err, req, res, next) => {
+  console.error(err.stack);
+  res.status(500).json({ message: "An internal error occurred." });
+});
+
 
 // Listen for requests
 const PORT = process.env.PORT;

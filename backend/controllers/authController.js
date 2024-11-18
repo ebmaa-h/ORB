@@ -86,17 +86,13 @@ const authController = {
   },
 
   verify: (req, res) => {
-
     const token = req.cookies.authToken; // JWT from the 'authToken' cookie
+    console.log('Received token:', token);
 
     if (!token) {
       console.log('No token found in request cookies');
       return res.status(401).json({ message: 'No token provided' });
     }
-
-    // Currently only retrieving the ID and first_name from the decoded token (as that is whats encoded as per login above)
-    // Can add a check here to retrieve all the data or ncessessary data upon verification and send back to front
-    // Will cehck if needed
   
     try {
       const user = verifyToken(token);  // Verify the token

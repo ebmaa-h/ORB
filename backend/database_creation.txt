@@ -1,9 +1,24 @@
+Please advise on my structure of the database and make any suggestions please where you think we can do something better after you understand my web app
+
+Full stack web app -> Web app name ORB
+Developed to streamline the processing of medical accounts
+Stack: react,express,mysql,tailwind
+Using jwt. Stage: Development
+	-> Structure first approach
+	-> JWT Works, orb database
+	-> Login Works
+	-> Login Page & Dashboard page
+	-> No registration, only managers can register new users
+	-> Web app intended for internal use, and by doctors
+
+Process: Doctor sees a patient. Patient gets account info. We (EBMAA) retrieve the data, (planning to automate this so that we can maybe just scan the barcode and get the data as the hospitals already captures it digitally, but this is for later). After we retrieve the data, we open an account, we bill it, (which includes connecting to the medical aids to do this automatically), this is essentiall the process. There is also some credit controller and qc steps involved but not too important atm.
+
 CREATE TABLE users (
   id INT AUTO_INCREMENT PRIMARY KEY,
   email VARCHAR(255) NOT NULL UNIQUE,
   password VARCHAR(255) NOT NULL,
-  first_name VARCHAR(100),
-  last_name VARCHAR(100),
+  user_name VARCHAR(255),
+  user_surname VARCHAR(255),
   role ENUM('manager', 'user') DEFAULT 'user',
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
@@ -11,19 +26,95 @@ CREATE TABLE users (
 
 
 CREATE TABLE doctors (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  email VARCHAR(255) NOT NULL UNIQUE,
+  password VARCHAR(255) NOT NULL,
 
+  dr_name VARCHAR(255),
+  dr_surname VARCHAR(255),
+
+  role ENUM('manager', 'user') DEFAULT 'user',
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 );
 
+create table service_centre {
+  id,
+  centre_name
+}
+
 CREATE TABLE accounts (
-  
+  acc_id or just id ?,
+  member, (links to a patient),
+  patient (links to a patient),
+  guarantor, (names, id, nr)
+  next_kin,(names, relationship, nr)
+  vat_nr,
+
 )
 
-CREATE TABLE crq (
+CREATE TABLE patients (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  pt_name VARCHAR(255),
+  pt_surname VARCHAR(255),
+  title ,
+  gender boolean ?
+  id_type,
+  id VARCHAR (255),
+  vat_num,
+  contact_nr, -> will be a list of numbers, so json ? not sure
+  employer,
+  email,(can also hold more than 1 email, json ? list ? how ? advise)
+  pt_post,
+  pt_str,
 
+  m_aid,
+  m_nr,
+  m_plan,
+
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 )
 
 
+CREATE TABLE gender (
+id
+gender
+)
 
+CREATE TABLE title (
+id,
+title
+)
+
+CREATE TABLE id_type {
+  id,
+  id_type
+}
+
+CREATE TABLE employer {
+  id,
+  emp_name,
+  emp_nr,
+  emp_post,
+  emp_str
+  emp_reg_nr
+
+}
+
+CREATE TABLE medical_aid {
+  id,
+  m_aid,
+
+}
+
+CREATE TABLE medical_aid_plan {
+  id,
+  m_aid, (links to medical_id)
+  m_plan,
+}
+
+-> help with naming and following best practices (like id_m_aid, or id, or id_m_aid_plan or just id too...)
 
 
 ////////////////////////////////////////////////////////////////////

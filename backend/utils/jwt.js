@@ -1,13 +1,17 @@
 require('dotenv').config();
 const jwt = require('jsonwebtoken');
 
+// Check if JWT_SECRET is provided
+if (!process.env.JWT_SECRET) {
+  throw new Error('JWT_SECRET is not defined in environment variables');
+}
+
 // Create a JWT token
 const generateToken = (user) => {
-
-  const payload = { id: user.id, first_name: user.first_name };
+  const payload = { id: user.id, first_name: user.first_name, email: user.email };
   const secretKey = process.env.JWT_SECRET;
   const options = { expiresIn: '1h' };
-  
+
   return jwt.sign(payload, secretKey, options);
 };
 
@@ -16,18 +20,13 @@ const verifyToken = (token) => {
   const secretKey = process.env.JWT_SECRET;
 
   try {
-    // return jwt.verify(token, secretKey); // Returns decoded user data if valid, or throws an error
-
     const decoded = jwt.verify(token, secretKey);
-
-    // Log successful verification
-    console.log(`JWT VERIFIED for ${JSON.stringify(decoded, null, 2)}`);
-
-
+    console.log(`JWT VERIFIED for user: ${JSON.stringify(decoded, null, 2)}`);
     return decoded;
   } catch (err) {
-    return null; // Return null if the token is invalid
-  } 
+    console.error(`JWT verification failed: ${err.message}`); 
+    return null;
+  }
 };
 
 module.exports = { generateToken, verifyToken };
