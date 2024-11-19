@@ -30,6 +30,7 @@ export default function Logout() {
       <Button 
         btnName="Log out" 
         onClick={handleLogout} 
+        className="border-none"
       />
     </div>
   );

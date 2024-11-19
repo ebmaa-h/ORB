@@ -22,6 +22,9 @@ export default {
       'gray-dark': '#273444',
       'gray': '#8492a6',
       'gray-light': '#d3dce6',
+      'ebmaa-blue': '#59C4CE',
+      'ebmaa-green': '#BDD331',
+      'ebmaa-purple': '#7580BE',
     },
     fontFamily: {
       sans: ['arial', 'sans-serif'],
