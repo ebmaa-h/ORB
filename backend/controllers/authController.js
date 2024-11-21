@@ -34,7 +34,7 @@ const authController = {
         const token = generateToken(userWithoutPassword);
 
          // Log when a token is generated
-        console.log(`JWT generated for ${user.first_name} with ID ${user.id}`);
+        console.log(`JWT generated for ${user.first} with ID ${user.id}`);
 
         // Set JWT as an HttpOnly cookie
         res.cookie('authToken', token, {
@@ -52,29 +52,95 @@ const authController = {
     });
   },
 
-  register: (req, res) => {
+  registerUser: (req, res) => {
     console.log("Registering User...");
-    const { email, password, first_name, last_name } = req.body;
+    const { email, password, first, last, role, doctorDetails, userDetails } = req.body;
   
     bcrypt.hash(password, 10, (err, hashedPassword) => {
       if (err) {
-        console.log("Error hashing password:", err);
-        return res.status(500).json({ message: 'Error hashing password' });
+        console.error("Error hashing password:", err);
+        return res.status(500).json({ message: "Error hashing password" });
       }
-  
-      console.log('Password hashed & registering:', email);
 
-      User.createUser(email, hashedPassword, first_name, last_name, (err, result) => {
-        if (err) {
-          console.error('Database Error:', err);
-          return res.status(500).json({ message: 'Error creating user' });
-        }
-        console.log('User created successfully with ID:', result.insertId);
+      if (role === 'doctor') {
+        const doctorData = {
+          email,
+          password: hashedPassword,
+          first,
+          last,
+          role,
+          address,
+          tell_nr
+        };
 
-        res.status(201).json({ message: 'User registered', userId: result.insertId });
-      });
+        User.createDoctor(doctorData, (err, result) => {
+          if (err) {
+            console.error("Database Error:", err);
+            return res.status(500).json({ message: "Error creating doctor" });
+          }
+          console.log("User created successfully with ID:", result.userId);
+    
+          res.status(201).json({ message: "Doctor registered", userId: result.userId });
+        });
+
+      } else {
+          
+      const userData = {
+        email,
+        password: hashedPassword,
+        first,
+        last,
+        role,
+        address,
+        tell_nr
+      };
+
+        User.createUser(userData, (err, result) => {
+          if (err) {
+            console.error("Database Error:", err);
+            return res.status(500).json({ message: "Error creating user" });
+          }
+          console.log("User created successfully with ID:", result.userId);
+    
+          res.status(201).json({ message: "User registered", userId: result.userId });
+        });
+      }
     });
   },
+
+  registerDoctor: (req, res) => {
+    console.log("Registering Doctor...");
+    const { email, password, first, last, role, address, tell_nr } = req.body;
+  
+    bcrypt.hash(password, 10, (err, hashedPassword) => {
+      if (err) {
+        console.error("Error hashing password:", err);
+        return res.status(500).json({ message: "Error hashing password" });
+      }
+
+      const doctorData = {
+        email,
+        password: hashedPassword,
+        first,
+        last,
+        role,
+        address,
+        tell_nr
+      };
+
+      User.createDoctor(doctorData, (err, result) => {
+        if (err) {
+          console.error("Database Error:", err);
+          return res.status(500).json({ message: "Error creating doctor" });
+        }
+        console.log("User created successfully with ID:", result.userId);
+  
+        res.status(201).json({ message: "Doctor registered", userId: result.userId });
+      });
+
+    });
+  },
+  
   
   logout: (req, res) => {
     res.clearCookie('authToken', {

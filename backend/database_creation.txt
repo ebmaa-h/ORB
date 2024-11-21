@@ -1,123 +1,200 @@
-Please advise on my structure of the database and make any suggestions please where you think we can do something better after you understand my web app
-
-Full stack web app -> Web app name ORB
-Developed to streamline the processing of medical accounts
-Stack: react,express,mysql,tailwind
-Using jwt. Stage: Development
-	-> Structure first approach
-	-> JWT Works, orb database
-	-> Login Works
-	-> Login Page & Dashboard page
-	-> No registration, only managers can register new users
-	-> Web app intended for internal use, and by doctors
-
-Process: Doctor sees a patient. Patient gets account info. We (EBMAA) retrieve the data, (planning to automate this so that we can maybe just scan the barcode and get the data as the hospitals already captures it digitally, but this is for later). After we retrieve the data, we open an account, we bill it, (which includes connecting to the medical aids to do this automatically), this is essentiall the process. There is also some credit controller and qc steps involved but not too important atm.
-
 CREATE TABLE users (
-  id INT AUTO_INCREMENT PRIMARY KEY,
-  email VARCHAR(255) NOT NULL UNIQUE,
-  password VARCHAR(255) NOT NULL,
-  user_name VARCHAR(255),
-  user_surname VARCHAR(255),
-  role ENUM('manager', 'user') DEFAULT 'user',
-  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+    user_id INT AUTO_INCREMENT PRIMARY KEY,
+    email VARCHAR(255) NOT NULL UNIQUE,
+    password VARCHAR(255) NOT NULL,
+    first VARCHAR(255),
+    last VARCHAR(255),
+    role ENUM('manager', 'user', 'doctor') DEFAULT 'user',
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 );
 
-
-CREATE TABLE doctors (
-  id INT AUTO_INCREMENT PRIMARY KEY,
-  email VARCHAR(255) NOT NULL UNIQUE,
-  password VARCHAR(255) NOT NULL,
-
-  dr_name VARCHAR(255),
-  dr_surname VARCHAR(255),
-
-  role ENUM('manager', 'user') DEFAULT 'user',
-  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+CREATE TABLE user_details (
+    user_details_id INT AUTO_INCREMENT PRIMARY KEY,
+    user_id INT NOT NULL,
+    address VARCHAR(255),
+    tell_nr VARCHAR(20),
+    FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE CASCADE
 );
 
-create table service_centre {
-  id,
-  centre_name
-}
+CREATE TABLE doctor_details (
+    doctor_details_id INT AUTO_INCREMENT PRIMARY KEY,
+    user_id INT NOT NULL,
+    registration_nr VARCHAR(255),
+    practice_nr VARCHAR(255) UNIQUE,
+    tell_nr VARCHAR(20),
+    doctor_type ENUM('specialist', 'anaesthetist', 'surgeon'),
+    FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE CASCADE
+);
+
+CREATE TABLE features (
+    feature_id INT AUTO_INCREMENT PRIMARY KEY,
+    feature_name VARCHAR(255) NOT NULL UNIQUE
+);
+
+CREATE TABLE user_features (
+    user_feature_id INT AUTO_INCREMENT PRIMARY KEY,
+    user_id INT NOT NULL,
+    feature_id INT NOT NULL,
+    is_active BOOLEAN DEFAULT FALSE,
+    permissions ENUM('view', 'edit', 'delete') DEFAULT 'view',
+    FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE CASCADE,
+    FOREIGN KEY (feature_id) REFERENCES features(feature_id) ON DELETE CASCADE
+);
+
+CREATE TABLE logs (
+    log_id INT AUTO_INCREMENT PRIMARY KEY, 
+    user_id INT NOT NULL, 
+    action VARCHAR(255) NOT NULL, 
+    old_value VARCHAR(255), 
+    new_value VARCHAR(255),
+    target_type ENUM('account', 'patient', 'user') NOT NULL,
+    target_id INT NOT NULL,
+    timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE CASCADE
+);
+
+CREATE TABLE ref_doctors (
+    ref_doctor_id INT AUTO_INCREMENT PRIMARY KEY,
+    first VARCHAR(255),
+    last VARCHAR(255),
+    practice_nr VARCHAR(255) UNIQUE
+);
+
+CREATE TABLE service_centers (
+    service_center_id INT AUTO_INCREMENT PRIMARY KEY,
+    service_center_name VARCHAR(255),
+	service_center_type ENUM ('Hospital', 'Rooms')
+);
+
+CREATE TABLE employers (
+  employer_id  INT AUTO_INCREMENT PRIMARY KEY,
+  employer_name VARCHAR(255),
+  employer_tel VARCHAR(255),
+  emp_post_address VARCHAR(255),
+  emp_str_address VARCHAR(255),
+  emp_reg_nr VARCHAR(255) UNIQUE
+);
+
+CREATE TABLE medical_aids (
+    medical_aid_id INT AUTO_INCREMENT PRIMARY KEY,
+    name VARCHAR(255) NOT NULL UNIQUE
+);
+
+CREATE TABLE medical_aid_plans (
+    plan_id INT AUTO_INCREMENT PRIMARY KEY,
+    medical_aid_id INT NOT NULL,
+    plan_name VARCHAR(255) NOT NULL,
+    description TEXT,
+    FOREIGN KEY (medical_aid_id) REFERENCES medical_aids(medical_aid_id) ON DELETE CASCADE
+);
+
+CREATE TABLE person_records (
+	person_id INT AUTO_INCREMENT PRIMARY KEY,
+    first VARCHAR(255),
+    last VARCHAR(255),
+    title ENUM('Mr', 'Mrs', 'Ms', 'Dr'),
+    post_address VARCHAR(255),
+    str_address VARCHAR(255),
+    dob DATE,
+    gender ENUM('m', 'f'),
+    dependant_nr VARCHAR(50),
+    id_type ENUM('passport', 'id', 'other'),
+    id_nr VARCHAR(255) UNIQUE,
+    cell_nr VARCHAR(20),
+    tell_nr VARCHAR(20),
+    work_nr VARCHAR(20),
+    email VARCHAR(255),
+    m_aid_id INT,
+    m_aid_plan_id INT,
+    m_aid_nr VARCHAR(255),
+    auth_nr VARCHAR(255),
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    FOREIGN KEY (m_aid_id) REFERENCES medical_aids(medical_aid_id) ON DELETE SET NULL, 
+    FOREIGN KEY (m_aid_plan_id) REFERENCES medical_aid_plans(plan_id) ON DELETE SET NULL
+);
 
 CREATE TABLE accounts (
-  acc_id or just id ?,
-  member, (links to a patient),
-  patient (links to a patient),
-  guarantor, (names, id, nr)
-  next_kin,(names, relationship, nr)
-  vat_nr,
-
-)
-
-CREATE TABLE patients (
-  id INT AUTO_INCREMENT PRIMARY KEY,
-  pt_name VARCHAR(255),
-  pt_surname VARCHAR(255),
-  title ,
-  gender boolean ?
-  id_type,
-  id VARCHAR (255),
-  vat_num,
-  contact_nr, -> will be a list of numbers, so json ? not sure
-  employer,
-  email,(can also hold more than 1 email, json ? list ? how ? advise)
-  pt_post,
-  pt_str,
-
-  m_aid,
-  m_nr,
-  m_plan,
-
-  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
-)
+    account_id INT AUTO_INCREMENT PRIMARY KEY,
+    patient_id INT NOT NULL, 
+    member_id INT NOT NULL, 
+    doctor_id INT,  
+    ref_doctor_id INT,
+    employer_id INT,
+    service_center_id INT, 
+    dos DATE,
+    guarantor_name VARCHAR(255),
+    guarantor_id_nr VARCHAR(255),
+    guarantor_nr VARCHAR(50),
+    guarantor_address VARCHAR(255),
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    FOREIGN KEY (patient_id) REFERENCES person_records(person_id) ON DELETE CASCADE,
+    FOREIGN KEY (member_id) REFERENCES person_records(person_id) ON DELETE CASCADE,
+    FOREIGN KEY (ref_doctor_id) REFERENCES ref_doctors(ref_doctor_id) ON DELETE SET NULL,
+    FOREIGN KEY (service_center_id) REFERENCES service_centers(service_center_id) ON DELETE SET NULL,
+    FOREIGN KEY (employer_id) REFERENCES employers(employer_id) ON DELETE SET NULL,
+    FOREIGN KEY (doctor_id) REFERENCES users(user_id) ON DELETE SET NULL
+);
 
 
-CREATE TABLE gender (
-id
-gender
-)
+-- User Details
+INSERT INTO user_details (user_id, address, contact_number) VALUES 
+(1, '123 Pretoria Street, Gauteng', '0123456789'),
+(2, '456 Cape Town Lane, Western Cape', '0211234567');
 
-CREATE TABLE title (
-id,
-title
-)
+-- Doctor Details
+INSERT INTO doctor_details (user_id, registration_nr, practice_nr, tell_nr, doctor_type) VALUES 
+(1, 'HPCSA12345', 'PR123456', '0123456789', 'specialist'),
+(2, 'HPCSA67890', 'PR654321', '0211234567', 'surgeon');
 
-CREATE TABLE id_type {
-  id,
-  id_type
-}
+-- Features
+INSERT INTO features (feature_name) VALUES 
+('Create Account'),
+('Manage Users');
 
-CREATE TABLE employer {
-  id,
-  emp_name,
-  emp_nr,
-  emp_post,
-  emp_str
-  emp_reg_nr
+-- User Features
+INSERT INTO user_features (user_id, feature_id, is_active, permissions) VALUES 
+(1, 1, TRUE, 'edit'),
+(2, 2, TRUE, 'view');
 
-}
+-- Logs
+INSERT INTO logs (user_id, action, old_value, new_value, target_type, target_id) VALUES 
+(1, 'Updated email', 'john.doe@example.com', 'john.doe@newmail.com', 'user', 1),
+(2, 'Deleted account', NULL, NULL, 'account', 5);
 
-CREATE TABLE medical_aid {
-  id,
-  m_aid,
+-- Accounts
+INSERT INTO accounts (patient_id, member_id, doctor_id, ref_doctor_id, employer_id, service_center_id, dos, guarantor_name) VALUES 
+(1, 2, 1, NULL, NULL, 1, '2024-01-01', 'Peter Guarantor'),
+(2, 3, 2, NULL, 1, 2, '2024-01-02', 'Sarah Sponsor');
 
-}
+-- Ref Doctors
+INSERT INTO ref_doctors (first, last, practice_nr) VALUES 
+('Michael', 'Smith', 'PR987654'),
+('Anna', 'Jones', 'PR123987');
 
-CREATE TABLE medical_aid_plan {
-  id,
-  m_aid, (links to medical_id)
-  m_plan,
-}
+-- Service Centers
+INSERT INTO service_centers (service_center_name, service_center_type) VALUES 
+('Gauteng General Hospital', 'Hospital'),
+('Cape Town Specialist Rooms', 'Rooms');
 
--> help with naming and following best practices (like id_m_aid, or id, or id_m_aid_plan or just id too...)
+-- Employers
+INSERT INTO employers (employer_name, employer_tel, emp_post_address, emp_str_address, emp_reg_nr) VALUES 
+('ABC Corporation', '0111112222', 'PO Box 123, Gauteng', '123 Main Street, Gauteng', 'REG123'),
+('XYZ Ltd', '0212223333', 'PO Box 456, Western Cape', '456 Side Street, Cape Town', 'REG456');
 
+-- Person Records
+INSERT INTO person_records (first, last, title, post_address, str_address, dob, gender, id_type, id_nr, cell_nr, email, m_aid_id, m_aid_plan_id, m_aid_nr) VALUES 
+('John', 'Doe', 'Mr', 'PO Box 123', '123 Pretoria Street', '1990-05-20', 'm', 'id', '9005201234567', '0821234567', 'john.doe@example.com', 1, 1, '1234567890'),
+('Jane', 'Doe', 'Mrs', 'PO Box 456', '456 Cape Town Lane', '1985-08-15', 'f', 'id', '8508159876543', '0849876543', 'jane.doe@example.com', 2, 2, '0987654321');
 
-////////////////////////////////////////////////////////////////////
+-- Medical Aids
+INSERT INTO medical_aids (name) VALUES 
+('Discovery Health'),
+('Momentum Health');
 
-root user password reset if needed -> local dev
-ALTER USER 'root'@'localhost' IDENTIFIED BY 'justlogin';
+-- Medical Aid Plans
+INSERT INTO medical_aid_plans (medical_aid_id, plan_name, description) VALUES 
+(1, 'Classic Saver', 'Comprehensive plan with saver benefits'),
+(2, 'Essential Core', 'Affordable plan with hospital benefits');

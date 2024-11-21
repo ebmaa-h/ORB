@@ -16,3 +16,6 @@ vps:
 git clone
 frontend npm run build
 restart server
+
+root user password reset if needed -> local dev
+ALTER USER 'root'@'localhost' IDENTIFIED BY 'justlogin';
