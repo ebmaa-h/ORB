@@ -5,14 +5,13 @@ const userController = {
   getUserData: (req, res) => {
     console.log("Getting user info...");
 
-    // Extract the token from cookies (assuming you're storing the token in an HttpOnly cookie)
     const token = req.cookies['authToken'];
 
     if (!token) {
       return res.status(401).json({ message: 'No token provided' });
     }
 
-    // Use the verifyToken function to validate and decode the token
+    // Validated token
     const decoded = verifyToken(token);
 
     if (!decoded) {
@@ -22,7 +21,7 @@ const userController = {
     // Extract the email from the decoded token
     const { email } = decoded;
 
-    // Find the user by email (now that we have it from the token)
+    // Find the user by email
     User.findByEmail(email, (err, user) => {
       if (err) {
         console.error('Error finding user:', err);

@@ -2,7 +2,7 @@ const express = require('express');
 const userController = require('../controllers/userController');
 const router = express.Router();
 
-// Login route
+// Get user data route
 router.get('/getUserData', userController.getUserData);
 
 

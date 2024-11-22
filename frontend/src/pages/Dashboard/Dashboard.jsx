@@ -7,7 +7,7 @@ export default function Dashboard() {
 
   return (
     <div>
-      <h1>Welcome, {user.first_name}.</h1>
+      <h1>Welcome, {user.first}.</h1>
       {user ? (
         <div>
           <br></br>
