@@ -21,7 +21,7 @@ CREATE TABLE doctor_details (
     doctor_details_id INT AUTO_INCREMENT PRIMARY KEY,
     user_id INT NOT NULL,
     registration_nr VARCHAR(255),
-    practice_nr VARCHAR(255) UNIQUE,
+    practice_nr VARCHAR(255),
     tell_nr VARCHAR(20),
     doctor_type ENUM('specialist', 'anaesthetist', 'surgeon'),
     FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE CASCADE
@@ -29,7 +29,7 @@ CREATE TABLE doctor_details (
 
 CREATE TABLE features (
     feature_id INT AUTO_INCREMENT PRIMARY KEY,
-    feature_name VARCHAR(255) NOT NULL UNIQUE
+    feature_name VARCHAR(255) NOT NULL
 );
 
 CREATE TABLE user_features (

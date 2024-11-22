@@ -15,22 +15,27 @@ const User = {
   },
 
   // Create new user
-  createUser: (userData, callback) => {
-    const { email, password, name, surname, role, address, tell_nr, doctorDetails } = userData;
+  createUser: (userDetails, callback) => {
+    const { email, password, first, last, role, address, tell_nr, doctorDetails } = userDetails;
 
-    let query = `INSERT INTO users (email, password, name, surname, role) VALUES (?, ?, ?, ?, ?)`;
-    db.query(query, [email, password, name, surname, role], (err, result) => {
-      if (err) return callback(err, null);
+    let query = `INSERT INTO users (email, password, first, last, role) VALUES (?, ?, ?, ?, ?)`;
+    db.query(query, [email, password, first, last, role], (err, result) => {
+      if (err) {
+        if (err.code === 'ER_DUP_ENTRY') {
+          return callback({ message: 'Email already exists' }, null); 
+        }
+        return callback({ message: 'Database error', details: err }, null);
+      }
 
       const userId = result.insertId;
 
       if (role === 'doctor' && doctorDetails) {
         // If the user is a doctor, insert only into doctor_details
-        const { registration_nr, practice_nr, tell_nr, doctor_type } = doctorDetails;
+        const { registration_nr, practice_nr, doctor_type } = doctorDetails;
         const doctorDetailsQuery = `INSERT INTO doctor_details (user_id, registration_nr, practice_nr, tell_nr, doctor_type) VALUES (?, ?, ?, ?, ?)`;
 
         db.query(doctorDetailsQuery, [userId, registration_nr, practice_nr, tell_nr, doctor_type], (err) => {
-          if (err) return callback(err, null);
+          if (err) return callback({ message: 'Error adding doctor details', details: err }, null);
           callback(null, { userId });
         });
       } else {
@@ -38,7 +43,7 @@ const User = {
         const userDetailsQuery = `INSERT INTO user_details (user_id, address, tell_nr) VALUES (?, ?, ?)`;
 
         db.query(userDetailsQuery, [userId, address, tell_nr], (err) => {
-          if (err) return callback(err, null);
+          if (err) return callback({ message: 'Error adding user details', details: err }, null);
           callback(null, { userId });
         });
       }

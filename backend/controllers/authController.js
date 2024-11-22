@@ -52,92 +52,44 @@ const authController = {
     });
   },
 
-  registerUser: (req, res) => {
+  register: (req, res) => {
     console.log("Registering User...");
-    const { email, password, first, last, role, doctorDetails, userDetails } = req.body;
+    const { email, password, first, last, role, address, tell_nr, doctorDetails = null } = req.body;
+
+      // Input validation for doctor
+      if (role === "doctor" && (!doctorDetails || !doctorDetails.registration_nr)) {
+        return res.status(400).json({ message: "Incomplete doctor details" });
+      }
   
     bcrypt.hash(password, 10, (err, hashedPassword) => {
       if (err) {
         console.error("Error hashing password:", err);
         return res.status(500).json({ message: "Error hashing password" });
       }
-
-      if (role === 'doctor') {
-        const doctorData = {
-          email,
-          password: hashedPassword,
-          first,
-          last,
-          role,
-          address,
-          tell_nr
-        };
-
-        User.createDoctor(doctorData, (err, result) => {
-          if (err) {
-            console.error("Database Error:", err);
-            return res.status(500).json({ message: "Error creating doctor" });
-          }
-          console.log("User created successfully with ID:", result.userId);
-    
-          res.status(201).json({ message: "Doctor registered", userId: result.userId });
-        });
-
-      } else {
-          
-      const userData = {
+        
+      const userDetails = {
         email,
         password: hashedPassword,
         first,
         last,
         role,
+        tell_nr,
         address,
-        tell_nr
-      };
-
-        User.createUser(userData, (err, result) => {
-          if (err) {
-            console.error("Database Error:", err);
-            return res.status(500).json({ message: "Error creating user" });
-          }
-          console.log("User created successfully with ID:", result.userId);
-    
-          res.status(201).json({ message: "User registered", userId: result.userId });
-        });
-      }
-    });
-  },
-
-  registerDoctor: (req, res) => {
-    console.log("Registering Doctor...");
-    const { email, password, first, last, role, address, tell_nr } = req.body;
-  
-    bcrypt.hash(password, 10, (err, hashedPassword) => {
-      if (err) {
-        console.error("Error hashing password:", err);
-        return res.status(500).json({ message: "Error hashing password" });
+        doctorDetails,
       }
 
-      const doctorData = {
-        email,
-        password: hashedPassword,
-        first,
-        last,
-        role,
-        address,
-        tell_nr
-      };
-
-      User.createDoctor(doctorData, (err, result) => {
+      User.createUser(userDetails, (err, result) => {
         if (err) {
           console.error("Database Error:", err);
-          return res.status(500).json({ message: "Error creating doctor" });
+          return res.status(400).json({ message: err.message || "Error creating user", details: err.details || {} });
+
         }
         console.log("User created successfully with ID:", result.userId);
-  
-        res.status(201).json({ message: "Doctor registered", userId: result.userId });
+        res.status(201).json({
+          message: result.role === "doctor" ? "Doctor Registered" : "User Registered",
+          userId: result.userId,
+        });
       });
-
     });
   },
   
