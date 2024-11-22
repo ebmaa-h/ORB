@@ -4,13 +4,61 @@ const User = {
 
   // Find user by email
   findByEmail: (email, callback) => {
-    let query = `SELECT * FROM users WHERE email = ?`;
+    let query = 'SELECT * FROM users WHERE email = ?';
     db.query(query, [email], (err, results) => {
       if (err) {
-        callback(err, null);
-      } else {
-        callback(null, results[0]);
+        return callback(err, null);
       }
+
+      const user = results[0];
+      if (!user) {
+        return callback(null, null); // No user found
+      }
+
+      // Role-based enrichment
+      const fetchDetails = (callback) => {
+        if (user.role === 'user') {
+          let userDetailsQuery = 'SELECT * FROM user_details WHERE user_id = ?';
+          db.query(userDetailsQuery, [user.user_id], (err, userDetails) => {
+            if (err) return callback(err);
+              user.details = userDetails[0] || {};
+              callback(null);
+            });
+        } else if (user.role === 'doctor') {
+          let doctorDetailsQuery = 'SELECT * FROM doctor_details WHERE user_id = ?';
+          db.query(doctorDetailsQuery, [user.user_id], (err, doctorDetails) => {
+            if (err) return callback(err);
+            user.details = doctorDetails[0] || {};
+            callback(null);
+          });
+          } else {
+            callback(null); 
+          }
+      };
+
+      // Fetch user features
+      const fetchFeatures = (callback) => {
+        let featuresQuery = `
+          SELECT f.feature_name, uf.is_active, uf.permissions
+          FROM user_features uf
+          JOIN features f ON uf.feature_id = f.feature_id
+          WHERE uf.user_id = ?`;
+        db.query(featuresQuery, [user.user_id], (err, features) => {
+          if (err) return callback(err);
+          user.features = features; // Attach features array to user
+          callback(null);
+        });
+      };
+
+      // Execute enrichment and features retrieval
+      fetchDetails((err) => {
+        if (err) return callback(err, null);
+
+        fetchFeatures((err) => {
+          if (err) return callback(err, null);
+          callback(null, user); // Final enriched user object
+        });
+      });
     });
   },
 
