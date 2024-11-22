@@ -19,7 +19,8 @@ function ProtectedLayout() {
         }}
       >
         {/* <Nav /> */}
-        <main className="m-6 p-6 overflow-y-auto bg-white rounded">
+        {/* overflow-y-auto */}
+        <main className="h-dvh"> 
           <Outlet />
         </main>
       </div>

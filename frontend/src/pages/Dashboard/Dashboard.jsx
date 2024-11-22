@@ -1,27 +1,31 @@
 import { useContext } from 'react';
 import { UserContext } from '../../context/UserContext'; 
 import './dashboard.css';
+import { FeatureBlock } from '../../components';
 
 export default function Dashboard() {
   const { user } = useContext(UserContext); 
 
+  // Helper function to find a specific feature by name
+  const findFeature = (featureName) => 
+    user.features.find((feature) => feature.feature_name === featureName && feature.is_active);
+
   return (
-    <div>
-      <h1>Welcome, {user.first}.</h1>
-      {user ? (
-        <div>
-          <br></br>
-          <p>Display user specific data like: </p>
-          <p>Annual Leave, Hours, Work time this month ? 
-            accounts admitted today / this month?
-          </p>
-          <br></br>
-          <p>Other stats...</p>
-          <p>Show upcoming EBMAA events ? Price givings ? etc.</p>
-        </div>
-      ) : (
-        <h2>Please log in to see your dashboard.</h2>
-      )}
-    </div>
+    <>        
+      <div className='bg-white rounded m-6 p-6'>
+        <p>Hello {user.first}.</p>
+      </div>
+      <div className='bg-white rounded m-6 p-6 flex'>
+        {/* Accounts Feature */}
+        {findFeature("View Accounts") && (
+          <FeatureBlock feature="View Accounts" />
+        )}
+
+        {/* Patinets Feature */}
+        {findFeature("Patient Records") && (
+          <FeatureBlock feature="Patient Records" />
+        )}
+      </div>
+    </>
   );
 }

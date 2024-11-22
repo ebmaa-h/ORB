@@ -151,23 +151,23 @@ INSERT INTO doctor_details (user_id, registration_nr, practice_nr, tell_nr, doct
 
 -- Features
 INSERT INTO features (feature_name) VALUES 
-('Create Account'),
-('Manage Users');
+('View Accounts'),
+('Management Tools');
 
 -- User Features
 INSERT INTO user_features (user_id, feature_id, is_active, permissions) VALUES 
-(1, 1, TRUE, 'edit'),
-(2, 2, TRUE, 'view');
+(19, 1, TRUE, 'edit'),
+(19, 2, TRUE, 'view');
 
--- Logs
-INSERT INTO logs (user_id, action, old_value, new_value, target_type, target_id) VALUES 
-(1, 'Updated email', 'john.doe@example.com', 'john.doe@newmail.com', 'user', 1),
-(2, 'Deleted account', NULL, NULL, 'account', 5);
+-- Medical Aids
+INSERT INTO medical_aids (name) VALUES 
+('Discovery Health'),
+('Momentum Health');
 
--- Accounts
-INSERT INTO accounts (patient_id, member_id, doctor_id, ref_doctor_id, employer_id, service_center_id, dos, guarantor_name) VALUES 
-(1, 2, 1, NULL, NULL, 1, '2024-01-01', 'Peter Guarantor'),
-(2, 3, 2, NULL, 1, 2, '2024-01-02', 'Sarah Sponsor');
+-- Medical Aid Plans
+INSERT INTO medical_aid_plans (medical_aid_id, plan_name, description) VALUES 
+(1, 'Classic Saver', 'Comprehensive plan with saver benefits'),
+(2, 'Essential Core', 'Affordable plan with hospital benefits');
 
 -- Ref Doctors
 INSERT INTO ref_doctors (first, last, practice_nr) VALUES 
@@ -189,12 +189,18 @@ INSERT INTO person_records (first, last, title, post_address, str_address, dob, 
 ('John', 'Doe', 'Mr', 'PO Box 123', '123 Pretoria Street', '1990-05-20', 'm', 'id', '9005201234567', '0821234567', 'john.doe@example.com', 1, 1, '1234567890'),
 ('Jane', 'Doe', 'Mrs', 'PO Box 456', '456 Cape Town Lane', '1985-08-15', 'f', 'id', '8508159876543', '0849876543', 'jane.doe@example.com', 2, 2, '0987654321');
 
--- Medical Aids
-INSERT INTO medical_aids (name) VALUES 
-('Discovery Health'),
-('Momentum Health');
+-- Accounts
+INSERT INTO accounts (patient_id, member_id, doctor_id, ref_doctor_id, employer_id, service_center_id, dos, guarantor_name, guarantor_id_nr, guarantor_nr, guarantor_address) VALUES 
+(1, 2, 21, 1, NULL, 1, '2024-01-01', 'Peter Doe', '9204235213083', '0612072951', '123 Peacock Lane, Pretoria, Gauteng, 0155'),
+(2, 1, 21, 2, 2, 2, '2024-01-02', 'Sarah Doe', '4504235213081', '0512072951', '123 Dock Str, Pretoria, Gauteng, 0155');
 
--- Medical Aid Plans
-INSERT INTO medical_aid_plans (medical_aid_id, plan_name, description) VALUES 
-(1, 'Classic Saver', 'Comprehensive plan with saver benefits'),
-(2, 'Essential Core', 'Affordable plan with hospital benefits');
+
+
+
+
+
+
+-- Logs
+INSERT INTO logs (user_id, action, old_value, new_value, target_type, target_id) VALUES 
+(1, 'Updated email', 'john.doe@example.com', 'john.doe@newmail.com', 'user', 1),
+(2, 'Deleted account', NULL, NULL, 'account', 5);

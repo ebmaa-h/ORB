@@ -1,9 +1,11 @@
 
 
 export default function Accounts() {
+
+
   return (
-    <div>
-      Manage patient accounts here
-    </div>
+    <>
+      list accounts here
+    </>
   )
 }
