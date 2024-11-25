@@ -33,7 +33,7 @@ app.use((req, res, next) => {
 // Routes
 app.use('/', authRoutes);   // Authentication routes
 app.use('/user', userRoutes); // User-related routes
-app.use('/acc', accRoutes); // Account-related routes
+app.use('/accounts', accRoutes); // Account-related routes
 
 // Error Handling Middleware
 app.use((err, req, res, next) => {

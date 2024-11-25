@@ -6,6 +6,7 @@ export const UserContext = createContext();
 // eslint-disable-next-line react/prop-types
 export const UserProvider = ({ children }) => {
   const [user, setUser] = useState(null);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const fetchUser = async () => {
@@ -31,6 +32,8 @@ export const UserProvider = ({ children }) => {
       } catch (error) {
         console.log("Error fetching user data or verifying JWT:", error);
         setUser(null); // If an error occurs, ensure user state is cleared
+      } finally {
+        setLoading(false); // Set loading to false after the fetch completes
       }
     };
 
@@ -38,7 +41,7 @@ export const UserProvider = ({ children }) => {
   }, [user]); // Run the effect whenever the user state changes
 
   return (
-    <UserContext.Provider value={{ user, setUser }}>
+    <UserContext.Provider value={{ user, setUser, loading }}>
       {children}
     </UserContext.Provider>
   );

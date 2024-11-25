@@ -1,7 +1,7 @@
 import './App.css';
 import { useContext } from 'react';
 import { BrowserRouter as Router, Route, Routes, Navigate } from 'react-router-dom';
-import { Login, Dashboard, ProtectedLayout, Tools, Accounts, TimeSheet, PatientRecords } from './pages/index';
+import { Login, Dashboard, ProtectedLayout, Tools, Accounts, TimeSheet, PatientRecords, AccountDetails } from './pages/index';
 import { UserContext } from './context/UserContext';
 
 function App() {
@@ -22,7 +22,8 @@ function App() {
           <Route path="/tools" element={<Tools />} />
           <Route path="/view-accounts" element={<Accounts />} />
           <Route path="/time" element={<TimeSheet />} />
-          <Route path="/view-accounts" element={<TimeSheet />} />
+          {/* <Route path="/view-accounts" element={<TimeSheet />} /> */}
+          <Route path="/view-accounts/:accountId" element={<AccountDetails />} />
           <Route path="/patient-records" element={<PatientRecords />} />
         </Route>
 

@@ -1,8 +1,10 @@
 const express = require('express');
-const authController = require('../controllers/accController');
+const accController = require('../controllers/accController');
 const router = express.Router();
 
-// Get accounts
-router.get('/get', authController.getAccounts);
+router.get('/', accController.getAccounts); // Get all accounts
+router.get('/:id', accController.getAccount); // Get one account by ID
+
+
 
 module.exports = router;

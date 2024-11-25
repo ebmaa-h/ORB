@@ -7,11 +7,12 @@ const userController = {
 
     const token = req.cookies['authToken'];
 
+    // Check if a JWT token is provided
     if (!token) {
       return res.status(401).json({ message: 'No token provided' });
     }
 
-    // Validated token
+    // Validate JWT token 
     const decoded = verifyToken(token);
 
     if (!decoded) {
