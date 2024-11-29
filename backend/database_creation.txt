@@ -1,7 +1,7 @@
 CREATE TABLE users (
     user_id INT AUTO_INCREMENT PRIMARY KEY,
     email VARCHAR(255) NOT NULL UNIQUE,
-    password VARCHAR(255) NOT NULL,
+    password VARCHAR(512) NOT NULL,
     first VARCHAR(255),
     last VARCHAR(255),
     role ENUM('manager', 'user', 'doctor') DEFAULT 'user',
@@ -11,60 +11,76 @@ CREATE TABLE users (
 
 CREATE TABLE user_details (
     user_details_id INT AUTO_INCREMENT PRIMARY KEY,
-    user_id INT NOT NULL,
+    user_id INT,
     address VARCHAR(255),
     tell_nr VARCHAR(20),
-    FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE CASCADE
+    FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE SET NULL
 );
 
 CREATE TABLE doctor_details (
     doctor_details_id INT AUTO_INCREMENT PRIMARY KEY,
-    user_id INT NOT NULL,
+    user_id INT,
     registration_nr VARCHAR(255),
     practice_nr VARCHAR(255),
     tell_nr VARCHAR(20),
-    doctor_type ENUM('specialist', 'anaesthetist', 'surgeon'),
-    FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE CASCADE
+    doctor_type ENUM('specialist', 'anaesthetist', 'surgeon') DEFAULT 'anaesthetist',
+    FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE SET NULL
 );
 
 CREATE TABLE features (
     feature_id INT AUTO_INCREMENT PRIMARY KEY,
-    feature_name VARCHAR(255) NOT NULL
+    feature_name VARCHAR(255)
 );
 
 CREATE TABLE user_features (
     user_feature_id INT AUTO_INCREMENT PRIMARY KEY,
-    user_id INT NOT NULL,
-    feature_id INT NOT NULL,
+    user_id INT,
+    feature_id INT,
     is_active BOOLEAN DEFAULT FALSE,
     permissions ENUM('view', 'edit', 'delete') DEFAULT 'view',
-    FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE CASCADE,
-    FOREIGN KEY (feature_id) REFERENCES features(feature_id) ON DELETE CASCADE
+    FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE SET NULL,
+    FOREIGN KEY (feature_id) REFERENCES features(feature_id) ON DELETE SET NULL
 );
 
 CREATE TABLE logs (
     log_id INT AUTO_INCREMENT PRIMARY KEY, 
-    user_id INT NOT NULL, 
-    action VARCHAR(255) NOT NULL, 
-    old_value VARCHAR(255), 
-    new_value VARCHAR(255),
-    target_type ENUM('account', 'patient', 'user') NOT NULL,
-    target_id INT NOT NULL,
+    user_id INT, 
+    action VARCHAR(255), 
+    old_value JSON, -- Allow storing structured data for old values
+    new_value JSON, -- Allow storing structured data for new values
+    target_table VARCHAR(255), -- Name of the affected table
+    target_id INT, -- ID of the affected row in the target table
     timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE CASCADE
+    FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE SET NULL
 );
 
-CREATE TABLE ref_doctors (
-    ref_doctor_id INT AUTO_INCREMENT PRIMARY KEY,
+CREATE TABLE ref_doctors_list (
+    ref_doctor_list_id INT AUTO_INCREMENT PRIMARY KEY,
     first VARCHAR(255),
     last VARCHAR(255),
     practice_nr VARCHAR(255) UNIQUE
 );
 
+CREATE TABLE ref_doctors (
+    ref_doctor_id INT AUTO_INCREMENT PRIMARY KEY,
+    ref_doctor_list_id INT,
+    doctor_id INT,
+    FOREIGN KEY (doctor_id) REFERENCES users(user_id) ON DELETE SET NULL,
+    FOREIGN KEY (ref_doctor_list_id) REFERENCES ref_doctors_list(ref_doctor_list_id) ON DELETE SET NULL
+);
+
+CREATE TABLE service_centers_list (
+    service_center_list_id INT AUTO_INCREMENT PRIMARY KEY,
+    service_center_name VARCHAR(255),
+	service_center_type ENUM ('hospital', 'rooms') DEFAULT 'anaesthetist'
+);
+
 CREATE TABLE service_centers (
     service_center_id INT AUTO_INCREMENT PRIMARY KEY,
-    service_center_name VARCHAR(255),
-	service_center_type ENUM ('Hospital', 'Rooms')
+    service_center_list_id INT,
+    doctor_id INT,
+    FOREIGN KEY (doctor_id) REFERENCES users(user_id) ON DELETE SET NULL,
+    FOREIGN KEY (service_center_list_id) REFERENCES service_centers_list(service_center_list_id) ON DELETE SET NULL
 );
 
 CREATE TABLE employers (
@@ -78,129 +94,171 @@ CREATE TABLE employers (
 
 CREATE TABLE medical_aids (
     medical_aid_id INT AUTO_INCREMENT PRIMARY KEY,
-    name VARCHAR(255) NOT NULL UNIQUE
+    name VARCHAR(255) UNIQUE
 );
 
 CREATE TABLE medical_aid_plans (
     plan_id INT AUTO_INCREMENT PRIMARY KEY,
-    medical_aid_id INT NOT NULL,
-    plan_name VARCHAR(255) NOT NULL,
-    description TEXT,
-    FOREIGN KEY (medical_aid_id) REFERENCES medical_aids(medical_aid_id) ON DELETE CASCADE
+    medical_aid_id INT,
+    plan_name VARCHAR(255),
+    plan_code VARCHAR(255),
+    FOREIGN KEY (medical_aid_id) REFERENCES medical_aids(medical_aid_id) ON DELETE SET NULL
+);
+
+CREATE TABLE profiles (
+    profile_id INT AUTO_INCREMENT PRIMARY KEY,
+    medical_aid_id INT, -- FK to medical_aids
+    plan_id INT, 
+    medical_aid_nr VARCHAR(255) UNIQUE, 
+    authorization_nr VARCHAR(255),
+    is_active BOOLEAN DEFAULT TRUE,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    FOREIGN KEY (medical_aid_id) REFERENCES medical_aids(medical_aid_id) ON DELETE SET NULL,
+    FOREIGN KEY (plan_id) REFERENCES medical_aid_plans(plan_id) ON DELETE SET NULL,
 );
 
 CREATE TABLE person_records (
 	person_id INT AUTO_INCREMENT PRIMARY KEY,
+    profile_id INT,
     first VARCHAR(255),
     last VARCHAR(255),
-    title ENUM('Mr', 'Mrs', 'Ms', 'Dr'),
+    title ENUM('mr', 'mrs', 'ms', 'dr') DEFAULT NULL,
     post_address VARCHAR(255),
     str_address VARCHAR(255),
-    dob DATE,
-    gender ENUM('m', 'f'),
-    dependant_nr VARCHAR(50),
-    id_type ENUM('passport', 'id', 'other'),
+    date_of_birth DATE,
+    gender ENUM('m', 'f') DEFAULT NULL,
+    dependent_nr INT,
+    id_type ENUM('passport', 'sa id', 'other') DEFAULT NULL,
     id_nr VARCHAR(255) UNIQUE,
     cell_nr VARCHAR(20),
     tell_nr VARCHAR(20),
     work_nr VARCHAR(20),
     email VARCHAR(255),
-    m_aid_id INT,
-    m_aid_plan_id INT,
-    m_aid_nr VARCHAR(255),
-    auth_nr VARCHAR(255),
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    FOREIGN KEY (m_aid_id) REFERENCES medical_aids(medical_aid_id) ON DELETE SET NULL, 
-    FOREIGN KEY (m_aid_plan_id) REFERENCES medical_aid_plans(plan_id) ON DELETE SET NULL
+    FOREIGN KEY (profile_id) REFERENCES profiles(profile_id) ON DELETE SET NULL,
 );
 
 CREATE TABLE accounts (
     account_id INT AUTO_INCREMENT PRIMARY KEY,
-    patient_id INT NOT NULL, 
-    member_id INT NOT NULL, 
-    doctor_id INT,  
-    ref_doctor_id INT,
-    employer_id INT,
-    service_center_id INT, 
-    dos DATE,
-    guarantor_name VARCHAR(255),
-    guarantor_id_nr VARCHAR(255),
-    guarantor_nr VARCHAR(50),
-    guarantor_address VARCHAR(255),
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    FOREIGN KEY (patient_id) REFERENCES person_records(person_id) ON DELETE CASCADE,
-    FOREIGN KEY (member_id) REFERENCES person_records(person_id) ON DELETE CASCADE,
-    FOREIGN KEY (ref_doctor_id) REFERENCES ref_doctors(ref_doctor_id) ON DELETE SET NULL,
-    FOREIGN KEY (service_center_id) REFERENCES service_centers(service_center_id) ON DELETE SET NULL,
-    FOREIGN KEY (employer_id) REFERENCES employers(employer_id) ON DELETE SET NULL,
-    FOREIGN KEY (doctor_id) REFERENCES users(user_id) ON DELETE SET NULL
+    profile_id INT,
+    doctor_id INT,
+    main_member_id INT NULL,
+    dependent_id INT NULL,
+    FOREIGN KEY (doctor_id) REFERENCES users(user_id) ON DELETE SET NULL,
+    FOREIGN KEY (main_member_id) REFERENCES person_records(person_id) ON DELETE SET NULL,
+    FOREIGN KEY (dependent_id) REFERENCES person_records(person_id) ON DELETE SET NULL,
 );
 
+CREATE TABLE invoices (
+    invoice_id INT AUTO_INCREMENT PRIMARY KEY,
+    account_id INT,
+    profile_id INT,
+    date_of_service DATE,
+    status ENUM('processing', 'billed', 'archived') DEFAULT 'processing',
+    patient_snapshot JSON,
+    member_snapshot JSON,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    FOREIGN KEY (account_id) REFERENCES accounts(account_id) ON DELETE SET NULL,
+    FOREIGN KEY (profile_id) REFERENCES profiles(profile_id) ON DELETE SET NULL,
+);
 
--- User Details
-INSERT INTO user_details (user_id, address, contact_number) VALUES 
-(1, '123 Pretoria Street, Gauteng', '0123456789'),
-(2, '456 Cape Town Lane, Western Cape', '0211234567');
+INSERT INTO users (email, password, first, last, role) VALUES
+('henri@test.com', 'test', 'Henri', 'Van der Merwe', 'manager'),
+('francois@test.com', 'test', 'Francois', 'Joubert', 'user'),
+('nicolene@test.com', 'test', 'Nicolene', 'Naude', 'user'),
+('ilze@test.com', 'test', 'Ilze', 'Botha', 'doctor'),
+('alet@test.com', 'test', 'Alet', 'Sithole', 'doctor'),
+('andrea@test.com', 'test', 'Andrea', 'Mokoena', 'user');
 
--- Doctor Details
-INSERT INTO doctor_details (user_id, registration_nr, practice_nr, tell_nr, doctor_type) VALUES 
-(1, 'HPCSA12345', 'PR123456', '0123456789', 'specialist'),
-(2, 'HPCSA67890', 'PR654321', '0211234567', 'surgeon');
 
--- Features
-INSERT INTO features (feature_name) VALUES 
-('View Accounts'),
-('Management Tools');
+INSERT INTO features (feature_name) VALUES
+('profiles'),
+('accounts'),
+('invoices'),
+('logs'),
+('person records');
 
--- User Features
-INSERT INTO user_features (user_id, feature_id, is_active, permissions) VALUES 
-(19, 1, TRUE, 'edit'),
-(19, 2, TRUE, 'view');
 
--- Medical Aids
-INSERT INTO medical_aids (name) VALUES 
+INSERT INTO user_features (user_id, feature_id, is_active, permissions) VALUES
+(1, 1, TRUE, 'edit'),
+(1, 2, TRUE, 'edit'),
+(1, 3, TRUE, 'edit'),
+(2, 1, TRUE, 'view'),
+(2, 2, TRUE, 'view'),
+(3, 3, TRUE, 'view'),
+(4, 1, TRUE, 'edit'),
+(4, 2, TRUE, 'edit'),
+(4, 3, TRUE, 'edit'),
+(5, 1, TRUE, 'edit'),
+(5, 2, TRUE, 'edit'),
+(5, 4, TRUE, 'view');
+
+
+INSERT INTO medical_aids (name) VALUES
 ('Discovery Health'),
-('Momentum Health');
+('Momentum Health'),
+('Bonitas');
 
--- Medical Aid Plans
-INSERT INTO medical_aid_plans (medical_aid_id, plan_name, description) VALUES 
-(1, 'Classic Saver', 'Comprehensive plan with saver benefits'),
-(2, 'Essential Core', 'Affordable plan with hospital benefits');
-
--- Ref Doctors
-INSERT INTO ref_doctors (first, last, practice_nr) VALUES 
-('Michael', 'Smith', 'PR987654'),
-('Anna', 'Jones', 'PR123987');
-
--- Service Centers
-INSERT INTO service_centers (service_center_name, service_center_type) VALUES 
-('Gauteng General Hospital', 'Hospital'),
-('Cape Town Specialist Rooms', 'Rooms');
-
--- Employers
-INSERT INTO employers (employer_name, employer_tel, emp_post_address, emp_str_address, emp_reg_nr) VALUES 
-('ABC Corporation', '0111112222', 'PO Box 123, Gauteng', '123 Main Street, Gauteng', 'REG123'),
-('XYZ Ltd', '0212223333', 'PO Box 456, Western Cape', '456 Side Street, Cape Town', 'REG456');
-
--- Person Records
-INSERT INTO person_records (first, last, title, post_address, str_address, dob, gender, id_type, id_nr, cell_nr, email, m_aid_id, m_aid_plan_id, m_aid_nr) VALUES 
-('John', 'Doe', 'Mr', 'PO Box 123', '123 Pretoria Street', '1990-05-20', 'm', 'id', '9005201234567', '0821234567', 'john.doe@example.com', 1, 1, '1234567890'),
-('Jane', 'Doe', 'Mrs', 'PO Box 456', '456 Cape Town Lane', '1985-08-15', 'f', 'id', '8508159876543', '0849876543', 'jane.doe@example.com', 2, 2, '0987654321');
-
--- Accounts
-INSERT INTO accounts (patient_id, member_id, doctor_id, ref_doctor_id, employer_id, service_center_id, dos, guarantor_name, guarantor_id_nr, guarantor_nr, guarantor_address) VALUES 
-(1, 2, 21, 1, NULL, 1, '2024-01-01', 'Peter Doe', '9204235213083', '0612072951', '123 Peacock Lane, Pretoria, Gauteng, 0155'),
-(2, 1, 21, 2, 2, 2, '2024-01-02', 'Sarah Doe', '4504235213081', '0512072951', '123 Dock Str, Pretoria, Gauteng, 0155');
+INSERT INTO medical_aid_plans (medical_aid_id, plan_name, plan_code) VALUES
+(1, 'Comprehensive', 'DISC-COMP'),
+(2, 'Standard', 'MOM-STD'),
+(3, 'Basic', 'BON-BASIC');
 
 
+INSERT INTO profiles (medical_aid_id, plan_id, medical_aid_nr, authorization_nr) VALUES
+(1, 1, 'DISC001', 'AUTH001'),
+(2, 2, 'MOM002', 'AUTH002'),
+(3, 3, 'BON003', 'AUTH003');
 
 
+INSERT INTO person_records (profile_id, first, last, title, gender, dependent_nr, id_type, id_nr, cell_nr) VALUES
+(1, 'David', 'Mokoena', 'mr', 'm', 0, 'sa id', '8001015009087', '0812345678'), -- Main Member
+(1, 'Thabo', 'Mokoena', 'mr', 'm', 1, 'sa id', '2002015009088', '0812345679'),
+(1, 'Siphiwe', 'Mokoena', 'ms', 'f', 2, 'sa id', '2003015009089', '0812345680'),
+(1, 'Naledi', 'Mokoena', 'ms', 'f', 3, 'sa id', '2004015009090', '0812345681'),
+(1, 'Dineo', 'Mokoena', 'ms', 'f', 4, 'sa id', '2005015009091', '0812345682'),
+(1, 'Katlego', 'Mokoena', 'mr', 'm', 5, 'sa id', '2006015009092', '0812345683');
 
 
+INSERT INTO person_records (profile_id, first, last, title, gender, dependent_nr, id_type, id_nr, cell_nr) VALUES
+(2, 'Johanna', 'Naude', 'mrs', 'f', 0, 'sa id', '7501015009087', '0712345678'), -- Main Member
+(2, 'Daniel', 'Naude', 'mr', 'm', 1, 'sa id', '2001015009088', '0712345679'),
+(2, 'Annelise', 'Naude', 'ms', 'f', 2, 'sa id', '2002015009089', '0712345680'),
+(2, 'Stephan', 'Naude', 'mr', 'm', 3, 'sa id', '2003015009090', '0712345681');
 
--- Logs
-INSERT INTO logs (user_id, action, old_value, new_value, target_type, target_id) VALUES 
-(1, 'Updated email', 'john.doe@example.com', 'john.doe@newmail.com', 'user', 1),
-(2, 'Deleted account', NULL, NULL, 'account', 5);
+
+INSERT INTO person_records (profile_id, first, last, title, gender, dependent_nr, id_type, id_nr, cell_nr) VALUES
+(3, 'Sizwe', 'Zulu', 'mr', 'm', 0, 'sa id', '6501015009087', '0612345678'), -- Main Member
+(3, 'Lindiwe', 'Zulu', 'ms', 'f', 1, 'sa id', '2001015009088', '0612345679');
+
+
+INSERT INTO accounts (profile_id, doctor_id, main_member_id, dependent_id) VALUES
+(1, 4, 1, 1), -- Main Member Account
+(1, 4, 1, 2), -- Dependent Accounts
+(1, 4, 1, 3),
+(1, 4, 1, 4),
+(1, 4, 1, 5),
+(1, 4, 1, 6);
+
+
+INSERT INTO accounts (profile_id, doctor_id, main_member_id, dependent_id) VALUES
+(2, 5, 7, 7), -- Main Member Account
+(2, 5, 7, 8), -- Dependent Accounts
+(2, 5, 7, 9),
+(2, 5, 7, 10);
+
+
+INSERT INTO accounts (profile_id, doctor_id, main_member_id, dependent_id) VALUES
+(3, 4, 11, 11), -- Main Member Account
+(3, 4, 11, 12); -- Dependent Account
+
+
+INSERT INTO invoices (account_id, profile_id, date_of_service, status, patient_snapshot, member_snapshot) VALUES
+(1, 1, '2024-11-01', 'billed', '{"patient":"David Mokoena"}', '{"member":"David Mokoena"}'),
+(2, 1, '2024-11-02', 'billed', '{"patient":"Thabo Mokoena"}', '{"member":"David Mokoena"}'),
+(3, 1, '2024-11-03', 'processing', '{"patient":"Siphiwe Mokoena"}', '{"member":"David Mokoena"}'),
+(4, 2, '2024-11-04', 'archived', '{"patient":"Daniel Naude"}', '{"member":"Johanna Naude"}'),
+(5, 3, '2024-11-05', 'processing', '{"patient":"Lindiwe Zulu"}', '{"member":"Sizwe Zulu"}');
