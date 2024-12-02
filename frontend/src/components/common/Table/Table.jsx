@@ -1,12 +1,12 @@
-import React from 'react';
 import { useNavigate } from 'react-router-dom';
 
-export default function Table({ data, columns, linkPrefix }) {
+export default function Table({ data, columns, linkPrefix, idField }) {
   const navigate = useNavigate();
 
-  const handleRowClick = (profileId) => {
-    // Navigate to the profile page
-    navigate(`/${linkPrefix}/${profileId}`);
+  const handleRowClick = (id) => {
+    // Navigate to the relevant page
+    navigate(`/${linkPrefix}/${id}`);
+    console.log("ID: ", id)
   };
 
   return (
@@ -23,14 +23,13 @@ export default function Table({ data, columns, linkPrefix }) {
           {data.length > 0 ? (
             data.map((item) => (
               <tr
-                key={item.profile_id}
+                key={item[idField]}
                 className="cursor-pointer hover:bg-gray-light"
-                onClick={() => handleRowClick(item.profile_id)} // Handle row click
+                onClick={() => handleRowClick(item[idField])} // Handle row click
               >
                 {Object.values(item).map((value, i) => (
                   <td key={i} className="border border-gray-light p-2 text-center">
                     {i === 0 ? (
-                      // Optionally keep the link styling for the first column
                       <span>{value}</span>
                     ) : (
                       value

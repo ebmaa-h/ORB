@@ -34,7 +34,7 @@ export default function Profiles() {
       </div>
 
       <SearchBar searchTerm={searchTerm} setSearchTerm={setSearchTerm} />
-      <Table data={filteredProfiles} columns={columns} linkPrefix="profiles"/>
+      <Table data={filteredProfiles} columns={columns} linkPrefix="profiles" idField="profile_id"/>
     </>
   );
 }
