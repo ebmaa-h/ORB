@@ -64,10 +64,11 @@ const User = {
 
   // Create new user
   createUser: (userDetails, callback) => {
-    const { email, password, first, last, role, address, tell_nr, doctorDetails } = userDetails;
+    const { email, password, first, last, address, tell_nr } = userDetails;
 
-    let query = `INSERT INTO users (email, password, first, last, role) VALUES (?, ?, ?, ?, ?)`;
-    db.query(query, [email, password, first, last, role], (err, result) => {
+    // Insert user into the users table
+    let query = `INSERT INTO users (email, password, first, last, address, tell_nr) VALUES (?, ?, ?, ?, ?, ?)`;
+    db.query(query, [email, password, first, last, address, tell_nr], (err, result) => {
       if (err) {
         if (err.code === 'ER_DUP_ENTRY') {
           return callback({ message: 'Email already exists' }, null); 
@@ -76,25 +77,26 @@ const User = {
       }
 
       const userId = result.insertId;
+      callback(null, { userId });
+    });
+  },
 
-      if (role === 'doctor' && doctorDetails) {
-        // If the user is a doctor, insert only into doctor_details
-        const { registration_nr, practice_nr, doctor_type } = doctorDetails;
-        const doctorDetailsQuery = `INSERT INTO doctor_details (user_id, registration_nr, practice_nr, tell_nr, doctor_type) VALUES (?, ?, ?, ?, ?)`;
+  // Create new doctor
+  createDoctor: (doctorDetails, callback) => {
+    const { email, password, first, last, registration_nr, practice_nr, doctor_type, tell_nr } = doctorDetails;
 
-        db.query(doctorDetailsQuery, [userId, registration_nr, practice_nr, tell_nr, doctor_type], (err) => {
-          if (err) return callback({ message: 'Error adding doctor details', details: err }, null);
-          callback(null, { userId });
-        });
-      } else {
-        // For non-doctor roles, insert into user_details
-        const userDetailsQuery = `INSERT INTO user_details (user_id, address, tell_nr) VALUES (?, ?, ?)`;
-
-        db.query(userDetailsQuery, [userId, address, tell_nr], (err) => {
-          if (err) return callback({ message: 'Error adding user details', details: err }, null);
-          callback(null, { userId });
-        });
+    // Insert doctor into the doctors table
+    let query = `INSERT INTO doctors ( email, password, first, last, registration_nr, practice_nr, doctor_type, tell_nr) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`;
+    db.query(query, [ email, password, first, last, registration_nr, practice_nr, doctor_type, tell_nr], (err, result) => {
+      if (err) {
+        if (err.code === 'ER_DUP_ENTRY') {
+          return callback({ message: 'Email already exists' }, null); 
+        }
+        return callback({ message: 'Database error', details: err }, null);
       }
+
+      const doctorId = result.insertId;
+      callback(null, { doctorId });
     });
   },
 

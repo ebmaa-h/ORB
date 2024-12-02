@@ -6,4 +6,5 @@ const router = express.Router();
 router.get('/getUserData', userController.getUserData);
 
 
+
 module.exports = router;

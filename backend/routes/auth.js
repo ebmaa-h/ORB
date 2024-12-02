@@ -5,7 +5,7 @@ const router = express.Router();
 // Login route
 router.post('/login', authController.login);
 
-// Register routes
+// User Register route
 router.post('/register', authController.register);
 
 // Logout route
@@ -13,5 +13,8 @@ router.post('/logout', authController.logout);
 
 // Verify route
 router.get('/verify', authController.verify);
+
+// Doctor Register routes
+router.post('/register/doctor', authController.doctorRegister);
 
 module.exports = router;

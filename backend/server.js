@@ -6,6 +6,7 @@ const cors = require('cors');
 const authRoutes = require('./routes/auth');
 const userRoutes = require('./routes/user');
 const accRoutes = require('./routes/accounts');
+const profRoutes = require('./routes/profiles');
 
 // Express app
 const app = express();
@@ -34,6 +35,7 @@ app.use((req, res, next) => {
 app.use('/', authRoutes);   // Authentication routes
 app.use('/user', userRoutes); // User-related routes
 app.use('/accounts', accRoutes); // Account-related routes
+app.use('/profiles', profRoutes); // Profiles-related routes
 
 // Error Handling Middleware
 app.use((err, req, res, next) => {
