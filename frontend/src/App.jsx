@@ -1,7 +1,7 @@
 import './App.css';
 import { useContext } from 'react';
 import { BrowserRouter as Router, Route, Routes, Navigate } from 'react-router-dom';
-import { Login, Dashboard, ProtectedLayout, Tools, Accounts, TimeSheet, PatientRecords, AccountDetails } from './pages/index';
+import { Login, Dashboard, ProtectedLayout, Tools, TimeSheet, Profiles, ProfileDetails, AccountDetails, InvoiceDetails, Accounts, Invoices } from './pages/index';
 import { UserContext } from './context/UserContext';
 
 function App() {
@@ -20,11 +20,16 @@ function App() {
         <Route element={user ? <ProtectedLayout /> : <Navigate to="/" />}>
           <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/tools" element={<Tools />} />
-          <Route path="/view-accounts" element={<Accounts />} />
+          <Route path="/profiles" element={<Profiles />} />
+          <Route path="/profiles/:profileId" element={<ProfileDetails />} />
+
+          <Route path="/accounts" element={<Accounts />} />
+          <Route path="/accounts/:accountId" element={<AccountDetails />} />
+
+          <Route path="/invoices" element={<Invoices />} />
+          <Route path="/invoices/:invoiceId" element={<InvoiceDetails />} />
+
           <Route path="/time" element={<TimeSheet />} />
-          {/* <Route path="/view-accounts" element={<TimeSheet />} /> */}
-          <Route path="/view-accounts/:accountId" element={<AccountDetails />} />
-          <Route path="/patient-records" element={<PatientRecords />} />
         </Route>
 
         {/* Catch-all route to redirect to login */}

@@ -16,14 +16,17 @@ export default function Dashboard() {
         <p>Hello {user.first}.</p>
       </div>
       <div className='bg-white rounded m-6 p-6 flex'>
-        {/* Accounts Feature */}
-        {findFeature("View Accounts") && (
-          <FeatureBlock feature="View Accounts" />
+        {/* Profiles Feature */}
+        {findFeature("profiles") && (
+          <FeatureBlock feature="Profiles" />
         )}
-
-        {/* Patinets Feature */}
-        {findFeature("Patient Records") && (
-          <FeatureBlock feature="Patient Records" />
+        {/* Accounts Feature */}
+        {findFeature("accounts") && (
+          <FeatureBlock feature="Accounts" />
+        )}
+        {/* Invoices Feature */}
+        {findFeature("invoices") && (
+          <FeatureBlock feature="Invoices" />
         )}
       </div>
     </>
