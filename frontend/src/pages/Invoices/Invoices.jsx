@@ -1,7 +1,7 @@
 import { useContext, useEffect, useState } from 'react';
 import { UserContext } from '../../context/UserContext'; 
 import axios from 'axios';
-import { SearchBar, Table } from '../../components';
+import { Nav, SearchBar, Table } from '../../components';
 // import { Link } from "react-router-dom";
 
 export default function Invoices() {
@@ -14,6 +14,7 @@ export default function Invoices() {
     const fetchInvoices = async () => {
       try {
         const response = await axios.get('http://localhost:4000/invoices');
+        console.log(response)
         setInvoices(response.data.invoices);
       } catch (error) {
         console.error('Error fetching invoices:', error);
@@ -22,19 +23,25 @@ export default function Invoices() {
     fetchInvoices();
   }, []);
 
-  const columns = ['Invoice ID', 'Profile ID', 'Amount', 'Status', 'Date Issued'];
+  const columns = ['Invoice ID', 'Account ID', 'Member ID', 'Patient ID', 'Balance', 'Date Created', 'Date Updated', 'Doctor', 'Pratice Nr', 'Patient', 'Member'];
   const filteredInvoices = invoices.filter((invoice) =>
     Object.values(invoice).join(' ').toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   return (
     <>
-      <div className='bg-white rounded m-6 p-6'>
-        <p>Hello {user.first}.</p>
+      <Nav />
+      <div className='flex flex-col gap-4 m-4 p-4 bg-white rounded'>
+        <SearchBar searchTerm={searchTerm} setSearchTerm={setSearchTerm} />
+        <Table 
+          data={filteredInvoices.map(invoice => ({
+            ...invoice
+          }))}
+          columns={columns} 
+          idField="invoice_id" 
+          linkPrefix="invoices" 
+        />
       </div>
-
-      <SearchBar searchTerm={searchTerm} setSearchTerm={setSearchTerm} />
-      <Table data={filteredInvoices} columns={columns} />
     </>
   );
 }

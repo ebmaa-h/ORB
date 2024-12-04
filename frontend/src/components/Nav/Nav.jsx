@@ -1,16 +1,28 @@
-import { Logout } from '../index'
+import { Link } from 'react-router-dom'
 
 export default function Nav() {
   return (
-    <div className="w-[90%] fixed top-0 h-16 bg-white text-white flex items-center p-6 z-10">
-      <nav className="flex justify-between w-full items-center">
-        <img src="/ebmaa-orb-text.svg" alt="Logo" className="h-7 w-auto" />
-
-        {/* Remove the 'absolute' positioning and set Logout button as 'fixed' */}
-        <div className="absolute top-0 right-0 p-4">
-          <Logout />
-        </div>
-      </nav>
-    </div>
+    <>
+      <div className="bg-white rounded m-4 p-4 flex gap-6">
+        <Link
+          to={`/accounts`}
+          className="text-blue-500 underline hover:text-blue-700"
+        >
+          Accounts
+        </Link>
+        <Link
+          to={`/profiles`}
+          className="text-blue-500 underline hover:text-blue-700"
+        >
+          Profiles
+        </Link>
+        <Link
+          to={`/invoices`}
+          className="text-blue-500 underline hover:text-blue-700"
+        >
+          Invoices
+        </Link>
+      </div>
+    </>
   )
 }

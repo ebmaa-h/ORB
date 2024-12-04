@@ -12,10 +12,10 @@ export default function Dashboard() {
 
   return (
     <>        
-      <div className='bg-white rounded m-6 p-6'>
+      <div className='bg-white rounded m-4 p-4'>
         <p>Hello {user.first}.</p>
       </div>
-      <div className='bg-white rounded m-6 p-6 flex'>
+      <div className='bg-white rounded m-3 flex'>
         {/* Profiles Feature */}
         {findFeature("profiles") && (
           <FeatureBlock feature="Profiles" />

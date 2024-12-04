@@ -2,7 +2,7 @@
 
 export default function SearchBar({ searchTerm, setSearchTerm }) {
   return (
-    <div className='bg-white rounded m-6 p-6'>
+    <div className='bg-white rounded'>
       <input
         type='text'
         placeholder='Search...'

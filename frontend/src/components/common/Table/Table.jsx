@@ -6,11 +6,9 @@ export default function Table({ data, columns, linkPrefix, idField }) {
   const handleRowClick = (id) => {
     // Navigate to the relevant page
     navigate(`/${linkPrefix}/${id}`);
-    console.log("ID: ", id)
   };
 
   return (
-    <div className="bg-white rounded m-6 p-6">
       <table className="table-auto w-full border-collapse border border-gray-light text-sm text-gray-dark">
         <thead>
           <tr>
@@ -47,6 +45,5 @@ export default function Table({ data, columns, linkPrefix, idField }) {
           )}
         </tbody>
       </table>
-    </div>
   );
 }

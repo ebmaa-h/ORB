@@ -5,32 +5,35 @@ const Account = {
   allAccounts: (callback) => {
     const query = `
       SELECT 
-        accounts.account_id,
-        accounts.dos,
-        accounts.guarantor_name,
-        accounts.guarantor_id_nr,
-        accounts.guarantor_nr,
-        accounts.guarantor_address,
-        accounts.created_at,
-        accounts.updated_at,
-        patients.first AS patient_first,
-        patients.last AS patient_last,
-        patients.id_nr AS patient_id_nr,
-        members.first AS member_first,
-        members.last AS member_last,
-        members.id_nr AS member_id_nr,
-        doctors.first AS doctor_first,
-        doctors.last AS doctor_last,
-        ref_doctors.first AS ref_doctor_first,
-        ref_doctors.last AS ref_doctor_last,
-        service_centers.service_center_name,
-        service_centers.service_center_type
-      FROM accounts
-      LEFT JOIN person_records AS patients ON accounts.patient_id = patients.person_id
-      LEFT JOIN person_records AS members ON accounts.member_id = members.person_id
-      LEFT JOIN users AS doctors ON accounts.doctor_id = doctors.user_id
-      LEFT JOIN ref_doctors ON accounts.ref_doctor_id = ref_doctors.ref_doctor_id
-      LEFT JOIN service_centers ON accounts.service_center_id = service_centers.service_center_id
+          a.account_id,
+          a.balance AS account_balance,
+          -- Doctor Details
+          CONCAT('Dr. ', LEFT(d.first, 1), '. ', d.last) AS doctor_name,
+          d.practice_nr AS doctor_practice_number,
+          -- Patient Details (Dependent)
+          CONCAT(pat.title, ' ', pat.first, ' ', pat.last) AS patient_name,
+          pat.id_nr AS patient_id_nr,
+          pat.dependent_nr AS patient_dependent_nr,
+          -- Member Details (Main Member)
+          CONCAT(mem.title, ' ', mem.first, ' ', mem.last) AS member_name,
+          mem.id_nr AS member_id_nr,
+          -- Invoice Details
+          COUNT(DISTINCT i.invoice_id) AS total_invoices -- Total invoices for this account
+      FROM accounts a
+      -- Join with doctor table for doctor details
+      LEFT JOIN doctors d ON d.doctor_id = a.doctor_id
+      -- Join with person_records table for patient details (linked via dependent_id)
+      LEFT JOIN person_records pat ON pat.person_id = a.dependent_id
+      -- Join with person_records table for member details (linked via main_member_id)
+      LEFT JOIN person_records mem ON mem.person_id = a.main_member_id
+      -- Join with invoices table to calculate total invoices
+      LEFT JOIN invoices i ON i.account_id = a.account_id
+      GROUP BY 
+          a.account_id, 
+          a.balance,
+          d.first, d.last, d.practice_nr,
+          pat.title, pat.first, pat.last, pat.id_nr, pat.dependent_nr,
+          mem.title, mem.first, mem.last, mem.id_nr;
     `;
     db.query(query, (err, results) => {
       if (err) {
@@ -44,40 +47,70 @@ const Account = {
   oneAccount: (accountId, callback) => {
     const query = `
       SELECT 
-        accounts.*,
-        patients.first AS patient_first,
-        patients.last AS patient_last,
-        patients.id_nr AS patient_id_nr,
-        patients.m_aid_nr AS patient_m_aid_nr,
-        patients.auth_nr AS patient_auth_nr,
-        members.first AS member_first,
-        members.last AS member_last,
-        members.id_nr AS member_id_nr,
-        members.m_aid_nr AS member_m_aid_nr,
-        members.auth_nr AS member_auth_nr,
-        doctors.first AS doctor_first,
-        doctors.last AS doctor_last,
-        ref_doctors.first AS ref_doctor_first,
-        ref_doctors.last AS ref_doctor_last,
-        service_centers.service_center_name,
-        service_centers.service_center_type,
-        medical_aids.name AS medical_aid_name,
-        medical_aid_plans.plan_name AS medical_aid_plan_name
-      FROM accounts
-      LEFT JOIN person_records AS patients ON accounts.patient_id = patients.person_id
-      LEFT JOIN person_records AS members ON accounts.member_id = members.person_id
-      LEFT JOIN users AS doctors ON accounts.doctor_id = doctors.user_id
-      LEFT JOIN ref_doctors ON accounts.ref_doctor_id = ref_doctors.ref_doctor_id
-      LEFT JOIN service_centers ON accounts.service_center_id = service_centers.service_center_id
-      LEFT JOIN medical_aids ON patients.m_aid_id = medical_aids.medical_aid_id
-      LEFT JOIN medical_aid_plans ON patients.m_aid_plan_id = medical_aid_plans.plan_id
-      WHERE accounts.account_id = ?
+          -- Account Details
+          a.account_id,
+          CONCAT('R ', FORMAT(a.balance, 2)) AS account_balance,
+          -- Doctor Details
+          CONCAT('Dr. ', LEFT(d.first, 1), '. ', d.last) AS doctor_name,
+          d.practice_nr AS doctor_practice_number,
+          -- Patient Details (Dependent)
+          CONCAT(pat.title, ' ', pat.first, ' ', pat.last) AS patient_name,
+          pat.id_nr AS patient_id_nr,
+          pat.dependent_nr AS patient_dependent_nr,
+          -- Member Details (Main Member)
+          CONCAT(mem.title, ' ', mem.first, ' ', mem.last) AS member_name,
+          mem.id_nr AS member_id_nr,
+          -- Profile and Medical Aid Details
+          p.profile_id,
+          p.medical_aid_nr,
+          p.authorization_nr,
+          ma.name AS medical_aid_name,
+          map.plan_name AS medical_aid_plan_name,
+          CONCAT('R ', FORMAT(p.balance, 2)) AS profile_balance,
+      FROM accounts a
+      -- Doctor Details
+      LEFT JOIN doctors d ON d.doctor_id = a.doctor_id
+      -- Patient Details
+      LEFT JOIN person_records pat ON pat.person_id = a.dependent_id
+      -- Member Details
+      LEFT JOIN person_records mem ON mem.person_id = a.main_member_id
+      -- Profile Details
+      LEFT JOIN profiles p ON p.profile_id = a.profile_id
+      LEFT JOIN medical_aids ma ON ma.medical_aid_id = p.medical_aid_id
+      LEFT JOIN medical_aid_plans map ON map.plan_id = p.plan_id
+      WHERE a.account_id = ?;
     `;
     db.query(query, [accountId], (err, results) => {
       if (err) {
         return callback(err, null);
       }
-      callback(null, results[0]);
+
+      // Fetch invoices related to this account
+      const invoiceQuery = `
+        SELECT 
+          i.invoice_id,
+          i.date_of_service,
+          i.status,
+          CONCAT('R ', FORMAT(i.balance, 2)) AS invoice_balance,
+        FROM invoices i
+        WHERE i.account_id = ?
+      `;
+
+      db.query(invoiceQuery, [accountId], (err, invoiceResults) => {
+        if (err) {
+          return callback(err, null);
+        }
+
+      const account = results[0];
+      const invoices = invoiceResults;
+
+      // Initialize result with account data
+      const result = {account, invoices};
+
+
+      // Return the result with account and invoices data
+      callback(null, result);
+      });
     });
   },
 };

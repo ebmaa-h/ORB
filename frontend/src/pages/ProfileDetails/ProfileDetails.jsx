@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom'; // For accessing profile_id from the URL
 import axios from 'axios';
-import { SearchBar, Table } from '../../components';
+import { Nav, SearchBar, Table } from '../../components';
 
 export default function ProfileDetails() {
   const { profileId } = useParams(); 
@@ -29,10 +29,10 @@ export default function ProfileDetails() {
         const { dependents, accounts, invoices, ...profileData } = response.data.profile;
         
         // Logging each extracted part
-        console.log('Dependents:', dependents);
-        console.log('Accounts:', accounts);
-        console.log('Invoices:', invoices);
-        console.log('Profile Data:', profileData);
+        // console.log('Dependents:', dependents);
+        // console.log('Accounts:', accounts);
+        // console.log('Invoices:', invoices);
+        // console.log('Profile Data:', profileData);
 
         setProfile(profileData);
         setDependents(dependents || []);
@@ -50,56 +50,53 @@ export default function ProfileDetails() {
 
   return (
     <>
-      <div className="bg-white rounded m-6 p-6">
-        <Link
-          to={`/profiles`}
-          className="text-blue-500 underline hover:text-blue-700"
-        >
-          Back to Profiles
-        </Link>
-      </div>
+      <Nav />
 
       {profile ? (
         <>
-          <div className="bg-white rounded p-6 m-6">
-            <h2 className="text-2xl font-bold">Profile Details</h2>
+          <div className="bg-white rounded m-4 p-4 flex flex-row justify-between items-center text-center text-sm text-gray-dark">
             <p><strong>Medical Aid Nr:</strong> {profile.medical_aid_nr}</p>
             <p><strong>Authorization Nr:</strong> {profile.authorization_nr}</p>
-            <p><strong>Medical Aid:</strong> {profile.medical_aid_name}</p>
-            <p><strong>Plan:</strong> {profile.plan_name}</p>
-            <p><strong>Main Member:</strong> {profile.main_member_name}</p>
+            <p><strong>Medical Aid:</strong> {profile.medical_aid_name} - {profile.plan_name}</p>
+            <p><strong>Dependent Nr:</strong> {profile.main_member_dependent_nr
+            }</p>
+            <p><strong>Main Member:</strong> {profile.main_member_id_nr
+            }</p>
           </div>
 
-          {/* Dependents Table */}
-          <div className="bg-white rounded p-6 m-6">
-            <h3 className="text-xl font-bold m-6">Dependents</h3>
-            <Table
-              data={dependents}
-              columns={['Dependent ID', 'First Name', 'Last Name', 'Date of Birth', 'Gender', 'Dependent Nr', 'Is Main Member']}
-              linkPrefix="dependents"
-            />
-          </div>
-
-          {/* Accounts Table */}
-          <div className="bg-white rounded p-6 m-6">
-            <h3 className="text-xl font-bold m-6">Accounts</h3>
-            <Table
-              data={accounts}
-              columns={['Account ID', 'Doctor ID', 'Doctor', 'Main Member ID', 'Main Member', 'Dependent ID', 'Patient']}
-              linkPrefix="accounts"
-            />
+          <div className="bg-white rounded m-4 p-4 gap-4 flex">
+            {/* Dependents Table */}
+            <div className='w-[50%]'>
+              <h3 className="text-sm uppercase font-bold pb-3">Accounts</h3>
+              <Table
+                data={accounts}
+                columns={['Account ID', 'Doctor', 'Patient', 'ID', 'Balance']}
+                linkPrefix="accounts"
+                idField="account_id"
+              />
+            </div>
+            {/* Accounts Table */}
+            <div className='w-[50%]'>
+              <h3 className="text-sm uppercase font-bold pb-3">Dependents</h3>
+              <Table
+                data={dependents}
+                columns={['Dependent ID', 'Dependent', 'Date of Birth', 'ID' ,'Dependent Nr']}
+                linkPrefix="dependents"
+              />
+            </div>
           </div>
 
           {/* Invoices Table with Search */}
-          <div className="bg-white rounded p-6 m-6">
-            <h3 className="text-xl font-bold m-6">Invoices</h3>
+          <div className="bg-white rounded m-4 p-4 flex flex-col gap-4">
+            <h3 className="text-sm uppercase font-bold">Invoices</h3>
             <SearchBar
               searchTerm={invoiceSearchTerm}
               setSearchTerm={setInvoiceSearchTerm}
             />
+            {console.log("DATA FOR TABLE ", filteredInvoices)}
             <Table
               data={filteredInvoices}
-              columns={['Invoice ID', 'Date of Service', 'Status', 'Patient Snapshot', 'Member Snapshot']}
+              columns={['Invoice ID', 'Date of Service', 'Status', 'Patient Snapshot', 'Member Snapshot', 'Balance']}
               linkPrefix="invoices"
             />
           </div>

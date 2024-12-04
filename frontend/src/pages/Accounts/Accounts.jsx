@@ -2,7 +2,8 @@ import { useContext, useEffect, useState } from 'react';
 import { UserContext } from '../../context/UserContext'; 
 import axios from 'axios';
 import { SearchBar, Table } from '../../components';
-// import { Link } from "react-router-dom";
+import { Link } from "react-router-dom";
+import { Nav } from '../../components/index'
 
 export default function Accounts() {
   const { user } = useContext(UserContext);
@@ -22,19 +23,18 @@ export default function Accounts() {
     fetchAccounts();
   }, []);
 
-  const columns = ['Account ID', 'Profile ID', 'Amount', 'Status', 'Last Payment Date'];
+  const columns = ['Account ID', 'Balance', 'Doctor', 'Practice Nr', 'Patient', 'Patient ID', 'Patient Dependent Nr', 'Main Member Name', 'Member ID', 'Total Invoices'];
   const filteredAccounts = accounts.filter((account) =>
     Object.values(account).join(' ').toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   return (
     <>
-      <div className='bg-white rounded m-6 p-6'>
-        <p>Hello {user.first}.</p>
+      <Nav />
+      <div className='flex flex-col gap-4 m-4 p-4 bg-white rounded'>
+        <SearchBar searchTerm={searchTerm} setSearchTerm={setSearchTerm} />
+        <Table data={filteredAccounts} columns={columns} linkPrefix="accounts" idField="account_id"/>
       </div>
-
-      <SearchBar searchTerm={searchTerm} setSearchTerm={setSearchTerm} />
-      <Table data={filteredAccounts} columns={columns} />
     </>
   );
 }

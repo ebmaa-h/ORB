@@ -1,85 +1,80 @@
-import { useParams } from 'react-router-dom';
 import { useEffect, useState } from 'react';
+import { useParams, Link } from 'react-router-dom'; // For accessing account_id from the URL
 import axios from 'axios';
-import { Link } from "react-router-dom";
+import { Nav, SearchBar, Table } from '../../components';
 
 export default function AccountDetails() {
-  // const { user } = useContext(UserContext); 
-  const { accountId } = useParams(); // Get accountId from URL
-  const [account, setAccount] = useState(null);
+  const { accountId } = useParams(); 
+  const [account, setAccount] = useState({}); // Stores the accounts
+  const [invoices, setInvoices] = useState([]); // Stores the invoices
+  const [invoiceSearchTerm, setInvoiceSearchTerm] = useState(''); // Search term for filtering invoices
 
+  const filteredInvoices = invoices.filter((invoice) =>
+    Object.values(invoice).join(' ').toLowerCase().includes(invoiceSearchTerm.toLowerCase())
+  );
 
   // Fetch account details
   useEffect(() => {
-    const fetchAccount = async () => {
+    const fetchAccountDetails  = async () => {
       try {
+        console.log('Fetching account data for ID:', accountId); // Log the account ID being fetched
         const response = await axios.get(`http://localhost:4000/accounts/${accountId}`, {
           withCredentials: true,
         });
-        setAccount(response.data.account);
+
+        const { account, invoices } = response.data.account; 
+
+        console.log("account",account);
+        console.log("invoices",invoices);
+        console.log("response.data.account",response.data.account);
+
+        setAccount(account || {});
+        setInvoices(invoices || []);
       } catch (error) {
         console.error('Error fetching account details:', error);
       }
     };
 
-    fetchAccount();
+    if (accountId) {
+      fetchAccountDetails ();
+    }
   }, [accountId]);
 
   return (
     <>
-      <div className="bg-white rounded m-6 p-6">
-        <Link
-          to={`/view-accounts`}
-          className="text-blue-500 underline hover:text-blue-700"
-        >
-          Back to Accounts
-        </Link>
-      </div>
-      <div className="bg-white rounded m-6 p-6">
-        <h1 className="text-lg font-bold mb-4">Account Details</h1>
-        {account ? (
-          <form className="grid grid-cols-2 gap-4">
-            <div>
-              <label className="block font-medium">Account ID</label>
-              <input
-                type="text"
-                value={account.account_id}
-                readOnly
-                className="border border-gray-light p-2 rounded w-full"
-              />
-            </div>
-            <div>
-              <label className="block font-medium">Member Name</label>
-              <input
-                type="text"
-                value={`${account.member_first} ${account.member_last}`}
-                readOnly
-                className="border border-gray-light p-2 rounded w-full"
-              />
-            </div>
-            <div>
-              <label className="block font-medium">Patient Name</label>
-              <input
-                type="text"
-                value={`${account.patient_first} ${account.patient_last}`}
-                readOnly
-                className="border border-gray-light p-2 rounded w-full"
-              />
-            </div>
-            <div>
-              <label className="block font-medium">Last Updated</label>
-              <input
-                type="text"
-                value={new Date(account.updated_at).toLocaleDateString('en-GB')}
-                readOnly
-                className="border border-gray-light p-2 rounded w-full"
-              />
-            </div>
-          </form>
-        ) : (
-          <p>Loading account details...</p>
-        )}
-      </div>
+      <Nav />
+
+      {account && Object.keys(account).length > 0 ? (
+        <>
+          {/* Accounts Table */}
+          <div className="bg-white rounded m-3">
+            <h3 className="text-xl font-bold pt-3 pl-3">Account</h3>
+            <Table
+              data={[account]}
+              columns={['Account ID', 'Balance', 'Doctor', 'Practice Nr', 'Patient', 'Patient ID', 'Balance', 'Balance', 'Balance', 'Balance', 'Auth', 'M/A Number', 'M/A', 'M/A Plan', 'Balance']}
+              linkPrefix="accounts"
+              idField="account_id"
+            />
+          </div>
+
+          {/* Invoices Table with Search */}
+          <div className="bg-white rounded m-3">
+            <h3 className="text-xl font-bold pt-3 pl-3">Invoices</h3>
+            <SearchBar
+              searchTerm={invoiceSearchTerm}
+              setSearchTerm={setInvoiceSearchTerm}
+            />
+
+            <Table
+              data={filteredInvoices}
+              columns={['Invoice ID', 'Date of Service', 'Status', 'Balance']}
+              linkPrefix="invoices"
+            />
+          </div>
+        </>
+      ) : (
+        <p>Loading account details...</p>
+      )}
     </>
   );
 }

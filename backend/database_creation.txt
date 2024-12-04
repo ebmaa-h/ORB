@@ -19,7 +19,7 @@ CREATE TABLE doctors (
     registration_nr VARCHAR(255),
     practice_nr VARCHAR(255),
     tell_nr VARCHAR(20),
-    doctor_type ENUM('specialist', 'anaesthetist', 'surgeon') DEFAULT 'anaesthetist',
+    doctor_type ENUM('Specialist', 'Anaesthetist', 'Surgeon') DEFAULT 'Anaesthetist',
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 );
@@ -34,7 +34,7 @@ CREATE TABLE user_features (
     user_id INT,
     feature_id INT,
     is_active BOOLEAN DEFAULT FALSE,
-    permissions ENUM('view', 'edit', 'delete') DEFAULT 'view',
+    permissions ENUM('View', 'Edit', 'Delete') DEFAULT 'View',
     FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE SET NULL,
     FOREIGN KEY (feature_id) REFERENCES features(feature_id) ON DELETE SET NULL
 );
@@ -81,7 +81,7 @@ CREATE TABLE ref_doctors (
 CREATE TABLE service_centers_list (
     service_center_list_id INT AUTO_INCREMENT PRIMARY KEY,
     service_center_name VARCHAR(255),
-    service_center_type ENUM('hospital', 'rooms') DEFAULT 'hospital'
+    service_center_type ENUM('Hospital', 'Rooms') DEFAULT 'Hospital'
 );
 
 CREATE TABLE service_centers (
@@ -133,14 +133,14 @@ CREATE TABLE person_records (
     profile_id INT,
     first VARCHAR(255),
     last VARCHAR(255),
-    title ENUM('mr', 'mrs', 'ms', 'dr') DEFAULT NULL,
+    title ENUM('Mr', 'Mrs', 'Miss', 'Ms', 'Dr') DEFAULT NULL,
     post_address VARCHAR(255),
     str_address VARCHAR(255),
     date_of_birth DATE,
-    gender ENUM('m', 'f') DEFAULT NULL,
+    gender ENUM('M', 'F') DEFAULT NULL,
     dependent_nr INT,
     is_main_member boolean DEFAULT 0,
-    id_type ENUM('passport', 'sa id', 'other') DEFAULT NULL,
+    id_type ENUM('Passport', 'SA ID', 'Other') DEFAULT NULL,
     id_nr VARCHAR(255) UNIQUE,
     cell_nr VARCHAR(20),
     tell_nr VARCHAR(20),
@@ -168,7 +168,7 @@ CREATE TABLE invoices (
     account_id INT,
     profile_id INT,
     date_of_service DATE,
-    status ENUM('processing', 'billed', 'archived') DEFAULT 'processing',
+    status ENUM('Processing', 'Billed', 'Archived') DEFAULT 'Processing',
     patient_snapshot JSON,
     member_snapshot JSON,
     balance DECIMAL(10, 2) DEFAULT 0.00, -- Balance for this specific invoice (procedure)
@@ -188,94 +188,209 @@ VALUES
 -- Inserting sample data for doctors
 INSERT INTO doctors (email, password, first, last, registration_nr, practice_nr, tell_nr, doctor_type)
 VALUES 
-('doctor1@example.com', 'password_hash_1', 'Dr. Alice', 'Johnson', 'REG1234', 'PRACTICE001', '111-222-3333', 'surgeon'),
-('doctor2@example.com', 'password_hash_2', 'Dr. Bob', 'Williams', 'REG5678', 'PRACTICE002', '444-555-6666', 'specialist');
+('doctor1@example.com', 'password_hash_1', 'Dr. Alice', 'Johnson', 'REG1234', 'PRACTICE001', '111-222-3333', 'Surgeon'),
+('doctor2@example.com', 'password_hash_2', 'Dr. Bob', 'Williams', 'REG5678', 'PRACTICE002', '444-555-6666', 'Specialist');
 
 -- Inserting sample data for medical aids
 INSERT INTO medical_aids (name)
 VALUES 
 ('Discovery'),
+('Medihelp'),
+('Private'),
+('Momentum'),
 ('Bonitas');
 
 -- Inserting sample data for medical aid plans
 INSERT INTO medical_aid_plans (medical_aid_id, plan_name, plan_code)
 VALUES 
 (1, 'Classic Saver', 'CLASAVE2911'),
-(2, 'BonClassic', 'BONCLA0054');
+(2, 'MediBonus', 'MEDI1001'),
+(3, 'Private', 'Private'),
+(4, 'Basic', 'MOM001'),
+(5, 'BonClassic', 'BONCLA0054');
 
 -- Inserting sample data for profiles
 INSERT INTO profiles (medical_aid_id, plan_id, medical_aid_nr, authorization_nr, is_active, balance)
 VALUES 
-(1, 1, 'MA001', 'AUTH001', TRUE, 500.00),
-(2, 2, 'MA002', 'AUTH002', TRUE, 1000.00);
+(1, 1, '91672345', '701666', TRUE, 1200.00),
+(2, 2, '42125516', '801666', TRUE, 1050.00),
+(3, 3, '74577457', '901666', TRUE, 500.00),
+(4, 4, 'FW515212', '1001666', TRUE, 5050.00);
 
 -- Inserting sample data for person records
 INSERT INTO person_records (profile_id, first, last, title, date_of_birth, gender, dependent_nr, is_main_member, id_nr, cell_nr, tell_nr, email)
 VALUES 
-(1, 'Michael', 'Brown', 'mr', '1990-05-15', 'm', 0, TRUE, 'ID12345', '555-111-2222', '555-333-4444', 'mike@example.com'),
-(1, 'Emma', 'Brown', 'mrs', '1992-04-12', 'f', 1, FALSE, 'ID12346', '555-111-2223', '555-333-4445', 'emma@example.com'),
-(1, 'James', 'Brown', 'mr', '2010-02-01', 'm', 2, FALSE, 'ID12347', '555-111-2224', '555-333-4446', 'james@example.com'),
-(1, 'Olivia', 'Brown', 'ms', '2012-08-05', 'f', 3, FALSE, 'ID12348', '555-111-2225', '555-333-4447', 'olivia@example.com'),
-(1, 'Lucas', 'Brown', 'mr', '2015-11-22', 'm', 4, FALSE, 'ID12349', '555-111-2226', '555-333-4448', 'lucas@example.com'),
-(1, 'Sophia', 'Brown', 'ms', '2017-03-30', 'f', 5, FALSE, 'ID12350', '555-111-2227', '555-333-4449', 'sophia@example.com'),
+(1, 'Thabo', 'Mokoena', 'Mr', '1990-05-15', 'M', 0, TRUE, '9005150000000', '082-111-2222', '011-333-4444', 'thabo@mokoena.co.za'),
+(1, 'Naledi', 'Mokoena', 'Mrs', '1992-04-12', 'F', 1, FALSE, '9204120000000', '082-111-2223', '011-333-4445', 'naledi@mokoena.co.za'),
+(1, 'Lerato', 'Mokoena', 'Miss', '2010-02-01', 'F', 2, FALSE, '1002010000000', '082-111-2224', '011-333-4446', 'lerato@mokoena.co.za'),
 
-(2, 'Sarah', 'Madison', 'mrs', '1992-07-20', 'f', 0, TRUE, 'ID67890', '555-222-3333', '555-444-5555', 'sarah@example.com'),
-(2, 'John', 'Madison', 'mr', '2015-01-14', 'm', 1, FALSE, 'ID67891', '555-222-3334', '555-444-5556', 'john@example.com'),
-(2, 'Lily', 'Madison', 'ms', '2017-06-22', 'f', 2, FALSE, 'ID67892', '555-222-3335', '555-444-5557', 'lily@example.com'),
-(2, 'Ethan', 'Madison', 'mr', '2019-09-17', 'm', 3, FALSE, 'ID67893', '555-222-3336', '555-444-5558', 'ethan@example.com'),
-(2, 'Mia', 'Madison', 'ms', '2021-02-10', 'f', 4, FALSE, 'ID67894', '555-222-3337', '555-444-5559', 'mia@example.com'),
-(2, 'Benjamin', 'Madison', 'mr', '2023-05-05', 'm', 5, FALSE, 'ID67895', '555-222-3338', '555-444-5560', 'benjamin@example.com');
+(2, 'Pieter', 'Van Der Merwe', 'Mr', '1990-08-05', 'F', 0, TRUE, '9008050000000', '082-111-2225', '011-333-4447', 'olivia@vdmerwe.co.za'),
+(2, 'Annelize', 'Van Der Merwe', 'Mrs', '1980-11-22', 'M', 1, FALSE, '8011220000000', '082-111-2226', '011-333-4448', 'annelize@vdmerwe.co.za'),
+(2, 'Jaco', 'Van Der Merwe', 'Mr', '2017-03-30', 'M', 2, FALSE, '1703300000000', '082-111-2227', '011-333-4449', 'jaco@vdmerwe.co.za'),
+(2, 'Saki', 'Van Der Merwe', 'Mr', '2011-06-10', 'M', 3, FALSE, '1106100000000', '082-111-2227', '011-333-4449', 'saki@vdmerwe.co.za'),
 
+(3, 'Jo-Anne', 'Smith', 'Mrs', '1972-07-20', 'F', 0, TRUE, '7207200000000', '082-222-3333', '011-444-5555', 'joanne@smith.co.za'),
+(3, 'John', 'Smith', 'Mr', '1973-04-14', 'M', 1, FALSE, '7304140000000', '082-222-3334', '011-444-5556', 'john@smith.co.za'),
+(3, 'Emily', 'Smith', 'Miss', '2001-06-22', 'F', 2, FALSE, '0106220000000', '082-222-3335', '011-444-5557', 'emily@smith.co.za'),
 
--- Inserting sample data for accounts
+(4, 'Rajesh', 'Naidoo', 'Mr', '1982-09-17', 'M', 0, TRUE, '8209170000000', '082-222-3336', '011-444-5558', 'rajesh@naidoo.co.za'),
+(4, 'Priya', 'Naidoo', 'Mrs', '1983-02-10', 'F', 1, FALSE, '8302100000000', '082-222-3337', '011-444-5559', 'priya@naidoo.co.za'),
+(4, 'Kavita', 'Naidoo', 'Miss', '2000-02-10', 'F', 2, FALSE, '0002100000000', '082-222-3337', '011-444-5559', 'kavita@naidoo.co.za'),
+(4, 'Sanjay', 'Naidoo', 'Mr', '1999-02-10', 'M', 3, FALSE, '9902100000000', '082-222-3337', '011-444-5559', 'sanjay@naidoo.co.za');
+
+-- Inserting data into accounts
 INSERT INTO accounts (profile_id, doctor_id, main_member_id, dependent_id, balance)
-VALUES 
-(1, 1, 1, 1, 518.00),
-(1, 1, 1, 2, 3500.00),
-(1, 1, 1, 3, 885.00),
-(1, 1, 1, 4, 421.00),
-(1, 1, 1, 5, 351.00),
-(1, 1, 1, 6, 1321.00),
-(1, 2, 1, 6, 300.00),
+VALUES
+-- Profile 1: Thabo (main member), Naledi, and Lerato (Total: 1200.00)
+(1, 1, 1, 1, 500.00), -- Thabo's account
+(1, 1, 1, 2, 400.00), -- Naledi's account
+(1, 1, 1, 3, 100.00), -- Lerato's account
+(1, 2, 1, 3, 200.00), -- Lerato's account second account with a diff doctor
 
-(2, 2, 7, 7, 518.00),
-(2, 2, 7, 8, 3500.00),
-(2, 2, 7, 9, 885.00),
-(2, 2, 7, 10, 421.00),
-(2, 2, 7, 11, 351.00),
-(2, 2, 7, 12, 1321.00),
-(2, 1, 7, 12, 300.00);
+-- Profile 2: Pieter (main member), Annelize, Jaco, and Saki (Total: 1050.00)
+(2, 2, 4, 4, 450.00), -- Pieter's account
+(2, 2, 4, 5, 300.00), -- Annelize's account
+(2, 2, 4, 6, 200.00), -- Jaco's account
+(2, 2, 4, 7, 100.00), -- Saki's account
+
+-- Profile 3: Jo-Anne (main member), John, and Emily (Total: 500.00)
+(3, 1, 8, 8, 250.00), -- Jo-Anne's account
+(3, 1, 8, 9, 150.00), -- John's account
+(3, 1, 8, 10, 100.00), -- Emily's account
+
+-- Profile 4: Rajesh (main member), Priya, Kavita, and Sanjay (Total: 5050.00)
+(4, 2, 11, 11, 2000.00), -- Rajesh's account
+(4, 2, 11, 12, 1500.00), -- Priya's account
+(4, 2, 11, 13, 1000.00), -- Kavita's account
+(4, 2, 11, 14, 550.00); -- Sanjay's account
 
 -- Inserting sample data for invoices
-INSERT INTO invoices (account_id, profile_id, date_of_service, status, patient_snapshot, member_snapshot, balance)
-VALUES 
-(1, 1, '2024-12-01', 'processing', '{"procedure": "surgery"}', '{"patient": "Michael Brown"}', 300.00),
-(2, 2, '2024-12-01', 'processing', '{"procedure": "consultation"}', '{"patient": "Sarah Brown"}', 700.00);
+INSERT INTO invoices (account_id, profile_id, date_of_service, status, member_snapshot, patient_snapshot, balance)
+VALUES
+-- Profile 1: Thabo, Naledi, Lerato
+(1, 1, '2024-12-01', 'Processing',
+ '{"member": {"first": "Thabo", "last": "Mokoena", "title": "Mr", "dob": "1990-05-15", "id_nr": "9005150093000"}}',
+ '{"patient": {"first": "Thabo", "last": "Mokoena", "title": "Mr", "dob": "1990-05-15", "id_nr": "9005150094000"}}',
+ 500.00),
+
+(2, 1, '2024-12-02', 'Processing',
+ '{"member": {"first": "Thabo", "last": "Mokoena", "title": "Mr", "dob": "1990-05-15", "id_nr": "9005150008900"}}',
+ '{"patient": {"first": "Naledi", "last": "Mokoena", "title": "Mrs", "dob": "1992-04-12", "id_nr": "9204120990000"}}',
+ 400.00),
+
+(3, 1, '2024-12-03', 'Processing',
+ '{"member": {"first": "Thabo", "last": "Mokoena", "title": "Mr", "dob": "1990-05-15", "id_nr": "9005150008800"}}',
+ '{"patient": {"first": "Lerato", "last": "Mokoena", "title": "Miss", "dob": "2010-02-01", "id_nr": "1002017700000"}}',
+ 100.00),
+
+(4, 1, '2024-12-04', 'Processing',
+ '{"member": {"first": "Thabo", "last": "Mokoena", "title": "Mr", "dob": "1990-05-15", "id_nr": "9005150006600"}}',
+ '{"patient": {"first": "Lerato", "last": "Mokoena", "title": "Miss", "dob": "2010-02-01", "id_nr": "1002010000550"}}',
+ 200.00),
+
+-- Profile 2: Pieter, Annelize, Jaco, Saki
+(5, 2, '2024-12-01', 'Processing',
+ '{"member": {"first": "Pieter", "last": "Van Der Merwe", "title": "Mr", "dob": "1990-08-05", "id_nr": "9008050044000"}}',
+ '{"patient": {"first": "Pieter", "last": "Van Der Merwe", "title": "Mr", "dob": "1990-08-05", "id_nr": "9008050330000"}}',
+ 450.00),
+
+(6, 2, '2024-12-02', 'Processing',
+ '{"member": {"first": "Pieter", "last": "Van Der Merwe", "title": "Mr", "dob": "1990-08-05", "id_nr": "9008050022000"}}',
+ '{"patient": {"first": "Annelize", "last": "Van Der Merwe", "title": "Mrs", "dob": "1980-11-22", "id_nr": "8011220011000"}}',
+ 300.00),
+
+(7, 2, '2024-12-03', 'Processing',
+ '{"member": {"first": "Pieter", "last": "Van Der Merwe", "title": "Mr", "dob": "1990-08-05", "id_nr": "9008059000000"}}',
+ '{"patient": {"first": "Jaco", "last": "Van Der Merwe", "title": "Mr", "dob": "2017-03-30", "id_nr": "1703380000000"}}',
+ 200.00),
+
+(8, 2, '2024-12-04', 'Processing',
+ '{"member": {"first": "Pieter", "last": "Van Der Merwe", "title": "Mr", "dob": "1990-08-05", "id_nr": "9008050700000"}}',
+ '{"patient": {"first": "Saki", "last": "Van Der Merwe", "title": "Mr", "dob": "2011-06-10", "id_nr": "1106160000000"}}',
+ 100.00),
+
+-- Profile 3: Jo-Anne, John, Emily
+(9, 3, '2024-12-01', 'Processing',
+ '{"member": {"first": "Jo-Anne", "last": "Smith", "title": "Mrs", "dob": "1972-07-20", "id_nr": "7207205000000"}}',
+ '{"patient": {"first": "Jo-Anne", "last": "Smith", "title": "Mrs", "dob": "1972-07-20", "id_nr": "7207240000000"}}',
+ 250.00),
+
+(10, 3, '2024-12-02', 'Processing',
+ '{"member": {"first": "Jo-Anne", "last": "Smith", "title": "Mrs", "dob": "1972-07-20", "id_nr": "7207203000000"}}',
+ '{"patient": {"first": "John", "last": "Smith", "title": "Mr", "dob": "1973-04-14", "id_nr": "7304142000000"}}',
+ 150.00),
+
+(11, 3, '2024-12-03', 'Processing',
+ '{"member": {"first": "Jo-Anne", "last": "Smith", "title": "Mrs", "dob": "1972-07-20", "id_nr": "720721000000"}}',
+ '{"patient": {"first": "Emily", "last": "Smith", "title": "Miss", "dob": "2001-06-22", "id_nr": "0106220000900"}}',
+ 100.00),
+
+-- Profile 4: Rajesh, Priya, Kavita, Sanjay
+(12, 4, '2024-12-01', 'Processing',
+ '{"member": {"first": "Rajesh", "last": "Naidoo", "title": "Mr", "dob": "1982-09-17", "id_nr": "8209170000080"}}',
+ '{"patient": {"first": "Rajesh", "last": "Naidoo", "title": "Mr", "dob": "1982-09-17", "id_nr": "8209170000700"}}',
+ 2000.00),
+
+(13, 4, '2024-12-02', 'Processing',
+ '{"member": {"first": "Rajesh", "last": "Naidoo", "title": "Mr", "dob": "1982-09-17", "id_nr": "8209170000060"}}',
+ '{"patient": {"first": "Priya", "last": "Naidoo", "title": "Mrs", "dob": "1983-02-10", "id_nr": "8302100000050"}}',
+ 1500.00),
+
+(14, 4, '2024-12-03', 'Processing',
+ '{"member": {"first": "Rajesh", "last": "Naidoo", "title": "Mr", "dob": "1982-09-17", "id_nr": "8209170000400"}}',
+ '{"patient": {"first": "Kavita", "last": "Naidoo", "title": "Miss", "dob": "2000-02-10", "id_nr": "0002103000000"}}',
+ 1000.00),
+
+(15, 4, '2024-12-04', 'Processing',
+ '{"member": {"first": "Rajesh", "last": "Naidoo", "title": "Mr", "dob": "1982-09-17", "id_nr": "8209170000200"}}',
+ '{"patient": {"first": "Sanjay", "last": "Naidoo", "title": "Mr", "dob": "1999-02-10", "id_nr": "9902100000100"}}',
+ 550.00);
+
 
 -- Inserting sample data for features
 INSERT INTO features (feature_name)
 VALUES 
 ('accounts'),
 ('invoices'),
+('records'),
 ('profiles');
 
 -- Inserting sample data for user features
 INSERT INTO user_features (user_id, feature_id, is_active, permissions)
 VALUES 
-(1, 3, TRUE, 'view'),
-(3, 3, TRUE, 'view');
+(1, 1, TRUE, 'Edit'),
+(1, 2, TRUE, 'Edit'),
+(1, 3, TRUE, 'Edit'),
+(1, 4, TRUE, 'Edit'),
+(2, 1, TRUE, 'Edit'),
+(2, 2, TRUE, 'Edit'),
+(2, 3, TRUE, 'Edit'),
+(2, 4, TRUE, 'Edit'),
+(3, 1, TRUE, 'Edit'),
+(3, 2, TRUE, 'Edit'),
+(3, 3, TRUE, 'Edit'),
+(3, 4, TRUE, 'Edit'),
+(4, 1, TRUE, 'Edit'),
+(4, 2, TRUE, 'Edit'),
+(4, 3, TRUE, 'Edit'),
+(4, 4, TRUE, 'Edit'),
+(5, 1, TRUE, 'Edit'),
+(5, 2, TRUE, 'Edit'),
+(5, 3, TRUE, 'Edit'),
+(5, 4, TRUE, 'Edit');
 
 -- Inserting sample data for service centers
 INSERT INTO service_centers_list (service_center_name, service_center_type)
 VALUES 
-('City Hospital', 'hospital'),
-('Private Rooms', 'rooms');
+('City Hospital', 'Hospital'),
+('Private Rooms', 'Rooms');
 
 -- Inserting sample data for service centers associations
 INSERT INTO service_centers (service_center_list_id, doctor_id)
 VALUES 
 (1, 1),
-(2, 2);
+(1, 2),
+(2, 3);
 
 -- Inserting sample data for employers
 INSERT INTO employers (employer_name, employer_tel, emp_post_address, emp_str_address, emp_reg_nr)
@@ -293,4 +408,5 @@ VALUES
 INSERT INTO ref_doctors (ref_doctor_list_id, doctor_id)
 VALUES 
 (1, 1),
-(2, 2);
+(1, 2),
+(2, 3);

@@ -12,7 +12,7 @@ export default function Tools() {
   return (
     <>
       <div className='bg-white rounded m-6 p-6'>
-        <p>Hello {user.first}.</p>
+        <p className='m-4 p-4'>Hello {user.first}.</p>
       </div>
       <div className='bg-white rounded m-6 p-6 flex flex-col'>
         <h2 className='pl-6 pt-3 pb-3 text-lg '>Manage Users</h2>

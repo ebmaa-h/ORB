@@ -1,7 +1,7 @@
 import { useContext, useEffect, useState } from 'react';
 import { UserContext } from '../../context/UserContext'; 
 import axios from 'axios';
-import { SearchBar, Table } from '../../components';
+import { Nav, SearchBar, Table } from '../../components';
 import { Link } from "react-router-dom";
 
 export default function Profiles() {
@@ -29,12 +29,11 @@ export default function Profiles() {
   console.log (filteredProfiles);
   return (
     <>
-      <div className='bg-white rounded m-6 p-6'>
-        <p>Hello {user.first}.</p>
+      <Nav />
+      <div className='flex flex-col gap-4 m-4 p-4 bg-white rounded'>
+        <SearchBar searchTerm={searchTerm} setSearchTerm={setSearchTerm} />
+        <Table data={filteredProfiles} columns={columns} linkPrefix="profiles" idField="profile_id"/>
       </div>
-
-      <SearchBar searchTerm={searchTerm} setSearchTerm={setSearchTerm} />
-      <Table data={filteredProfiles} columns={columns} linkPrefix="profiles" idField="profile_id"/>
     </>
   );
 }
