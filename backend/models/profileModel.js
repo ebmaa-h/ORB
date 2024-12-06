@@ -39,6 +39,13 @@ GROUP BY
   },
 
   oneProfile: (profileId, callback) => {
+
+    const queryGroupIncrease = "SET SESSION group_concat_max_len = 1000000;";
+    db.query(queryGroupIncrease, (err, results) => {
+        if (err) {
+            console.log('Error setting session variable:', err);
+        }
+    });
     const query = `
       WITH dependents AS (
           SELECT 
