@@ -40,7 +40,7 @@ GROUP BY
 
   oneProfile: (profileId, callback) => {
 
-    const queryGroupIncrease = "SET SESSION group_concat_max_len = 1000000;";
+    const queryGroupIncrease = "SET SESSION group_concat_max_len = 10000000000;";
     db.query(queryGroupIncrease, (err, results) => {
       if (err) {
           console.log('Error setting session variable:', err);
@@ -165,9 +165,6 @@ GROUP BY
         if (results.length > 0) {
             const result = results[0];
             console.log(results.invoices);
-            console.log('Dependents:', result.dependents);
-              console.log('Accounts:', result.accounts);
-              console.log('Invoices:', result.invoices);
 
             result.dependents = JSON.parse(`[${result.dependents || ''}]`);
             result.accounts = JSON.parse(`[${result.accounts || ''}]`);
