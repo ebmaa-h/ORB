@@ -140,7 +140,7 @@ GROUP BY
       LEFT JOIN accounts ON accounts.profile_id = p.profile_id
       LEFT JOIN invoices ON invoices.profile_id = p.profile_id
       WHERE p.profile_id = ?
-      GROUP BY p.profile_id;
+      GROUP BY p.profile_id, pm.title, pm.first, pm.last, pm.id_nr;
 
 
       
