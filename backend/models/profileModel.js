@@ -4,35 +4,31 @@ const Profile = {
 
   allProfiles: (callback) => {
     const query = `
-      SELECT 
-          p.profile_id,
-          CONCAT(mm.title, ' ', mm.first, ' ', mm.last) AS member_name,
-          ma.name AS medical_aid_name,
-          map.plan_name AS plan_name,
-          p.medical_aid_nr,
-          p.authorization_nr,
-          p.balance,
-          COUNT(DISTINCT a.account_id) AS total_accounts,
-          COUNT(DISTINCT ppm.person_id) AS total_dependents,
-          COUNT(DISTINCT i.invoice_id) AS total_invoices,
-          GROUP_CONCAT(DISTINCT dependents.dependent) AS dependents,
-          GROUP_CONCAT(DISTINCT accounts.account) AS accounts,
-          GROUP_CONCAT(DISTINCT invoices.invoice) AS invoices
-      FROM 
-          profiles p
-      LEFT JOIN medical_aids ma ON p.medical_aid_id = ma.medical_aid_id
-      LEFT JOIN medical_aid_plans map ON p.plan_id = map.plan_id
-      LEFT JOIN accounts a ON p.profile_id = a.profile_id
-      LEFT JOIN profile_person_map ppm ON p.profile_id = ppm.profile_id
-      LEFT JOIN invoices i ON p.profile_id = i.profile_id
-      -- Main member join
-      LEFT JOIN profile_person_map main_map ON p.profile_id = main_map.profile_id AND main_map.is_main_member = TRUE
-      LEFT JOIN person_records mm ON main_map.person_id = mm.person_id
-      LEFT JOIN profile_person_map dependents ON p.profile_id = dependents.profile_id
-      LEFT JOIN accounts accounts ON p.profile_id = accounts.profile_id
-      LEFT JOIN invoices invoices ON p.profile_id = invoices.profile_id
-      GROUP BY 
-          p.profile_id;
+SELECT 
+    p.profile_id,
+    CONCAT(mm.title, ' ', mm.first, ' ', mm.last) AS member_name,
+    ma.name AS medical_aid_name,
+    map.plan_name AS plan_name,
+    p.medical_aid_nr,
+    p.authorization_nr,
+    p.balance,
+    COUNT(DISTINCT a.account_id) AS total_accounts,
+    COUNT(DISTINCT ppm.person_id) AS total_dependents,
+    COUNT(DISTINCT i.invoice_id) AS total_invoices
+FROM 
+    profiles p
+LEFT JOIN medical_aids ma ON p.medical_aid_id = ma.medical_aid_id
+LEFT JOIN medical_aid_plans map ON p.plan_id = map.plan_id
+LEFT JOIN accounts a ON p.profile_id = a.profile_id
+LEFT JOIN profile_person_map ppm ON p.profile_id = ppm.profile_id
+LEFT JOIN invoices i ON p.profile_id = i.profile_id
+-- Main member join
+LEFT JOIN profile_person_map main_map ON p.profile_id = main_map.profile_id AND main_map.is_main_member = TRUE
+LEFT JOIN person_records mm ON main_map.person_id = mm.person_id
+GROUP BY 
+    p.profile_id, ma.name, map.plan_name, mm.title, mm.first, mm.last;
+
+
     `;
     db.query(query, (err, results) => {
       if (err) {
