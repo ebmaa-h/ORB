@@ -6,7 +6,6 @@ const Profile = {
     const query = `
       SELECT 
           p.profile_id,
-          -- Main member details
           CONCAT(mm.title, ' ', mm.first, ' ', mm.last) AS member_name,
           ma.name AS medical_aid_name,
           map.plan_name AS plan_name,
@@ -15,8 +14,10 @@ const Profile = {
           p.balance,
           COUNT(DISTINCT a.account_id) AS total_accounts,
           COUNT(DISTINCT ppm.person_id) AS total_dependents,
-          COUNT(DISTINCT i.invoice_id) AS total_invoices
-
+          COUNT(DISTINCT i.invoice_id) AS total_invoices,
+          GROUP_CONCAT(DISTINCT dependents.dependent) AS dependents,
+          GROUP_CONCAT(DISTINCT accounts.account) AS accounts,
+          GROUP_CONCAT(DISTINCT invoices.invoice) AS invoices
       FROM 
           profiles p
       LEFT JOIN medical_aids ma ON p.medical_aid_id = ma.medical_aid_id
@@ -27,9 +28,11 @@ const Profile = {
       -- Main member join
       LEFT JOIN profile_person_map main_map ON p.profile_id = main_map.profile_id AND main_map.is_main_member = TRUE
       LEFT JOIN person_records mm ON main_map.person_id = mm.person_id
-    GROUP BY 
-      p.profile_id, ma.name, map.plan_name, ppm.dependent_nr, mm.title, mm.first, mm.last;
-
+      LEFT JOIN profile_person_map dependents ON p.profile_id = dependents.profile_id
+      LEFT JOIN accounts accounts ON p.profile_id = accounts.profile_id
+      LEFT JOIN invoices invoices ON p.profile_id = invoices.profile_id
+      GROUP BY 
+          p.profile_id;
     `;
     db.query(query, (err, results) => {
       if (err) {
