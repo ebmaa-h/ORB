@@ -140,7 +140,9 @@ GROUP BY
       LEFT JOIN accounts ON accounts.profile_id = p.profile_id
       LEFT JOIN invoices ON invoices.profile_id = p.profile_id
       WHERE p.profile_id = ?
-      GROUP BY p.profile_id, ma.name, map.plan_name, pm.first, pm.last, ppm.dependent_nr;
+GROUP BY p.profile_id, ma.name, map.plan_name, pm.first, pm.last, pm.title, pm.id_nr, ppm.dependent_nr;
+
+      
     `;
 
     db.query(query, [profileId, profileId, profileId, profileId], (err, results) => {
