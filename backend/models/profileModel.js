@@ -28,7 +28,8 @@ const Profile = {
       LEFT JOIN profile_person_map main_map ON p.profile_id = main_map.profile_id AND main_map.is_main_member = TRUE
       LEFT JOIN person_records mm ON main_map.person_id = mm.person_id
     GROUP BY 
-        p.profile_id, ma.name, map.plan_name, pm.first, pm.last, ppm.dependent_nr, mm.title, mm.first, mm.last;
+      p.profile_id, ma.name, map.plan_name, ppm.dependent_nr, mm.title, mm.first, mm.last;
+
     `;
     db.query(query, (err, results) => {
       if (err) {
