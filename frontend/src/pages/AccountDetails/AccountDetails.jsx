@@ -18,7 +18,7 @@ export default function AccountDetails() {
     const fetchAccountDetails  = async () => {
       try {
         console.log('Fetching account data for ID:', accountId); // Log the account ID being fetched
-        const response = await axios.get(`http://localhost:4000/accounts/${accountId}`, {
+        const response = await axios.get(`http://167.99.196.172/accounts/${accountId}`, {
           withCredentials: true,
         });
 

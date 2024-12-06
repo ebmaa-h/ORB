@@ -20,7 +20,7 @@ export default function ProfileDetails() {
     const fetchProfile = async () => {
       try {
         console.log('Fetching profile data for ID:', profileId); // Log the profile ID being fetched
-        const response = await axios.get(`http://localhost:4000/profiles/${profileId}`, {
+        const response = await axios.get(`http://167.99.196.172/profiles/${profileId}`, {
           withCredentials: true,
         });
         

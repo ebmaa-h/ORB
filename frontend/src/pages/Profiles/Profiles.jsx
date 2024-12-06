@@ -13,7 +13,7 @@ export default function Profiles() {
   useEffect(() => {
     const fetchProfiles = async () => {
       try {
-        const response = await axios.get('http://localhost:4000/profiles');
+        const response = await axios.get('http://167.99.196.172/profiles');
         setProfiles(response.data.profiles);
       } catch (error) {
         console.error('Error fetching profiles:', error);

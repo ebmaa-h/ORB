@@ -14,7 +14,7 @@ export default function Accounts() {
   useEffect(() => {
     const fetchAccounts = async () => {
       try {
-        const response = await axios.get('http://localhost:4000/accounts');
+        const response = await axios.get('http://167.99.196.172/accounts');
         setAccounts(response.data.accounts);
       } catch (error) {
         console.error('Error fetching accounts:', error);

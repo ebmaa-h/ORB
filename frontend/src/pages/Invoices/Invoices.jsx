@@ -13,7 +13,7 @@ export default function Invoices() {
   useEffect(() => {
     const fetchInvoices = async () => {
       try {
-        const response = await axios.get('http://localhost:4000/invoices');
+        const response = await axios.get('http://167.99.196.172/invoices');
         console.log(response)
         setInvoices(response.data.invoices);
       } catch (error) {

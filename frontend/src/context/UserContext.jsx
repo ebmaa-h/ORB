@@ -18,7 +18,7 @@ export const UserProvider = ({ children }) => {
 
       try {
         // Fetch user data
-        const response = await axios.get('http://localhost:4000/user/getUserData', {
+        const response = await axios.get('http://167.99.196.172/user/getUserData', {
           withCredentials: true, // Send cookies with the request
         });
 
