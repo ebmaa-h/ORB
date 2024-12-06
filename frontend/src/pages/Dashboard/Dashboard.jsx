@@ -15,7 +15,7 @@ export default function Dashboard() {
       <div className='bg-white rounded m-4 p-4'>
         <p>Hello {user.first}.</p>
       </div>
-      <div className='bg-white rounded m-3 flex'>
+      <div className='bg-white rounded m-4 flex'>
         {/* Profiles Feature */}
         {findFeature("profiles") && (
           <FeatureBlock feature="Profiles" />

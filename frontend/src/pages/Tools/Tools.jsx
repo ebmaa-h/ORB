@@ -10,32 +10,8 @@ export default function Tools() {
     user.features.find((feature) => feature.feature_name === featureName && feature.is_active);
 
   return (
-    <>
-      <div className='bg-white rounded m-6 p-6'>
-        <p className='m-4 p-4'>Hello {user.first}.</p>
-      </div>
-      <div className='bg-white rounded m-6 p-6 flex flex-col'>
-        <h2 className='pl-6 pt-3 pb-3 text-lg '>Manage Users</h2>
-        <div className='flex'>
-          {/* Accounts Feature */}
-          {findFeature("View Accounts") && (
-            <FeatureBlock feature="User Permissions" />
-          )}
-
-          {/* Patinets Feature */}
-          {findFeature("Patient Records") && (
-            <FeatureBlock feature="Add Users" />
-          )}
-          {/* Patinets Feature */}
-          {findFeature("Patient Records") && (
-            <FeatureBlock feature="Remove Users" />
-          )}
-          {/* Patinets Feature */}
-          {findFeature("Patient Records") && (
-            <FeatureBlock feature="View Users" />
-          )}
-        </div>
-      </div>
-    </>
+    <div className='bg-white rounded m-4 p-4'>
+      tools
+    </div>
   )
 }

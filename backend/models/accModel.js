@@ -1,40 +1,36 @@
 const db = require('../config/db');
 
 const Account = {
-  // Get all accounts with merged data
   allAccounts: (callback) => {
     const query = `
       SELECT 
-          a.account_id,
-          a.balance AS account_balance,
-          -- Doctor Details
-          CONCAT('Dr. ', LEFT(d.first, 1), '. ', d.last) AS doctor_name,
-          d.practice_nr AS doctor_practice_number,
-          -- Patient Details (Dependent)
-          CONCAT(pat.title, ' ', pat.first, ' ', pat.last) AS patient_name,
-          pat.id_nr AS patient_id_nr,
-          pat.dependent_nr AS patient_dependent_nr,
-          -- Member Details (Main Member)
-          CONCAT(mem.title, ' ', mem.first, ' ', mem.last) AS member_name,
-          mem.id_nr AS member_id_nr,
-          -- Invoice Details
-          COUNT(DISTINCT i.invoice_id) AS total_invoices -- Total invoices for this account
+        a.account_id,
+        CONCAT('Dr. ', LEFT(d.first, 1), '. ', d.last) AS doctor_name,
+        d.practice_nr,
+        CONCAT(pr_dep.title, ' ', pr_dep.first, ' ', pr_dep.last) AS patient_name,
+        ppm.dependent_nr AS patient_dependent_number, -- Add dependent number
+        CONCAT(pr_main.title, ' ', pr_main.first, ' ', pr_main.last) AS member_name,
+        pr_main.id_nr AS main_member_id,
+        COUNT(i.invoice_id) AS total_invoices,
+        CONCAT('R ', FORMAT(SUM(i.balance), 2)) AS total_invoice_balance
       FROM accounts a
-      -- Join with doctor table for doctor details
-      LEFT JOIN doctors d ON d.doctor_id = a.doctor_id
-      -- Join with person_records table for patient details (linked via dependent_id)
-      LEFT JOIN person_records pat ON pat.person_id = a.dependent_id
-      -- Join with person_records table for member details (linked via main_member_id)
-      LEFT JOIN person_records mem ON mem.person_id = a.main_member_id
-      -- Join with invoices table to calculate total invoices
-      LEFT JOIN invoices i ON i.account_id = a.account_id
+      LEFT JOIN profiles p ON a.profile_id = p.profile_id
+      LEFT JOIN doctors d ON a.doctor_id = d.doctor_id
+      LEFT JOIN person_records pr_main ON a.main_member_id = pr_main.person_id
+      LEFT JOIN person_records pr_dep ON a.dependent_id = pr_dep.person_id
+      LEFT JOIN profile_person_map ppm 
+        ON ppm.profile_id = p.profile_id AND ppm.person_id = a.dependent_id
+      LEFT JOIN invoices i ON a.account_id = i.account_id
       GROUP BY 
-          a.account_id, 
-          a.balance,
-          d.first, d.last, d.practice_nr,
-          pat.title, pat.first, pat.last, pat.id_nr, pat.dependent_nr,
-          mem.title, mem.first, mem.last, mem.id_nr;
+        a.account_id, 
+        a.balance, 
+        d.doctor_id, 
+        d.practice_nr, 
+        pr_main.person_id, 
+        pr_dep.person_id,
+        ppm.dependent_nr;
     `;
+  
     db.query(query, (err, results) => {
       if (err) {
         return callback(err, null);
@@ -42,6 +38,8 @@ const Account = {
       callback(null, results);
     });
   },
+  
+  
 
   // Get one account with all details
   oneAccount: (accountId, callback) => {

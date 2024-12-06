@@ -23,7 +23,7 @@ export default function Invoices() {
     fetchInvoices();
   }, []);
 
-  const columns = ['Invoice ID', 'Account ID', 'Member ID', 'Patient ID', 'Balance', 'Date Created', 'Date Updated', 'Doctor', 'Pratice Nr', 'Patient', 'Member'];
+  const columns = ['Invoice ID', 'Account ID','Date of Service' , 'Balance', 'Date Created', 'Date Updated', 'Doctor', 'Pratice Nr', 'Patient', 'ID', 'Member', 'ID'];
   const filteredInvoices = invoices.filter((invoice) =>
     Object.values(invoice).join(' ').toLowerCase().includes(searchTerm.toLowerCase())
   );
