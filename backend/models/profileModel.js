@@ -42,10 +42,13 @@ GROUP BY
 
     const queryGroupIncrease = "SET SESSION group_concat_max_len = 1000000;";
     db.query(queryGroupIncrease, (err, results) => {
-        if (err) {
-            console.log('Error setting session variable:', err);
-        }
-    });
+      if (err) {
+          console.log('Error setting session variable:', err);
+      } else {
+          console.log('group_concat_max_len set successfully');
+      }
+  });
+  
     const query = `
       WITH dependents AS (
           SELECT 
