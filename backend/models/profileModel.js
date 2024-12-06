@@ -55,7 +55,7 @@ GROUP BY
           JOIN person_records pr ON pr.person_id = ppm.person_id
           LEFT JOIN accounts a ON a.profile_id = ppm.profile_id AND a.dependent_id = pr.person_id
           WHERE ppm.profile_id = ?
-          GROUP BY ppm.map_id
+          GROUP BY ppm.map_id, pr.title, pr.first, pr.last, pr.date_of_birth, pr.id_nr, ppm.dependent_nr
       ),
       accounts AS (
           SELECT 
