@@ -75,7 +75,7 @@ GROUP BY
           LEFT JOIN person_records pr ON pr.person_id = COALESCE(a.dependent_id, a.main_member_id)
           LEFT JOIN invoices i ON i.account_id = a.account_id
           WHERE a.profile_id = ?
-          GROUP BY a.account_id, a.doctor_id, a.profile_id, d.first, d.last, pr.title, pr.first, pr.last, pr.id_nr, a.balance
+          GROUP BY a.account_id, a.doctor_id, a.profile_id, d.first, d.last, pr.title, pr.first, pr.last
       ),
       invoices AS (
           SELECT 
