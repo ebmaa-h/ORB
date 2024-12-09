@@ -34,7 +34,7 @@ app.use((req, res, next) => {
 
 // Routes
 app.use('/', authRoutes);   // Authentication routes
-app.use('/user', userRoutes); // User-related routes
+app.use('/users', userRoutes); // User-related routes
 app.use('/accounts', accRoutes); // Account-related routes
 app.use('/profiles', profRoutes); // Profiles-related routes
 app.use('/invoices', invRoutes); // Invoices-related routes
