@@ -1,5 +1,6 @@
 import { createContext, useState, useEffect } from 'react';
 import axios from 'axios';
+import ENDPOINTS from '../config/apiEndpoints';
 
 export const UserContext = createContext();
 
@@ -10,15 +11,15 @@ export const UserProvider = ({ children }) => {
 
   useEffect(() => {
     const fetchUser = async () => {
+
       if (user !== null) {
-        // If user is already set, no need to make another request
         console.log("User already loaded");
         return;
       }
 
       try {
         // Fetch user data
-        const response = await axios.get('http://167.99.196.172/user/getUserData', {
+        const response = await axios.get(ENDPOINTS.userData, {
           withCredentials: true, // Send cookies with the request
         });
 
@@ -38,7 +39,7 @@ export const UserProvider = ({ children }) => {
     };
 
     fetchUser();
-  }, [user]); // Run the effect whenever the user state changes
+  }, [user]); // Run the effect whenever the user state changes -> still deciding whether to remove this or not, as it might lead to unncessary re-renders. If removed, will only run on mount
 
   return (
     <UserContext.Provider value={{ user, setUser, loading }}>

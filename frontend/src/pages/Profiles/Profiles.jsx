@@ -1,11 +1,9 @@
-import { useContext, useEffect, useState } from 'react';
-import { UserContext } from '../../context/UserContext'; 
+import { useEffect, useState } from 'react';
 import axios from 'axios';
 import { Nav, SearchBar, Table } from '../../components';
-import { Link } from "react-router-dom";
+import ENDPOINTS from '../../config/apiEndpoints';
 
 export default function Profiles() {
-  const { user } = useContext(UserContext);
   const [profiles, setProfiles] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
 
@@ -13,7 +11,7 @@ export default function Profiles() {
   useEffect(() => {
     const fetchProfiles = async () => {
       try {
-        const response = await axios.get('http://167.99.196.172/profiles');
+        const response = await axios.get(ENDPOINTS.profiles);
         setProfiles(response.data.profiles);
       } catch (error) {
         console.error('Error fetching profiles:', error);

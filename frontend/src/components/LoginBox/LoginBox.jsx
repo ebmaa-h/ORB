@@ -3,8 +3,9 @@ import { useState, useContext } from 'react';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 import { UserContext } from '../../context/UserContext';
+import ENDPOINTS from '../../config/apiEndpoints';
 import { Button } from '../common/index'
-
+ 
 // Set Axios to include cookies by default
 axios.defaults.withCredentials = true;
 
@@ -19,7 +20,7 @@ export default function LoginBox() {
     const password = event.target.password.value;
 
     try {
-      const response = await axios.post('http://167.99.196.172/login', {
+      const response = await axios.post(ENDPOINTS.login, {
         email: email,
         password: password,
       }, {

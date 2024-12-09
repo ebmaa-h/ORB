@@ -1,12 +1,10 @@
-import { useContext, useEffect, useState } from 'react';
-import { UserContext } from '../../context/UserContext'; 
+import { useEffect, useState } from 'react';
 import axios from 'axios';
 import { SearchBar, Table } from '../../components';
-import { Link } from "react-router-dom";
+import ENDPOINTS from '../../config/apiEndpoints';
 import { Nav } from '../../components/index'
 
 export default function Accounts() {
-  const { user } = useContext(UserContext);
   const [accounts, setAccounts] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
 
@@ -14,7 +12,8 @@ export default function Accounts() {
   useEffect(() => {
     const fetchAccounts = async () => {
       try {
-        const response = await axios.get('http://167.99.196.172/accounts');
+        const response = await axios.get(ENDPOINTS.accounts);
+        
         setAccounts(response.data.accounts);
       } catch (error) {
         console.error('Error fetching accounts:', error);

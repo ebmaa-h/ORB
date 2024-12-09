@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react';
-import { useParams, Link } from 'react-router-dom'; // For accessing profile_id from the URL
+import { useParams } from 'react-router-dom'; // For accessing profile_id from the URL
 import axios from 'axios';
 import { Nav, SearchBar, Table } from '../../components';
+import ENDPOINTS from '../../config/apiEndpoints';
 
 export default function ProfileDetails() {
   const { profileId } = useParams(); 
@@ -20,7 +21,7 @@ export default function ProfileDetails() {
     const fetchProfile = async () => {
       try {
         console.log('Fetching profile data for ID:', profileId); // Log the profile ID being fetched
-        const response = await axios.get(`http://167.99.196.172/profiles/${profileId}`, {
+        const response = await axios.get(`${ENDPOINTS.profiles}/${profileId}`, {
           withCredentials: true,
         });
         

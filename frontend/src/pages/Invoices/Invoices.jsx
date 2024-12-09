@@ -1,11 +1,9 @@
-import { useContext, useEffect, useState } from 'react';
-import { UserContext } from '../../context/UserContext'; 
+import { useEffect, useState } from 'react';
 import axios from 'axios';
+import ENDPOINTS from '../../config/apiEndpoints';
 import { Nav, SearchBar, Table } from '../../components';
-// import { Link } from "react-router-dom";
 
 export default function Invoices() {
-  const { user } = useContext(UserContext);
   const [invoices, setInvoices] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
 
@@ -13,7 +11,7 @@ export default function Invoices() {
   useEffect(() => {
     const fetchInvoices = async () => {
       try {
-        const response = await axios.get('http://167.99.196.172/invoices');
+        const response = await axios.get(ENDPOINTS.invoices);
         console.log(response)
         setInvoices(response.data.invoices);
       } catch (error) {
