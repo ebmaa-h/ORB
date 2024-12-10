@@ -22,6 +22,13 @@ export default function Nav() {
         >
           Invoices
         </Link>
+
+        <Link
+          to={`/persons`}
+          className="text-blue-500 underline hover:text-blue-700"
+        >
+          Person Records
+        </Link>
       </div>
     </>
   )

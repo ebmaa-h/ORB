@@ -11,6 +11,7 @@ const ENDPOINTS = {
   profiles : `${API_URL}/profiles`,
   userData : `${API_URL}/users/data`,
   logout : `${API_URL}/logout`,
+  persons : `${API_URL}/persons`,
 };
 
 export default ENDPOINTS;

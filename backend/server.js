@@ -8,6 +8,7 @@ const userRoutes = require('./routes/user');
 const accRoutes = require('./routes/accounts');
 const profRoutes = require('./routes/profiles');
 const invRoutes = require('./routes/invoices.js');
+const personRoutes = require('./routes/persons.js');
 
 // Express app
 const app = express();
@@ -38,6 +39,7 @@ app.use('/users', userRoutes); // User-related routes
 app.use('/accounts', accRoutes); // Account-related routes
 app.use('/profiles', profRoutes); // Profiles-related routes
 app.use('/invoices', invRoutes); // Invoices-related routes
+app.use('/persons', personRoutes); // Persons-related routes
 
 // Error Handling Middleware
 app.use((err, req, res, next) => {
