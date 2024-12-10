@@ -12,7 +12,7 @@ export default function Logout() {
   const handleLogout = async () => {
     try {
       // Make a request to the backend to clear the JWT cookie
-      await axios.post(`${ENDPOINTS.logout}`, {}, { withCredentials: true });
+      await axios.post(`${ENDPOINTS.logout}`, { withCredentials: true });
       
       // Clear the user context
       setUser(null);
