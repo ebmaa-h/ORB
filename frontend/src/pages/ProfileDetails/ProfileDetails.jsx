@@ -36,7 +36,7 @@ export default function ProfileDetails() {
         // console.log('Profile Data:', profileData);
 
         setProfile(profileData);
-        // setDependents(dependents || []);
+        setDependents(dependents || []);
         setAccounts(accounts || []);
         // setInvoices(invoices || []);
       } catch (error) {
@@ -79,12 +79,12 @@ export default function ProfileDetails() {
             {/* Dependents Table */}
             <div className='w-[50%]'>
               <h3 className="text-sm uppercase font-bold pb-3">Dependents</h3>
-              {/* <Table
+              <Table
                 data={dependents}
                 columns={['Dependent Nr','Dependent', 'Date of Birth', 'ID' , 'Accounts']}
                 linkPrefix="dependents"
                 idField="person_id"
-              /> */}
+              />
             </div>
           </div>
 
