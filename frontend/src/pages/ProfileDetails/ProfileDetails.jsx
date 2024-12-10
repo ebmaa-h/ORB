@@ -81,7 +81,7 @@ export default function ProfileDetails() {
               <h3 className="text-sm uppercase font-bold pb-3">Dependents</h3>
               <Table
                 data={dependents}
-                columns={['Dependent ID', 'Dependent', 'Date of Birth', 'ID' ,'Dependent Nr', 'Accounts']}
+                columns={['Dependent Nr','Dependent', 'Date of Birth', 'ID' , 'Accounts']}
                 linkPrefix="dependents"
                 idField="person_id"
               />
