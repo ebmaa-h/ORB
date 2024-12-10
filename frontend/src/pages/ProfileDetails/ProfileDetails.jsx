@@ -27,7 +27,7 @@ export default function ProfileDetails() {
         
         // console.log('Profile data response:', response.data.profile); // Log the response data
         
-        const { dependents, accounts, invoices, ...profileData } = response.data.profile;
+        const { dependents, accounts, invoices, profileData } = response.data.profile;
         
         // Logging each extracted part
         // console.log('Dependents:', dependents);
@@ -35,7 +35,7 @@ export default function ProfileDetails() {
         console.log('Invoices:', invoices);
         // console.log('Profile Data:', profileData);
 
-        setProfile(profileData);
+        setProfile(profileData || []);
         setDependents(dependents || []);
         setAccounts(accounts || []);
         setInvoices(invoices || []);
@@ -56,13 +56,13 @@ export default function ProfileDetails() {
       {profile ? (
         <>
           <div className="bg-white rounded m-4 p-4 flex flex-row justify-between items-center text-center text-sm text-gray-dark">
-            {/* <p><strong>Profile ID:</strong> {profile.profile_id}</p>
+            <p><strong>Profile ID:</strong> {profile.profile_id}</p>
             <p><strong>Medical Aid Nr:</strong> {profile.medical_aid_nr}</p>
-            <p><strong>Authorization Nr:</strong> {profile.authorization_nr}</p>
             <p><strong>Medical Aid:</strong> {profile.medical_aid_name} - {profile.plan_name}</p>
-            <p><strong>Dependent Nr:</strong> {profile.main_member_dependent_nr}</p>
+            <p><strong>Auth:</strong> {profile.authorization_nr}</p>
             <p><strong>Main Member:</strong> {profile.main_member_name}</p>
-            <p><strong>ID:</strong> {profile.main_member_id_nr}</p> */}
+            <p><strong>Dependent Nr:</strong> {profile.main_member_dependent_nr}</p>
+            <p><strong>Balance:</strong> {profile.profile_balance}</p>
           </div>
 
           <div className="bg-white rounded m-4 p-4 gap-4 flex">
