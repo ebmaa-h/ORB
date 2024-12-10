@@ -70,8 +70,27 @@ const Profile = {
     WHERE a.profile_id = ?
     GROUP BY a.account_id, a.doctor_id, a.profile_id, d.first, d.last, pr.title, pr.first, pr.last, pr.id_nr;
   `;
-  
-    const invQuery = 'SELECT * FROM invoices WHERE profile_id = ?';
+
+
+  const invQuery = `SELECT
+  i.invoice_id AS 'Invoice ID',  -- Specify table alias for invoice_id
+  a.account_id AS 'Account ID',  -- Specify table alias for account_id
+  i.profile_id AS 'Profile ID',  -- Specify table alias for profile_id
+  CONCAT(JSON_UNQUOTE(JSON_EXTRACT(i.member_snapshot, '$.member.first')), ' ', JSON_UNQUOTE(JSON_EXTRACT(i.member_snapshot, '$.member.last'))) AS 'Member Name',
+  JSON_UNQUOTE(JSON_EXTRACT(i.member_snapshot, '$.member.id_nr')) AS 'Member ID',
+  CONCAT(JSON_UNQUOTE(JSON_EXTRACT(i.patient_snapshot, '$.patient.first')), ' ', JSON_UNQUOTE(JSON_EXTRACT(i.patient_snapshot, '$.patient.last'))) AS 'Patient Name',
+  JSON_UNQUOTE(JSON_EXTRACT(i.patient_snapshot, '$.patient.id_nr')) AS 'Patient ID',
+  i.balance AS 'Balance',
+  i.date_of_service AS 'Date of Service',
+  i.status AS 'Status',
+  CONCAT(d.first, ' ', d.last) AS 'Doctor Name',
+  d.practice_nr AS 'Doctor Practice Number'
+FROM invoices i
+JOIN accounts a ON i.account_id = a.account_id
+JOIN doctors d ON a.doctor_id = d.doctor_id
+WHERE i.profile_id = ?`;
+
+
 
     // Query for dependents
     db.query(dependentsQuery, [profileId], (err, dependentsResults) => {

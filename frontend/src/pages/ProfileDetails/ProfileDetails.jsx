@@ -32,13 +32,13 @@ export default function ProfileDetails() {
         // Logging each extracted part
         // console.log('Dependents:', dependents);
         // console.log('Accounts:', accounts);
-        // console.log('Invoices:', invoices);
+        console.log('Invoices:', invoices);
         // console.log('Profile Data:', profileData);
 
         setProfile(profileData);
         setDependents(dependents || []);
         setAccounts(accounts || []);
-        // setInvoices(invoices || []);
+        setInvoices(invoices || []);
       } catch (error) {
         console.error('Error fetching profile details:', error);
       }
@@ -96,12 +96,12 @@ export default function ProfileDetails() {
               setSearchTerm={setInvoiceSearchTerm}
             />
             {/* {console.log("DATA FOR TABLE ", filteredInvoices)} */}
-            {/* <Table
+            <Table
               data={filteredInvoices}
               columns={['Invoice ID', 'Account ID', 'Profile ID', 'Patient', 'ID', 'Main Member', 'ID', 'Balance', 'Date of Service', 'Status', 'Doctor', 'Practice Nr']}
               linkPrefix="invoices"
               idField="invoice_id"
-            /> */}
+            />
           </div>
         </>
       ) : (
