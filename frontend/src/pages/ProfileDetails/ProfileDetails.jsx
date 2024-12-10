@@ -56,13 +56,13 @@ export default function ProfileDetails() {
       {profile ? (
         <>
           <div className="bg-white rounded m-4 p-4 flex flex-row justify-between items-center text-center text-sm text-gray-dark">
-            <p><strong>Profile ID:</strong> {profile.profile_id}</p>
+            {/* <p><strong>Profile ID:</strong> {profile.profile_id}</p>
             <p><strong>Medical Aid Nr:</strong> {profile.medical_aid_nr}</p>
             <p><strong>Authorization Nr:</strong> {profile.authorization_nr}</p>
             <p><strong>Medical Aid:</strong> {profile.medical_aid_name} - {profile.plan_name}</p>
             <p><strong>Dependent Nr:</strong> {profile.main_member_dependent_nr}</p>
             <p><strong>Main Member:</strong> {profile.main_member_name}</p>
-            <p><strong>ID:</strong> {profile.main_member_id_nr}</p>
+            <p><strong>ID:</strong> {profile.main_member_id_nr}</p> */}
           </div>
 
           <div className="bg-white rounded m-4 p-4 gap-4 flex">
