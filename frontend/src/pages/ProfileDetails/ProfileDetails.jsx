@@ -30,15 +30,15 @@ export default function ProfileDetails() {
         const { dependents, accounts, invoices, ...profileData } = response.data.profile;
         
         // Logging each extracted part
-        console.log('Dependents:', dependents);
-        console.log('Accounts:', accounts);
-        console.log('Invoices:', invoices);
-        console.log('Profile Data:', profileData);
+        // console.log('Dependents:', dependents);
+        // console.log('Accounts:', accounts);
+        // console.log('Invoices:', invoices);
+        // console.log('Profile Data:', profileData);
 
         setProfile(profileData);
-        setDependents(dependents || []);
+        // setDependents(dependents || []);
         setAccounts(accounts || []);
-        setInvoices(invoices || []);
+        // setInvoices(invoices || []);
       } catch (error) {
         console.error('Error fetching profile details:', error);
       }
@@ -79,12 +79,12 @@ export default function ProfileDetails() {
             {/* Dependents Table */}
             <div className='w-[50%]'>
               <h3 className="text-sm uppercase font-bold pb-3">Dependents</h3>
-              <Table
+              {/* <Table
                 data={dependents}
                 columns={['Dependent Nr','Dependent', 'Date of Birth', 'ID' , 'Accounts']}
                 linkPrefix="dependents"
                 idField="person_id"
-              />
+              /> */}
             </div>
           </div>
 
@@ -96,12 +96,12 @@ export default function ProfileDetails() {
               setSearchTerm={setInvoiceSearchTerm}
             />
             {/* {console.log("DATA FOR TABLE ", filteredInvoices)} */}
-            <Table
+            {/* <Table
               data={filteredInvoices}
               columns={['Invoice ID', 'Account ID', 'Profile ID', 'Patient', 'ID', 'Main Member', 'ID', 'Balance', 'Date of Service', 'Status', 'Doctor', 'Practice Nr']}
               linkPrefix="invoices"
               idField="invoice_id"
-            />
+            /> */}
           </div>
         </>
       ) : (
