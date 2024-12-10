@@ -3,6 +3,7 @@ import { UserContext } from '../../context/UserContext';
 import { Button } from '../common/index';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
+import ENDPOINTS from '../../config/apiEndpoints';
 
 export default function Logout() {
   const { setUser } = useContext(UserContext);
@@ -11,7 +12,7 @@ export default function Logout() {
   const handleLogout = async () => {
     try {
       // Make a request to the backend to clear the JWT cookie
-      await axios.post('http://167.99.196.172/logout', {}, { withCredentials: true });
+      await axios.post(`${ENDPOINTS.logout}`, {}, { withCredentials: true });
       
       // Clear the user context
       setUser(null);

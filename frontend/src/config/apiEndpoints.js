@@ -10,6 +10,7 @@ const ENDPOINTS = {
   accounts : `${API_URL}/accounts`,
   profiles : `${API_URL}/profiles`,
   userData : `${API_URL}/users/data`,
+  logout : `${API_URL}/logout`,
 };
 
 export default ENDPOINTS;

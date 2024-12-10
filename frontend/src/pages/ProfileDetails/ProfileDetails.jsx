@@ -20,20 +20,20 @@ export default function ProfileDetails() {
   useEffect(() => {
     const fetchProfile = async () => {
       try {
-        console.log('Fetching profile data for ID:', profileId); // Log the profile ID being fetched
+        // console.log('Fetching profile data for ID:', profileId); // Log the profile ID being fetched
         const response = await axios.get(`${ENDPOINTS.profiles}/${profileId}`, {
           withCredentials: true,
         });
         
-        console.log('Profile data response:', response.data.profile); // Log the response data
+        // console.log('Profile data response:', response.data.profile); // Log the response data
         
         const { dependents, accounts, invoices, ...profileData } = response.data.profile;
         
         // Logging each extracted part
-        // console.log('Dependents:', dependents);
-        // console.log('Accounts:', accounts);
-        // console.log('Invoices:', invoices);
-        // console.log('Profile Data:', profileData);
+        console.log('Dependents:', dependents);
+        console.log('Accounts:', accounts);
+        console.log('Invoices:', invoices);
+        console.log('Profile Data:', profileData);
 
         setProfile(profileData);
         setDependents(dependents || []);
@@ -60,16 +60,13 @@ export default function ProfileDetails() {
             <p><strong>Medical Aid Nr:</strong> {profile.medical_aid_nr}</p>
             <p><strong>Authorization Nr:</strong> {profile.authorization_nr}</p>
             <p><strong>Medical Aid:</strong> {profile.medical_aid_name} - {profile.plan_name}</p>
-            <p><strong>Dependent Nr:</strong> {profile.main_member_dependent_nr
-            }</p>
-            <p><strong>Main Member:</strong> {profile.main_member_name
-            }</p>
-            <p><strong>ID:</strong> {profile.main_member_id_nr
-            }</p>
+            <p><strong>Dependent Nr:</strong> {profile.main_member_dependent_nr}</p>
+            <p><strong>Main Member:</strong> {profile.main_member_name}</p>
+            <p><strong>ID:</strong> {profile.main_member_id_nr}</p>
           </div>
 
           <div className="bg-white rounded m-4 p-4 gap-4 flex">
-            {/* Dependents Table */}
+            {/* Accounts Table */}
             <div className='w-[50%]'>
               <h3 className="text-sm uppercase font-bold pb-3">Accounts</h3>
               <Table
@@ -79,13 +76,14 @@ export default function ProfileDetails() {
                 idField="account_id"
               />
             </div>
-            {/* Accounts Table */}
+            {/* Dependents Table */}
             <div className='w-[50%]'>
               <h3 className="text-sm uppercase font-bold pb-3">Dependents</h3>
               <Table
                 data={dependents}
                 columns={['Dependent ID', 'Dependent', 'Date of Birth', 'ID' ,'Dependent Nr', 'Accounts']}
                 linkPrefix="dependents"
+                idField="person_id"
               />
             </div>
           </div>
@@ -97,11 +95,12 @@ export default function ProfileDetails() {
               searchTerm={invoiceSearchTerm}
               setSearchTerm={setInvoiceSearchTerm}
             />
-            {console.log("DATA FOR TABLE ", filteredInvoices)}
+            {/* {console.log("DATA FOR TABLE ", filteredInvoices)} */}
             <Table
               data={filteredInvoices}
               columns={['Invoice ID', 'Account ID', 'Profile ID', 'Patient', 'ID', 'Main Member', 'ID', 'Balance', 'Date of Service', 'Status', 'Doctor', 'Practice Nr']}
               linkPrefix="invoices"
+              idField="invoice_id"
             />
           </div>
         </>

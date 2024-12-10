@@ -1,3 +1,4 @@
+/* eslint-disable react/prop-types */
 import { useNavigate } from 'react-router-dom';
 
 export default function Table({ data, columns, linkPrefix, idField }) {
@@ -21,17 +22,17 @@ export default function Table({ data, columns, linkPrefix, idField }) {
           {data.length > 0 ? (
             data.map((item) => (
               <tr
-                key={item[idField]}
-                className="cursor-pointer hover:bg-gray-light"
-                onClick={() => handleRowClick(item[idField])} // Handle row click
+              key={item[idField]}
+              className="cursor-pointer hover:bg-gray-light"
+              onClick={() => handleRowClick(item[idField])} // Handle row click
               >
-                {Object.values(item).map((value, i) => (
-                  <td key={i} className="border border-gray-light p-2 text-center">
-                    {i === 0 ? (
-                      <span>{value}</span>
-                    ) : (
-                      value
-                    )}
+                {Object.values(item).map((value, key) => (
+                  <td 
+                    key={key} 
+                    className="border border-gray-light p-2 text-center"
+                    >
+
+                    {value}
                   </td>
                 ))}
               </tr>

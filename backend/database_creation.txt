@@ -1,4 +1,12 @@
--- Drop all tables if they exist (use this carefully in development environments)
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+NOTE:
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+WHEN ADDING NEW DATABASE:
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+dependent_id in account changed to patient_id for clarification -> CHANGES STILL NEEDS TO BE DONE ON THE BACKEND/FRONTEND. Only DB changed.
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+- Drop all tables if they exist (use this carefully in development environments)
 DROP TABLE IF EXISTS profile_person_map, invoices, accounts, person_records, profiles, medical_aid_plans, medical_aids, employers, service_centers, service_centers_list, ref_doctors, ref_doctors_list, doctors_logs, logs, user_features, features, doctors, users;
 
 -- Create users table
@@ -184,12 +192,12 @@ CREATE TABLE accounts (
     profile_id INT,
     doctor_id INT,
     main_member_id INT NULL,
-    dependent_id INT NULL,
+    patient_id INT NULL,
     balance DECIMAL(10, 2) DEFAULT 0.00,
     FOREIGN KEY (doctor_id) REFERENCES doctors(doctor_id) ON DELETE SET NULL,
     FOREIGN KEY (profile_id) REFERENCES profiles(profile_id) ON DELETE SET NULL,
     FOREIGN KEY (main_member_id) REFERENCES person_records(person_id) ON DELETE SET NULL,
-    FOREIGN KEY (dependent_id) REFERENCES person_records(person_id) ON DELETE SET NULL
+    FOREIGN KEY (patient_id) REFERENCES person_records(person_id) ON DELETE SET NULL
 );
 
 -- Create invoices table
@@ -256,10 +264,10 @@ VALUES
 ('Naledi', 'Mokoena', 'Mrs', '1992-04-12', 'F', '9204120000000', '082-111-2223', '011-333-4445', 'naledi@mokoena.co.za'),
 ('Lerato', 'Mokoena', 'Miss', '2010-02-01', 'F', '1002010000000', '082-111-2224', '011-333-4446', 'lerato@mokoena.co.za'),
 
-('Pieter', 'Van Der Merwe', 'Mr', '1990-08-05', 'M', '9008050000000', '082-111-2225', '011-333-4447', 'olivia@vdmerwe.co.za'),
-('Annelize', 'Van Der Merwe', 'Mrs', '1980-11-22', 'F', '8011220000000', '082-111-2226', '011-333-4448', 'annelize@vdmerwe.co.za'),
-('Jaco', 'Van Der Merwe', 'Mr', '2017-03-30', 'M', '1703300000000', '082-111-2227', '011-333-4449', 'jaco@vdmerwe.co.za'),
-('Saki', 'Van Der Merwe', 'Mr', '2011-06-10', 'M', '1106100000000', '082-111-2227', '011-333-4449', 'saki@vdmerwe.co.za'),
+('Pieter', 'van der Merwe', 'Mr', '1990-08-05', 'M', '9008050000000', '082-111-2225', '011-333-4447', 'olivia@vdmerwe.co.za'),
+('Annelize', 'van der Merwe', 'Mrs', '1980-11-22', 'F', '8011220000000', '082-111-2226', '011-333-4448', 'annelize@vdmerwe.co.za'),
+('Jaco', 'van der Merwe', 'Mr', '2017-03-30', 'M', '1703300000000', '082-111-2227', '011-333-4449', 'jaco@vdmerwe.co.za'),
+('Saki', 'van der Merwe', 'Mr', '2011-06-10', 'M', '1106100000000', '082-111-2227', '011-333-4449', 'saki@vdmerwe.co.za'),
 
 ('Jo-Anne', 'Smith', 'Mrs', '1972-07-20', 'F', '7207200000000', '082-222-3333', '011-444-5555', 'joanne@smith.co.za'),
 ('John', 'Smith', 'Mr', '1973-04-14', 'M', '7304140000000', '082-222-3334', '011-444-5556', 'john@smith.co.za'),
@@ -296,7 +304,7 @@ VALUES
 
 
 -- Inserting data into accounts
-INSERT INTO accounts (profile_id, doctor_id, main_member_id, dependent_id)
+INSERT INTO accounts (profile_id, doctor_id, main_member_id, patient_id)
 VALUES
 -- Profile 1: Thabo (main member), Naledi, and Lerato (Total: 1200.00)
 (1, 1, 1, 1), -- Thabo's account
@@ -347,20 +355,20 @@ VALUES
 
 -- Profile 2: Pieter, Annelize, Jaco, Saki
 (5, 2, '2024-12-01', 'Processing',
- '{"member": {"first": "Pieter", "last": "Van Der Merwe", "title": "Mr", "dob": "1990-08-05", "id_nr": "9008050044000"}}',
- '{"patient": {"first": "Pieter", "last": "Van Der Merwe", "title": "Mr", "dob": "1990-08-05", "id_nr": "9008050330000"}}'),
+ '{"member": {"first": "Pieter", "last": "van der Merwe", "title": "Mr", "dob": "1990-08-05", "id_nr": "9008050044000"}}',
+ '{"patient": {"first": "Pieter", "last": "van der Merwe", "title": "Mr", "dob": "1990-08-05", "id_nr": "9008050330000"}}'),
 
 (6, 2, '2024-12-02', 'Processing',
- '{"member": {"first": "Pieter", "last": "Van Der Merwe", "title": "Mr", "dob": "1990-08-05", "id_nr": "9008050022000"}}',
- '{"patient": {"first": "Annelize", "last": "Van Der Merwe", "title": "Mrs", "dob": "1980-11-22", "id_nr": "8011220011000"}}'),
+ '{"member": {"first": "Pieter", "last": "van der Merwe", "title": "Mr", "dob": "1990-08-05", "id_nr": "9008050022000"}}',
+ '{"patient": {"first": "Annelize", "last": "van der Merwe", "title": "Mrs", "dob": "1980-11-22", "id_nr": "8011220011000"}}'),
 
 (7, 2, '2024-12-03', 'Processing',
- '{"member": {"first": "Pieter", "last": "Van Der Merwe", "title": "Mr", "dob": "1990-08-05", "id_nr": "9008059000000"}}',
- '{"patient": {"first": "Jaco", "last": "Van Der Merwe", "title": "Mr", "dob": "2017-03-30", "id_nr": "1703380000000"}}'),
+ '{"member": {"first": "Pieter", "last": "van der Merwe", "title": "Mr", "dob": "1990-08-05", "id_nr": "9008059000000"}}',
+ '{"patient": {"first": "Jaco", "last": "van der Merwe", "title": "Mr", "dob": "2017-03-30", "id_nr": "1703380000000"}}'),
 
 (8, 2, '2024-12-04', 'Processing',
- '{"member": {"first": "Pieter", "last": "Van Der Merwe", "title": "Mr", "dob": "1990-08-05", "id_nr": "9008050700000"}}',
- '{"patient": {"first": "Saki", "last": "Van Der Merwe", "title": "Mr", "dob": "2011-06-10", "id_nr": "1106160000000"}}'),
+ '{"member": {"first": "Pieter", "last": "van der Merwe", "title": "Mr", "dob": "1990-08-05", "id_nr": "9008050700000"}}',
+ '{"patient": {"first": "Saki", "last": "van der Merwe", "title": "Mr", "dob": "2011-06-10", "id_nr": "1106160000000"}}'),
 
 -- Profile 3: Jo-Anne, John, Emily
 (9, 3, '2024-12-01', 'Processing',
