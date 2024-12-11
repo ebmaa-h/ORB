@@ -35,10 +35,10 @@ export default function ProfileDetails() {
         console.log('Invoices:', invoices);
         // console.log('Profile Data:', profileData);
 
-        setProfile(profileData || []);
-        setDependents(dependents || []);
-        setAccounts(accounts || []);
-        setInvoices(invoices || []);
+        setProfile(profileData || {});
+        setDependents(dependents || {});
+        setAccounts(accounts || {});
+        setInvoices(invoices || {});
       } catch (error) {
         console.error('Error fetching profile details:', error);
       }
