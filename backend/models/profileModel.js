@@ -41,6 +41,7 @@ const Profile = {
 
     const dependentsQuery = `
         SELECT 
+            ppm.person_id AS person_id,
             ppm.dependent_nr AS dependent_nr,
             CONCAT(pr.title, ' ', pr.first, ' ', pr.last) AS name,
             pr.date_of_birth AS date_of_birth,

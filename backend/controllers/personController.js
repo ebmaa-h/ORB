@@ -23,7 +23,28 @@ const personController = {
   },
 
   getPerson: (req, res) => {
-  // 
+    const recordId = req.params.id;
+
+    if (!recordId) {
+      return res.status(400).json({ message: 'Record ID is required' });
+    }
+
+    Person.onePerson(recordId, (err, record) => {
+      if (err) {
+        console.error('Error finding record:', err);
+        return res.status(500).json({ message: 'Internal server error', error: err });
+      }
+
+      if (!record) {
+        return res.status(404).json({ message: 'Record not found' });
+      }
+
+      console.log("Record Found: ", record);
+      return res.status(200).json({
+        message: 'Record retrieval successful',
+        record: record,
+      });
+    });
   },
 };
 

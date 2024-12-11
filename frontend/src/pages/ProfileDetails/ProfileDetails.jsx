@@ -81,9 +81,9 @@ export default function ProfileDetails() {
               <h3 className="text-sm uppercase font-bold pb-3">Dependents</h3>
               <Table
                 data={dependents}
-                columns={['Dependent Nr','Dependent', 'Date of Birth', 'ID' , 'Accounts']}
-                linkPrefix="records"
-                idField="record_id"
+                columns={['Record ID', 'Dependent Nr','Dependent', 'Date of Birth', 'ID' , 'Accounts']}
+                idField="person_id" 
+                linkPrefix="records" 
               />
             </div>
           </div>

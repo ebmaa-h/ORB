@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { useParams, Link } from 'react-router-dom'; // For accessing account_id from the URL
+import { useParams } from 'react-router-dom'; // For accessing account_id from the URL
 import axios from 'axios';
 import { Nav, SearchBar, Table } from '../../components';
 import ENDPOINTS from '../../config/apiEndpoints';
@@ -71,8 +71,8 @@ export default function AccountDetails() {
               <Table
                 data={Array.isArray(member) ? member : [member]} 
                 columns={['Record ID', 'Name', 'Cell', 'Email', 'Date of Birth', 'Gender']}
-                linkPrefix="records"
-                idField="record_id"
+                idField="person_id" 
+                linkPrefix="records" 
               />
             </div>
             {/* Patient Table */}
@@ -81,8 +81,8 @@ export default function AccountDetails() {
               <Table
                 data={Array.isArray(patient) ? patient : [patient]} 
                 columns={['Record ID', 'Name', 'Cell', 'Email', 'Date of Birth', 'Gender']}
-                linkPrefix="records"
-                idField="record_id"
+                idField="person_id" 
+                linkPrefix="records" 
               />
             </div>
           </div>

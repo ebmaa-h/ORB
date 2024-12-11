@@ -30,7 +30,7 @@ export default function Dashboard() {
         )}
         {/* Invoices Feature */}
         {findFeature("records") && (
-          <FeatureBlock feature="records" />
+          <FeatureBlock feature="Records" />
         )}
       </div>
     </>
