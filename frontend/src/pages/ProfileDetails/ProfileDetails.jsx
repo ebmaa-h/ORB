@@ -82,8 +82,8 @@ export default function ProfileDetails() {
               <Table
                 data={dependents}
                 columns={['Dependent Nr','Dependent', 'Date of Birth', 'ID' , 'Accounts']}
-                linkPrefix="dependents"
-                idField="person_id"
+                linkPrefix="records"
+                idField="record_id"
               />
             </div>
           </div>

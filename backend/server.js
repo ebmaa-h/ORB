@@ -39,7 +39,7 @@ app.use('/users', userRoutes); // User-related routes
 app.use('/accounts', accRoutes); // Account-related routes
 app.use('/profiles', profRoutes); // Profiles-related routes
 app.use('/invoices', invRoutes); // Invoices-related routes
-app.use('/persons', personRoutes); // Persons-related routes
+app.use('/records', personRoutes); // Persons-records-related routes
 
 // Error Handling Middleware
 app.use((err, req, res, next) => {

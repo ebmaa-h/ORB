@@ -19,7 +19,7 @@ const Invoice = {
         CONCAT('R ', FORMAT(i.balance, 2)) AS invoice_balance,
         DATE_FORMAT(i.created_at, '%Y-%m-%d') AS created_at,
         DATE_FORMAT(i.updated_at, '%Y-%m-%d') AS updated_date,
-        CONCAT('Dr. ', LEFT(d.first, 1), '. ', d.last) AS doctor_name,
+        CONCAT('Dr ', LEFT(d.first, 1), ' ', d.last) AS doctor_name,
         d.practice_nr AS doctor_practice_number
       FROM invoices i
       LEFT JOIN accounts a ON i.account_id = a.account_id

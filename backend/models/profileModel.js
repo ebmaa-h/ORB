@@ -56,7 +56,7 @@ const Profile = {
     const accQuery = `
         SELECT 
             a.account_id,
-            CONCAT('Dr. ', LEFT(d.first, 1), ' ', d.last) AS doctor_name,
+            CONCAT('Dr ', LEFT(d.first, 1), ' ', d.last) AS doctor_name,
             CONCAT(pr.title, ' ', pr.first, ' ', pr.last) AS patient_name,
             pr.id_nr AS id_nr,
             CONCAT('R ', FORMAT(SUM(i.balance), 2)) AS total_balance,

@@ -5,7 +5,7 @@ const Account = {
     const query = `
       SELECT 
         a.account_id,
-        CONCAT('Dr. ', LEFT(d.first, 1), '. ', d.last) AS doctor_name,
+        CONCAT('Dr ', LEFT(d.first, 1), ' ', d.last) AS doctor_name,
         d.practice_nr,
         CONCAT(pr_dep.title, ' ', pr_dep.first, ' ', pr_dep.last) AS patient_name,
         ppm.dependent_nr AS patient_dependent_number, -- Add dependent number

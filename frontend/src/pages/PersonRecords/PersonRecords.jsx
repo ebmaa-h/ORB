@@ -11,7 +11,7 @@ export default function PersonRecords() {
   useEffect(() => {
     const fetchPersons = async () => {
       try {
-        const response = await axios.get(ENDPOINTS.persons);
+        const response = await axios.get(ENDPOINTS.records);
         console.log(response)
         setPersons(response.data.persons);
       } catch (error) {
@@ -37,7 +37,7 @@ export default function PersonRecords() {
           }))}
           columns={columns} 
           idField="person_id" 
-          linkPrefix="persons" 
+          linkPrefix="records" 
         />
       </div>
     </>
