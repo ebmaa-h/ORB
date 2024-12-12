@@ -5,7 +5,7 @@ import { Login, Dashboard, ProtectedLayout, Tools, TimeSheet, Profiles, ProfileD
 import { UserContext } from './context/UserContext';
 
 function App() {
-  const { user } = useContext(UserContext); // Access user state from UserContext
+  const { user } = useContext(UserContext);
 
   return (
     <Router>

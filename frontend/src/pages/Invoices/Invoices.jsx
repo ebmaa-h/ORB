@@ -21,7 +21,8 @@ export default function Invoices() {
     fetchInvoices();
   }, []);
 
-  const columns = ['Invoice ID', 'Account ID','Date of Service' , 'Balance', 'Date Created', 'Date Updated', 'Doctor', 'Pratice Nr', 'Patient', 'ID', 'Member', 'ID'];
+  const columns = ['Invoice ID', 'Account ID', 'Patient', 'Patient ID', 'Guarantor', 'Guarantor ID', 'Balance', 'Date of Service', 'Status', 'Doctor', 'Practice Nr', 'Last Update'];
+
   const filteredInvoices = invoices.filter((invoice) =>
     Object.values(invoice).join(' ').toLowerCase().includes(searchTerm.toLowerCase())
   );

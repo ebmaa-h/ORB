@@ -8,10 +8,10 @@ const Person = {
         person_id,
         CONCAT(title,' ',first,' ',last) as name,
         gender,
-        date_of_birth,
+        DATE_FORMAT(date_of_birth, '%Y-%m-%d') AS date_of_birth,
         id_nr,
         email,
-        created_at
+        DATE_FORMAT(created_at, '%Y-%m-%d') AS created_at
       FROM person_records;
     `;
 
@@ -32,7 +32,7 @@ const Person = {
         last,
         title,
         gender,
-        date_of_birth,
+        DATE_FORMAT(date_of_birth, '%Y-%m-%d') AS date_of_birth,
         id_nr,
         email,
         cell_nr,
@@ -40,10 +40,14 @@ const Person = {
         work_nr,
         post_address,
         str_address,
-        created_at
+        DATE_FORMAT(created_at, '%Y-%m-%d') AS created_at
       FROM person_records
       WHERE person_id = ?;
     `;
+
+    // Get List of accounts
+
+    // Get profile related to
 
     db.query(query, [recordId], (err, result) => {
       if (err) return callback(err, null);

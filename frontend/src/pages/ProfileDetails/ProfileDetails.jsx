@@ -81,7 +81,7 @@ export default function ProfileDetails() {
               <h3 className="text-sm uppercase font-bold pb-3">Dependents</h3>
               <Table
                 data={dependents}
-                columns={['Record ID', 'Dependent Nr','Dependent', 'Date of Birth', 'ID' , 'Accounts']}
+                columns={['Record ID','Dependent', 'Date of Birth', 'ID' ,'Gender' , 'Dependent Nr']}
                 idField="person_id" 
                 linkPrefix="records" 
               />
@@ -98,7 +98,7 @@ export default function ProfileDetails() {
             {/* {console.log("DATA FOR TABLE ", filteredInvoices)} */}
             <Table
               data={filteredInvoices}
-              columns={['Invoice ID', 'Account ID', 'Profile ID', 'Patient', 'ID', 'Main Member', 'ID', 'Balance', 'Date of Service', 'Status', 'Doctor', 'Practice Nr']}
+              columns={['Invoice ID', 'Account ID', 'Patient', 'Patient ID', 'Guarantor', 'Guarantor ID', 'Balance', 'Date of Service', 'Status', 'Doctor', 'Practice Nr', 'Last Update']}
               linkPrefix="invoices"
               idField="invoice_id"
             />

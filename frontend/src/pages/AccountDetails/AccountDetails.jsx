@@ -1,16 +1,18 @@
 import { useEffect, useState } from 'react';
-import { useParams } from 'react-router-dom'; // For accessing account_id from the URL
+import { useParams } from 'react-router-dom';
 import axios from 'axios';
-import { Nav, SearchBar, Table } from '../../components';
+import { Nav, SearchBar, Table, Button } from '../../components';
 import ENDPOINTS from '../../config/apiEndpoints';
+import { useNavigate } from 'react-router-dom';
 
 export default function AccountDetails() {
   const { accountId } = useParams(); 
-  const [account, setAccount] = useState({}); // Stores the accounts
-  const [invoices, setInvoices] = useState([]); // Stores the invoices
-  const [patient, setPatient] = useState([]); // Stores the invoices
-  const [member, setMember] = useState([]); // Stores the invoices
-  const [invoiceSearchTerm, setInvoiceSearchTerm] = useState(''); // Search term for filtering invoices
+  const [account, setAccount] = useState({});
+  const [invoices, setInvoices] = useState([]);
+  const [patient, setPatient] = useState([]); 
+  const [member, setMember] = useState([]);
+  const [invoiceSearchTerm, setInvoiceSearchTerm] = useState('');
+  const navigate = useNavigate();
 
   const filteredInvoices = invoices.filter((invoice) =>
     Object.values(invoice).join(' ').toLowerCase().includes(invoiceSearchTerm.toLowerCase())
@@ -55,10 +57,16 @@ export default function AccountDetails() {
       {account && Object.keys(account).length > 0 ? (
         <>
           <div className="bg-white rounded m-4 p-4 flex flex-row justify-between items-center text-center text-sm text-gray-dark">
+            <p>
+              <Button
+                btnName={`Profile ID: ${account.profile_id}`}
+                onClick={() => navigate(`/profiles/${account.profile_id}`)} 
+                className=""
+              />
+            </p>
             <p><strong>Account ID:</strong> {account.account_id}</p>
-            <p><strong>Profile ID:</strong> {account.profile_id}</p>
-            <p><strong>Medical Aid:</strong></p>
             <p><strong>Medical Aid Nr:</strong> {account.medical_aid_nr}</p>
+            <p><strong>Medical Aid:</strong> {account.medical_aid_name} - {account.plan_name}</p>
             <p><strong>Doctor:</strong> {account.doctor_name}</p>
             <p><strong>Auth:</strong> {account.authorization_nr}</p>
             <p><strong>Balance:</strong> 0.00</p>
@@ -67,10 +75,10 @@ export default function AccountDetails() {
           <div className="bg-white rounded m-4 p-4 gap-4 flex">
             {/* Member Table */}
             <div className='w-[50%]'>
-              <h3 className="text-sm uppercase font-bold pb-3">Main Member / GUARANTOR</h3>
+              <h3 className="text-sm uppercase font-bold pb-3">GUARANTOR</h3>
               <Table
                 data={Array.isArray(member) ? member : [member]} 
-                columns={['Record ID', 'Name', 'Cell', 'Email', 'Date of Birth', 'Gender']}
+                columns={['Record ID', 'Name', 'Cell', 'Email', 'Date of Birth', 'Gender', 'Depedent Nr']}
                 idField="person_id" 
                 linkPrefix="records" 
               />
@@ -80,7 +88,7 @@ export default function AccountDetails() {
               <h3 className="text-sm uppercase font-bold pb-3">Patient</h3>
               <Table
                 data={Array.isArray(patient) ? patient : [patient]} 
-                columns={['Record ID', 'Name', 'Cell', 'Email', 'Date of Birth', 'Gender']}
+                columns={['Record ID', 'Name', 'Cell', 'Email', 'Date of Birth', 'Gender', 'Depedent Nr']}
                 idField="person_id" 
                 linkPrefix="records" 
               />
@@ -97,7 +105,7 @@ export default function AccountDetails() {
             {/* {console.log("DATA FOR TABLE ", filteredInvoices)} */}
             <Table
               data={filteredInvoices}
-              columns={['Invoice ID', 'Account ID', 'Profile ID', 'Patient', 'ID', 'Main Member', 'ID', 'Balance', 'Date of Service', 'Status', 'Doctor', 'Practice Nr']}
+              columns={['Invoice ID','Patient', 'ID', 'Main Member', 'ID', 'Balance', 'Date of Service', 'Status', 'Doctor', 'Practice Nr']}
               linkPrefix="invoices"
               idField="invoice_id"
             />

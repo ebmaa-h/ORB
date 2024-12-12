@@ -47,51 +47,59 @@ const Account = {
         a.doctor_id,
         a.main_member_id,
         a.dependent_id,
-         CONCAT('Dr ', LEFT(d.first, 1), ' ', d.last) AS doctor_name,
-         p.medical_aid_nr, p.authorization_nr
+        CONCAT('Dr ', LEFT(d.first, 1), ' ', d.last) AS doctor_name,
+        p.authorization_nr,
+        p.medical_aid_nr, 
+        mp.plan_name,
+        mp.plan_code,
+        ma.name AS medical_aid_name
       FROM accounts a
       LEFT JOIN doctors d ON a.doctor_id = d.doctor_id
       LEFT JOIN profiles p ON a.profile_id = p.profile_id
+      LEFT JOIN medical_aid_plans mp ON p.plan_id = mp.plan_id
+      LEFT JOIN medical_aids ma ON p.medical_aid_id = ma.medical_aid_id
       WHERE a.account_id = ?;
     `;
 
     const memberQuery = `
       SELECT 
-      person_id,
+      pr.person_id,
       CONCAT(pr.title, ' ', pr.first, ' ', pr.last) AS member_name,
-        pr.cell_nr AS member_cell, 
-        pr.tell_nr AS member_cell, 
-        pr.email AS member_email,
-        pr.date_of_birth,
-        pr.gender
+      pr.cell_nr AS member_cell, 
+      pr.tell_nr AS member_cell, 
+      pr.email AS member_email,
+      DATE_FORMAT(pr.date_of_birth, '%Y-%m-%d') AS date_of_birth,
+      pr.gender,
+      ppm.dependent_nr
       FROM person_records pr
+      LEFT JOIN profile_person_map ppm ON pr.person_id = ppm.person_id
       WHERE pr.person_id = ?;
     `;
 
     const patientQuery = `
       SELECT 
-      person_id,
+      pr.person_id,
       CONCAT(pr.title, ' ', pr.first, ' ', pr.last) AS member_name,
-        pr.cell_nr AS member_cell, 
-        pr.tell_nr AS member_cell, 
-        pr.email AS member_email,
-        pr.date_of_birth,
-        pr.gender
+      pr.cell_nr AS member_cell, 
+      pr.tell_nr AS member_cell, 
+      pr.email AS member_email,
+      DATE_FORMAT(pr.date_of_birth, '%Y-%m-%d') AS date_of_birth,
+      pr.gender,
+      ppm.dependent_nr
       FROM person_records pr
+      LEFT JOIN profile_person_map ppm ON pr.person_id = ppm.person_id
       WHERE pr.person_id = ?;
     `;
 
     const invQuery = `
         SELECT
             i.invoice_id AS 'Invoice ID',  -- Specify table alias for invoice_id
-            a.account_id AS 'Account ID',  -- Specify table alias for account_id
-            i.profile_id AS 'Profile ID',  -- Specify table alias for profile_id
-            CONCAT(JSON_UNQUOTE(JSON_EXTRACT(i.member_snapshot, '$.member.first')), ' ', JSON_UNQUOTE(JSON_EXTRACT(i.member_snapshot, '$.member.last'))) AS 'Member Name',
-            JSON_UNQUOTE(JSON_EXTRACT(i.member_snapshot, '$.member.id_nr')) AS 'Member ID',
             CONCAT(JSON_UNQUOTE(JSON_EXTRACT(i.patient_snapshot, '$.patient.first')), ' ', JSON_UNQUOTE(JSON_EXTRACT(i.patient_snapshot, '$.patient.last'))) AS 'Patient Name',
             JSON_UNQUOTE(JSON_EXTRACT(i.patient_snapshot, '$.patient.id_nr')) AS 'Patient ID',
+            CONCAT(JSON_UNQUOTE(JSON_EXTRACT(i.member_snapshot, '$.member.first')), ' ', JSON_UNQUOTE(JSON_EXTRACT(i.member_snapshot, '$.member.last'))) AS 'Member Name',
+            JSON_UNQUOTE(JSON_EXTRACT(i.member_snapshot, '$.member.id_nr')) AS 'Member ID',
             CONCAT('R ', FORMAT(i.balance, 2)) AS invoice_balance,
-            i.date_of_service AS 'Date of Service',
+            DATE_FORMAT(i.date_of_service , '%Y-%m-%d') AS date_of_service,
             i.status AS 'Status',
             CONCAT(d.first, ' ', d.last) AS 'Doctor Name',
             d.practice_nr AS 'Doctor Practice Number'

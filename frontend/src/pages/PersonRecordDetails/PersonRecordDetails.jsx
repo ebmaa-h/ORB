@@ -41,7 +41,7 @@ export default function PersonRecordDetails() {
       <Nav />
 
       {record ? (
-        <div className="flex flex-col gap-4 m-4 p-4 bg-white rounded">
+        <div className="flex flex-col gap-4 m-4 p-4 bg-white rounded text-gray-dark">
           {/* Name */}
           <div className='flex flex-row gap-4'>
             <InputField
@@ -132,7 +132,7 @@ export default function PersonRecordDetails() {
 
           <Button
             btnName="Update"
-            className='w-[125px]'
+            className='w-[125px] text-sm'
           />
         </div>
       ) : (

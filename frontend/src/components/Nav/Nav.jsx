@@ -1,19 +1,21 @@
 import { Link } from 'react-router-dom'
 
 export default function Nav() {
+  const linkClass = "border py-1 px-1 border-gray-light min-w-[100px] rounded hover:bg-gray-light hover:border-white transition duration-200";
+
   return (
     <>
-      <div className="bg-white rounded m-4 p-4 flex gap-6">
+      <div className="bg-white rounded m-4 p-4 flex gap-6 text-sm text-center">
         <Link
           to={`/profiles`}
-          className="text-blue-500 underline hover:text-blue-700"
+          className={linkClass}
         >
           Profiles
         </Link>
         
         <Link
           to={`/accounts`}
-          className="text-blue-500 underline hover:text-blue-700"
+          className={linkClass}
         >
           Accounts
         </Link>
@@ -21,16 +23,16 @@ export default function Nav() {
 
         <Link
           to={`/invoices`}
-          className="text-blue-500 underline hover:text-blue-700"
+          className={linkClass}
         >
           Invoices
         </Link>
 
         <Link
           to={`/records`}
-          className="text-blue-500 underline hover:text-blue-700"
+          className={linkClass}
         >
-          Person Records
+          Records
         </Link>
       </div>
     </>

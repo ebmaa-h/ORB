@@ -42,14 +42,13 @@ const Profile = {
     const dependentsQuery = `
         SELECT 
             ppm.person_id AS person_id,
-            ppm.dependent_nr AS dependent_nr,
             CONCAT(pr.title, ' ', pr.first, ' ', pr.last) AS name,
-            pr.date_of_birth AS date_of_birth,
+            DATE_FORMAT(pr.date_of_birth, '%Y-%m-%d') AS date_of_birth,
             pr.id_nr AS id_nr,
-            COUNT(a.account_id) AS total_accounts
+            pr.gender,
+            ppm.dependent_nr AS dependent_nr
         FROM profile_person_map ppm
         JOIN person_records pr ON pr.person_id = ppm.person_id
-        LEFT JOIN accounts a ON a.profile_id = ppm.profile_id AND a.dependent_id = pr.person_id
         WHERE ppm.profile_id = ?
         GROUP BY ppm.map_id, pr.title, pr.first, pr.last, pr.date_of_birth, pr.id_nr, ppm.dependent_nr;
     `;
@@ -75,16 +74,16 @@ const Profile = {
         SELECT
             i.invoice_id AS 'Invoice ID',  -- Specify table alias for invoice_id
             a.account_id AS 'Account ID',  -- Specify table alias for account_id
-            i.profile_id AS 'Profile ID',  -- Specify table alias for profile_id
-            CONCAT(JSON_UNQUOTE(JSON_EXTRACT(i.member_snapshot, '$.member.first')), ' ', JSON_UNQUOTE(JSON_EXTRACT(i.member_snapshot, '$.member.last'))) AS 'Member Name',
-            JSON_UNQUOTE(JSON_EXTRACT(i.member_snapshot, '$.member.id_nr')) AS 'Member ID',
             CONCAT(JSON_UNQUOTE(JSON_EXTRACT(i.patient_snapshot, '$.patient.first')), ' ', JSON_UNQUOTE(JSON_EXTRACT(i.patient_snapshot, '$.patient.last'))) AS 'Patient Name',
             JSON_UNQUOTE(JSON_EXTRACT(i.patient_snapshot, '$.patient.id_nr')) AS 'Patient ID',
+            CONCAT(JSON_UNQUOTE(JSON_EXTRACT(i.member_snapshot, '$.member.first')), ' ', JSON_UNQUOTE(JSON_EXTRACT(i.member_snapshot, '$.member.last'))) AS 'Member Name',
+            JSON_UNQUOTE(JSON_EXTRACT(i.member_snapshot, '$.member.id_nr')) AS 'Member ID',
             CONCAT('R ', FORMAT(i.balance, 2)) AS invoice_balance,
-            i.date_of_service AS 'Date of Service',
+            DATE_FORMAT(i.date_of_service, '%Y-%m-%d') AS date_of_service,
             i.status AS 'Status',
             CONCAT(d.first, ' ', d.last) AS 'Doctor Name',
-            d.practice_nr AS 'Doctor Practice Number'
+            d.practice_nr AS 'Doctor Practice Number',
+            DATE_FORMAT(i.updated_at, '%Y-%m-%d') AS updated_at
         FROM invoices i
         JOIN accounts a ON i.account_id = a.account_id
         JOIN doctors d ON a.doctor_id = d.doctor_id
