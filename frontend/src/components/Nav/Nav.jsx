@@ -5,7 +5,7 @@ export default function Nav() {
 
   return (
     <>
-      <div className="bg-white rounded m-4 p-4 flex gap-6 text-sm text-center">
+      <div className="bg-white rounded m-4 p-4 flex gap-4 text-sm text-center">
         <Link
           to={`/profiles`}
           className={linkClass}

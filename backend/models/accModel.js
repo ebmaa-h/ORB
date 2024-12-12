@@ -17,13 +17,12 @@ const Account = {
       LEFT JOIN profiles p ON a.profile_id = p.profile_id
       LEFT JOIN doctors d ON a.doctor_id = d.doctor_id
       LEFT JOIN person_records pr_main ON a.main_member_id = pr_main.person_id
-      LEFT JOIN person_records pr_dep ON a.dependent_id = pr_dep.person_id
+      LEFT JOIN person_records pr_dep ON a.patient_id = pr_dep.person_id
       LEFT JOIN profile_person_map ppm 
-        ON ppm.profile_id = p.profile_id AND ppm.person_id = a.dependent_id
+        ON ppm.profile_id = p.profile_id AND ppm.person_id = a.patient_id
       LEFT JOIN invoices i ON a.account_id = i.account_id
       GROUP BY 
         a.account_id, 
-        a.balance, 
         d.doctor_id, 
         d.practice_nr, 
         pr_main.person_id, 
@@ -46,7 +45,7 @@ const Account = {
         a.profile_id,
         a.doctor_id,
         a.main_member_id,
-        a.dependent_id,
+        a.patient_id,
         CONCAT('Dr ', LEFT(d.first, 1), ' ', d.last) AS doctor_name,
         p.authorization_nr,
         p.medical_aid_nr, 
@@ -101,7 +100,7 @@ const Account = {
             CONCAT('R ', FORMAT(i.balance, 2)) AS invoice_balance,
             DATE_FORMAT(i.date_of_service , '%Y-%m-%d') AS date_of_service,
             i.status AS 'Status',
-            CONCAT(d.first, ' ', d.last) AS 'Doctor Name',
+            CONCAT('Dr ', LEFT(d.first, 1), ' ', d.last) AS doctor_name,
             d.practice_nr AS 'Doctor Practice Number'
         FROM invoices i
         JOIN accounts a ON i.account_id = a.account_id
@@ -116,7 +115,7 @@ const Account = {
         db.query(memberQuery, [account.main_member_id], (err, memberResults) => {
             if (err) return callback(err, null);
 
-            db.query(patientQuery, [account.dependent_id], (err, patientResults) => {
+            db.query(patientQuery, [account.patient_id], (err, patientResults) => {
                 if (err) return callback(err, null);
 
                 db.query(invQuery, [accountId], (err, invoiceResults) => {

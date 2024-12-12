@@ -1,14 +1,4 @@
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-NOTE:
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-WHEN ADDING NEW DATABASE:
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-dependent_id in account changed to patient_id for clarification -> CHANGES STILL NEEDS TO BE DONE ON THE BACKEND/FRONTEND. Only DB changed.
-/////////////////////////////////
-ALSO REMOVE BALANCE FIELD FROM ACCOUNT.
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-- Drop all tables if they exist (use this carefully in development environments)
 DROP TABLE IF EXISTS profile_person_map, invoices, accounts, person_records, profiles, medical_aid_plans, medical_aids, employers, service_centers, service_centers_list, ref_doctors, ref_doctors_list, doctors_logs, logs, user_features, features, doctors, users;
 
 -- Create users table
@@ -195,7 +185,6 @@ CREATE TABLE accounts (
     doctor_id INT,
     main_member_id INT NULL,
     patient_id INT NULL,
-    balance DECIMAL(10, 2) DEFAULT 0.00,
     FOREIGN KEY (doctor_id) REFERENCES doctors(doctor_id) ON DELETE SET NULL,
     FOREIGN KEY (profile_id) REFERENCES profiles(profile_id) ON DELETE SET NULL,
     FOREIGN KEY (main_member_id) REFERENCES person_records(person_id) ON DELETE SET NULL,
@@ -237,7 +226,7 @@ INSERT INTO medical_aids (name)
 VALUES 
 ('Discovery'),
 ('Medihelp'),
-('Private'),
+('Gems'),
 ('Momentum'),
 ('Bonitas');
 
@@ -246,7 +235,7 @@ INSERT INTO medical_aid_plans (medical_aid_id, plan_name, plan_code)
 VALUES 
 (1, 'Classic Saver', 'CLASAVE2911'),
 (2, 'MediBonus', 'MEDI1001'),
-(3, 'Private', 'Private'),
+(3, 'Emerald', 'EME2312'),
 (4, 'Basic', 'MOM001'),
 (5, 'BonClassic', 'BONCLA0054');
 

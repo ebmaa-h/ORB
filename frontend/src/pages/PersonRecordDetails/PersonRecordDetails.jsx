@@ -129,10 +129,9 @@ export default function PersonRecordDetails() {
               onChange={handleChange}
             />
           </div>
-
           <Button
             btnName="Update"
-            className='w-[125px] text-sm'
+            className="text-sm bg-white w-[90px] text-gray-dark"
           />
         </div>
       ) : (

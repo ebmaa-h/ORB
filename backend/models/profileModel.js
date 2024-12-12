@@ -11,7 +11,7 @@ const Profile = {
             map.plan_name AS plan_name,
             p.medical_aid_nr,
             p.authorization_nr,
-            p.balance,
+            CONCAT('R ', FORMAT(p.balance, 2)) AS profile_balance,
             COUNT(DISTINCT a.account_id) AS total_accounts,
             COUNT(DISTINCT ppm.person_id) AS total_dependents,
             COUNT(DISTINCT i.invoice_id) AS total_invoices
@@ -63,7 +63,7 @@ const Profile = {
             COUNT(i.invoice_id) AS total_invoices
         FROM accounts a
         LEFT JOIN doctors d ON d.doctor_id = a.doctor_id
-        LEFT JOIN person_records pr ON pr.person_id = COALESCE(a.dependent_id, a.main_member_id)
+        LEFT JOIN person_records pr ON pr.person_id = COALESCE(a.patient_id, a.main_member_id)
         LEFT JOIN invoices i ON i.account_id = a.account_id
         WHERE a.profile_id = ?
         GROUP BY a.account_id, a.doctor_id, a.profile_id, d.first, d.last, pr.title, pr.first, pr.last, pr.id_nr;
@@ -81,7 +81,7 @@ const Profile = {
             CONCAT('R ', FORMAT(i.balance, 2)) AS invoice_balance,
             DATE_FORMAT(i.date_of_service, '%Y-%m-%d') AS date_of_service,
             i.status AS 'Status',
-            CONCAT(d.first, ' ', d.last) AS 'Doctor Name',
+            CONCAT('Dr ', LEFT(d.first, 1), ' ', d.last) AS doctor_name,
             d.practice_nr AS 'Doctor Practice Number',
             DATE_FORMAT(i.updated_at, '%Y-%m-%d') AS updated_at
         FROM invoices i
@@ -96,7 +96,7 @@ const Profile = {
             p.profile_id,
             p.medical_aid_nr,
             p.authorization_nr,
-            p.balance AS profile_balance,
+            CONCAT('R ', FORMAT(p.balance, 2)) AS profile_balance,
             ma.name AS medical_aid_name,
             map.plan_name AS plan_name,
             CONCAT(pr.title,' ', pr.first,' ', pr.last) AS main_member_name,

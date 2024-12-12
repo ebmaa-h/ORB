@@ -21,7 +21,7 @@ export default function PersonRecords() {
     fetchPersons();
   }, []);
 
-  const columns = ['Person ID', 'Person','Gender' , 'DOB', 'ID', 'Email',  'Date Created'];
+  const columns = ['Person ID', 'Name','Gender' , 'Date of Birth', 'ID', 'Email',  'Date Created'];
   const filteredPersons = persons.filter((person) =>
     Object.values(person).join(' ').toLowerCase().includes(searchTerm.toLowerCase())
   );

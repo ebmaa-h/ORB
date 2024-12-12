@@ -75,7 +75,7 @@ export default function AccountDetails() {
           <div className="bg-white rounded m-4 p-4 gap-4 flex">
             {/* Member Table */}
             <div className='w-[50%]'>
-              <h3 className="text-sm uppercase font-bold pb-3">GUARANTOR</h3>
+              <h3 className="text-sm uppercase font-bold pb-4">GUARANTOR</h3>
               <Table
                 data={Array.isArray(member) ? member : [member]} 
                 columns={['Record ID', 'Name', 'Cell', 'Email', 'Date of Birth', 'Gender', 'Depedent Nr']}
@@ -85,10 +85,10 @@ export default function AccountDetails() {
             </div>
             {/* Patient Table */}
             <div className='w-[50%]'>
-              <h3 className="text-sm uppercase font-bold pb-3">Patient</h3>
+              <h3 className="text-sm uppercase font-bold pb-4">Patient</h3>
               <Table
                 data={Array.isArray(patient) ? patient : [patient]} 
-                columns={['Record ID', 'Name', 'Cell', 'Email', 'Date of Birth', 'Gender', 'Depedent Nr']}
+                columns={['Record ID', 'Name', 'Cell', 'Email', 'Date of Birth', 'Gender', 'Dependent Nr']}
                 idField="person_id" 
                 linkPrefix="records" 
               />
@@ -105,10 +105,16 @@ export default function AccountDetails() {
             {/* {console.log("DATA FOR TABLE ", filteredInvoices)} */}
             <Table
               data={filteredInvoices}
-              columns={['Invoice ID','Patient', 'ID', 'Main Member', 'ID', 'Balance', 'Date of Service', 'Status', 'Doctor', 'Practice Nr']}
+              columns={['Invoice ID','Patient', 'Patient ID', 'Main Member', 'Guarantor ID', 'Balance', 'Date of Service', 'Status', 'Doctor', 'Practice Nr']}
               linkPrefix="invoices"
               idField="invoice_id"
             />
+            <div className="flex justify-start">
+              <Button
+                btnName="New Invoice"
+                className="text-sm bg-white w-[90px] text-gray-dark"
+              />
+            </div>
           </div>
         </>
       ) : (

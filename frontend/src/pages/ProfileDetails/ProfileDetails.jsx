@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom'; // For accessing profile_id from the URL
 import axios from 'axios';
-import { Nav, SearchBar, Table } from '../../components';
+import { Nav, SearchBar, Table, Button } from '../../components';
 import ENDPOINTS from '../../config/apiEndpoints';
 
 export default function ProfileDetails() {
@@ -67,25 +67,30 @@ export default function ProfileDetails() {
 
           <div className="bg-white rounded m-4 p-4 gap-4 flex">
             {/* Accounts Table */}
-            <div className='w-[50%]'>
-              <h3 className="text-sm uppercase font-bold pb-3">Accounts</h3>
+            <div className='w-[50%] flex flex-col gap-4'>
+              <h3 className="text-sm uppercase font-bold">Accounts</h3>
               <Table
                 data={accounts}
-                columns={['Account ID', 'Doctor', 'Patient', 'ID', 'Balance', 'Invoices']}
+                columns={['Account ID', 'Doctor', 'Patient', 'Patient ID', 'Balance', 'Invoices']}
                 linkPrefix="accounts"
                 idField="account_id"
+              />
+              <Button
+                btnName="New Account"
+                className="text-sm bg-white w-[90px] text-gray-dark"
               />
             </div>
             {/* Dependents Table */}
             <div className='w-[50%]'>
-              <h3 className="text-sm uppercase font-bold pb-3">Dependents</h3>
+              <h3 className="text-sm uppercase font-bold pb-4">Dependents</h3>
               <Table
                 data={dependents}
-                columns={['Record ID','Dependent', 'Date of Birth', 'ID' ,'Gender' , 'Dependent Nr']}
+                columns={['Record ID','Name', 'Date of Birth', 'ID' ,'Gender' , 'Dependent Nr']}
                 idField="person_id" 
                 linkPrefix="records" 
               />
             </div>
+
           </div>
 
           {/* Invoices Table with Search */}
