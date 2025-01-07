@@ -7,7 +7,7 @@ const authController = {
   login: (req, res) => {
     const { email, password } = req.body;
 
-    User.findByEmail(email, (err, user) => {
+    User.loginUser(email, (err, user) => {
       if (err) {
         console.error('Error finding user:', err);
         return res.status(500).json({ message: 'Internal server error' });
@@ -44,7 +44,7 @@ const authController = {
           expires: new Date(Date.now() + 3600000),  // 1 hour
         });
 
-        console.log("User Created:",userWithoutPassword);
+        console.log("User logged in:",userWithoutPassword);
         res.status(200).json({
           message: 'Login successful',
           user: userWithoutPassword,

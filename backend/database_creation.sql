@@ -1,5 +1,5 @@
 
-DROP TABLE IF EXISTS profile_person_map, invoices, accounts, person_records, profiles, medical_aid_plans, medical_aids, employers, service_centers, service_centers_list, ref_doctors, ref_doctors_list, doctors_logs, logs, user_features, features, doctors, users;
+DROP TABLE IF EXISTS profile_person_map, invoices, accounts, person_records, profiles, medical_aid_plans, medical_aids, employers, service_centers, service_centers_list, ref_doctors, ref_doctors_list, doctors_logs, logs, user_feature, features, doctors, users, user_feature_access, user_doctor_access;
 
 -- Create users table
 CREATE TABLE users (
@@ -29,15 +29,25 @@ CREATE TABLE doctors (
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 );
 
+-- Create user_doctor_access table
+CREATE TABLE user_doctor_access (
+    user_doctor_access_id INT AUTO_INCREMENT PRIMARY KEY,
+    user_id INT,
+    doctor_id INT,
+    permissions ENUM('View', 'Edit', 'Delete') DEFAULT 'View',
+    FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE SET NULL,
+    FOREIGN KEY (doctor_id) REFERENCES doctors(doctor_id) ON DELETE SET NULL
+);
+
 -- Create features table
 CREATE TABLE features (
     feature_id INT AUTO_INCREMENT PRIMARY KEY,
     feature_name VARCHAR(255)
 );
 
--- Create user_features table
-CREATE TABLE user_features (
-    user_feature_id INT AUTO_INCREMENT PRIMARY KEY,
+-- Create user_feature_access 
+CREATE TABLE user_feature_access (
+    user_feature_access_id INT AUTO_INCREMENT PRIMARY KEY,
     user_id INT,
     feature_id INT,
     is_active BOOLEAN DEFAULT FALSE,
@@ -45,6 +55,9 @@ CREATE TABLE user_features (
     FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE SET NULL,
     FOREIGN KEY (feature_id) REFERENCES features(feature_id) ON DELETE SET NULL
 );
+
+-- doctor_features inc or doctor_feature_access
+
 
 -- Create logs table
 CREATE TABLE logs (
@@ -414,7 +427,7 @@ VALUES
 ('doctors');
 
 -- Inserting sample data for user features
-INSERT INTO user_features (user_id, feature_id, is_active, permissions)
+INSERT INTO user_feature_access (user_id, feature_id, is_active, permissions)
 VALUES 
 (1, 1, TRUE, 'Edit'),
 (1, 2, TRUE, 'Edit'),

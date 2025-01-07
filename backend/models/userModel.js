@@ -2,8 +2,8 @@ const db = require('../config/db');
 
 const User = {
 
-  // Find user by email
-  findByEmail: (email, callback) => {
+  // Login
+  loginUser: (email, callback) => {
     let query = 'SELECT * FROM users WHERE email = ?';
     db.query(query, [email], (err, results) => {
       if (err) {
@@ -15,32 +15,11 @@ const User = {
         return callback(null, null); // No user found
       }
 
-      // Role-based enrichment
-      const fetchDetails = (callback) => {
-        if (user.role === 'user') {
-          let userDetailsQuery = 'SELECT * FROM user_details WHERE user_id = ?';
-          db.query(userDetailsQuery, [user.user_id], (err, userDetails) => {
-            if (err) return callback(err);
-              user.details = userDetails[0] || {};
-              callback(null);
-            });
-        } else if (user.role === 'doctor') {
-          let doctorDetailsQuery = 'SELECT * FROM doctor_details WHERE user_id = ?';
-          db.query(doctorDetailsQuery, [user.user_id], (err, doctorDetails) => {
-            if (err) return callback(err);
-            user.details = doctorDetails[0] || {};
-            callback(null);
-          });
-          } else {
-            callback(null); 
-          }
-      };
-
       // Fetch user features
       const fetchFeatures = (callback) => {
         let featuresQuery = `
           SELECT f.feature_name, uf.is_active, uf.permissions
-          FROM user_features uf
+          FROM user_feature_access uf
           JOIN features f ON uf.feature_id = f.feature_id
           WHERE uf.user_id = ?`;
         db.query(featuresQuery, [user.user_id], (err, features) => {
@@ -50,12 +29,27 @@ const User = {
         });
       };
 
-      // Execute enrichment and features retrieval
-      fetchDetails((err) => {
+      // Fetch user doctor access
+      const fetchDoctorAccess = (callback) => {
+        let doctorAccessQuery = `
+          SELECT d.doctor_id, CONCAT('Dr ', d.first, ' ', d.last) AS doctor_name, d.practice_nr, uda.permissions
+          FROM user_doctor_access uda
+          JOIN doctors d ON uda.doctor_id = d.doctor_id
+          WHERE uda.user_id = ?`;
+        db.query(doctorAccessQuery, [user.user_id], (err, doctorAccess) => {
+          if (err) return callback(err);
+          user.doctor_access = doctorAccess; // Attach doctor access array to user
+          callback(null);
+        });
+      };
+
+      // Execute features and doctor access retrieval
+      fetchFeatures((err) => {
         if (err) return callback(err, null);
 
-        fetchFeatures((err) => {
+        fetchDoctorAccess((err) => {
           if (err) return callback(err, null);
+
           callback(null, user); // Final enriched user object
         });
       });

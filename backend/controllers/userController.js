@@ -22,8 +22,8 @@ const userController = {
     // Extract the email from the decoded token
     const { email } = decoded;
 
-    // Find the user by email
-    User.findByEmail(email, (err, user) => {
+    // Find the user by email / Log user in
+    User.loginUser(email, (err, user) => {
       if (err) {
         console.error('Error finding user:', err);
         return res.status(500).json({ message: 'Internal server error' });
