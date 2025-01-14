@@ -12,6 +12,7 @@ export default {
       xl: '1440px',
     },
     colors: {
+      'red': '#FF0000',
       'white': '#fff',
       'blue': '#1fb6ff',
       'purple': '#7e5bef',
@@ -25,6 +26,7 @@ export default {
       'ebmaa-blue': '#59C4CE',
       'ebmaa-green': '#BDD331',
       'ebmaa-purple': '#7580BE',
+      'ebmaa-purple-light': '#96a0d9',
     },
     fontFamily: {
       sans: ['arial', 'sans-serif'],

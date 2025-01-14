@@ -5,7 +5,7 @@ import { useContext } from 'react';
 import { DoctorContext } from '../../context/DoctorContext'; 
 import { SearchBar, Table } from '../../components';
 
-export default function Accounts() {
+export default function AllAccounts() {
   const [accounts, setAccounts] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
   const { doctorId } = useContext(DoctorContext); 
@@ -21,7 +21,7 @@ export default function Accounts() {
       }
     };
     fetchAccounts();
-  }, [doctorId]);
+  }, []);
 
   const columns = ['Account ID', 'Patient', 'Dependent Nr', 'Guarantor', 'Guarantor ID', 'Invoices', 'Balance'];
   const filteredAccounts = accounts.filter((account) =>
@@ -30,16 +30,10 @@ export default function Accounts() {
 
   return (
     <>
-      {doctorId ? 
-        <div className='flex flex-col gap-4 m-4 p-4 bg-white rounded'>
-          <SearchBar searchTerm={searchTerm} setSearchTerm={setSearchTerm} />
-          <Table data={filteredAccounts} columns={columns} linkPrefix="accounts" idField="account_id"/>
-        </div>
-      : 
-        <div> 
-          Accounts Info Here
-        </div> 
-      }
+      <div className='flex flex-col gap-4 m-4 p-4 bg-white rounded'>
+        <SearchBar searchTerm={searchTerm} setSearchTerm={setSearchTerm} />
+        <Table data={filteredAccounts} columns={columns} linkPrefix="accounts" idField="account_id"/>
+      </div>
     </>
   );
 }

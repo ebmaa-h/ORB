@@ -2,7 +2,6 @@ import { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import ENDPOINTS from '../../config/apiEndpoints';
 import axios from 'axios';
-import { Nav } from '../../components';
 
 export default function InvoiceDetails() {
   const { invoiceId } = useParams(); 
@@ -35,8 +34,6 @@ export default function InvoiceDetails() {
 
   return (
     <>
-      <Nav />
-
       {invoice && Object.keys(invoice).length > 0 ? (
         <>
           {/* Invoice */}

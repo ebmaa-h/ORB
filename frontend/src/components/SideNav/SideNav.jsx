@@ -36,9 +36,16 @@ function SideNav({ setNavWidth }) {
             </Link>
           </li>
           <li className="flex justify-center">
-            <Link to="/time" className="flex items-center justify-center w-full">
+            <Link to="/records" className="flex items-center justify-center w-full">
               <span className={`text-base whitespace-nowrap ${!isExpanded ? 'material-symbols-outlined' : ''}`}>
-                {isExpanded ? 'Timesheet' : 'schedule'}
+                {isExpanded ? 'Records' : 'library_add'}
+              </span>
+            </Link>
+          </li>
+          <li className="flex justify-center">
+            <Link to="/profiles" className="flex items-center justify-center w-full">
+              <span className={`text-base whitespace-nowrap ${!isExpanded ? 'material-symbols-outlined' : ''}`}>
+                {isExpanded ? 'Profiles' : 'library_add'}
               </span>
             </Link>
           </li>
@@ -46,6 +53,13 @@ function SideNav({ setNavWidth }) {
             <Link to="/tools" className="flex items-center justify-center w-full">
               <span className={`text-base whitespace-nowrap ${!isExpanded ? 'material-symbols-outlined' : ''}`}>
                 {isExpanded ? 'Management Tools' : 'library_add'}
+              </span>
+            </Link>
+          </li>
+          <li className="flex justify-center">
+            <Link to="/time" className="flex items-center justify-center w-full">
+              <span className={`text-base whitespace-nowrap ${!isExpanded ? 'material-symbols-outlined' : ''}`}>
+                {isExpanded ? 'Timesheet' : 'schedule'}
               </span>
             </Link>
           </li>

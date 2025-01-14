@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import axios from 'axios';
 import ENDPOINTS from '../../config/apiEndpoints';
-import { Nav, SearchBar, Table } from '../../components';
+import { SearchBar, Table } from '../../components';
 
 export default function PersonRecords() {
   const [persons, setPersons] = useState([]);
@@ -28,7 +28,6 @@ export default function PersonRecords() {
 
   return (
     <>
-      <Nav />
       <div className='flex flex-col gap-4 m-4 p-4 bg-white rounded'>
         <SearchBar searchTerm={searchTerm} setSearchTerm={setSearchTerm} />
         <Table 

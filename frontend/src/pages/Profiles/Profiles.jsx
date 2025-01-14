@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import axios from 'axios';
-import { Nav, SearchBar, Table } from '../../components';
+import { SearchBar, Table } from '../../components';
 import ENDPOINTS from '../../config/apiEndpoints';
 
 export default function Profiles() {
@@ -27,7 +27,6 @@ export default function Profiles() {
   console.log (filteredProfiles);
   return (
     <>
-      <Nav />
       <div className='flex flex-col gap-4 m-4 p-4 bg-white rounded'>
         <SearchBar searchTerm={searchTerm} setSearchTerm={setSearchTerm} />
         <Table data={filteredProfiles} columns={columns} linkPrefix="profiles" idField="profile_id"/>

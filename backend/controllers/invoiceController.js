@@ -22,6 +22,32 @@ const invoiceController = {
     });
   },
 
+  getInvoicesByDoctor: (req, res) => {
+    const doctorId = req.params.doctorId;
+
+    if (!doctorId) {
+      return res.status(400).json({ message: 'Doctor ID is required' });
+    }
+
+    Invoice.doctorInvoices(doctorId, (err, invoices) => {
+      if (err) {
+        console.error('Error finding invoices:', err);
+        return res.status(500).json({ message: 'Internal server error', error: err });
+      }
+
+      if (!invoices || invoices.length === 0) {
+        console.log('No invoices found.');
+        return res.status(404).json({ message: 'No invoices found' });
+      }
+
+      console.log("invoices Found: ", invoices);
+      return res.status(200).json({
+        message: 'invoices retrieval successful',
+        invoices: invoices,
+      });
+    });
+  },
+
   getInvoice: (req, res) => {
   // 
   },

@@ -1,65 +1,85 @@
-import { Link } from 'react-router-dom'
+import { Link, useLocation } from 'react-router-dom';
+import { useContext } from 'react';
+
+import { UserContext } from '../../context/UserContext';
+import { DoctorContext } from '../../context/DoctorContext';
+import Logout from '../Logout/Logout';
 
 export default function Nav() {
-  const linkClass = "border py-1 px-1 border-gray-light min-w-[100px] rounded hover:bg-gray-light hover:border-white transition duration-200";
+  const { user } = useContext(UserContext);
+  const { doctorId, setDoctorId } = useContext(DoctorContext);
+  const location = useLocation(); // Get the current path
+  
+  const linkClass = "text-sm py-1 px-2 mx-2 min-w-[100px] rounded hover:bg-ebmaa-purple hover:border-white hover:text-white transition duration-10 text-center";
+  const activeLinkClass = "bg-ebmaa-purple text-white border-none"; 
+  const accLinkClass = doctorId
+    ? `${linkClass}`
+    : `${linkClass} hidden`;
 
-
-  // Get user context
-  // Get permissions in context
-  // List access granted doctors
-
-  // Selected practice number add to doctors context
   return (
-    <>
-      <div className="bg-white rounded m-4 p-4 flex gap-4 text-sm text-center">
-
-        {/* dropdown to select a doctor */}
-        {/* Depending on what doctor is selected: will show accounts/invoices/records (not profiles) of that doctor on click on the other links
-        so this dropdown is only for selection. */}
-                {/* Dropdown to select a doctor */}
-                <select
-          // value={selectedDoctor}
-          // onChange={handleDoctorChange}
-          className="border py-1 px-2 rounded focus:outline-none focus:ring focus:border-blue-300 transition duration-200"
-        >
-          <option value="" disabled>
-            Select Doctor
+    <div className="bg-white flex justify-center items-center  h-[60px]">
+      <select
+        className="border rounded border-gray-light py-1 px-1 text-sm py-1 px-2  "
+        value={doctorId || ""}
+        onChange={(e) => {
+          setDoctorId(e.target.value);
+        }}
+      >
+        <option value="" disabled>
+          Select Doctor
+        </option>
+        {user.doctor_access.map((doctor, i) => (
+          <option key={i} className='hover:bg-ebmaa-purple' value={doctor.doctor_id}>
+            {doctor.doctor_name}
           </option>
-          <option value="doctor1">Dr. Smith</option>
-          <option value="doctor2">Dr. Johnson</option>
-          <option value="doctor3">Dr. Lee</option>
-        </select>
-        
-        <Link
-          to={`/accounts`}
-          className={linkClass}
-        >
-          Accounts
-        </Link>
-        
+        ))}
+      </select>
 
-        <Link
-          to={`/invoices`}
-          className={linkClass}
-        >
-          Invoices
-        </Link>
+      <Link
+        to={doctorId ? "/accounts" : "#"}
+        className={`${accLinkClass} ${location.pathname === '/accounts' ? activeLinkClass : ''}`}
+      >
+        Accounts
+      </Link>
 
-        <Link
-          to={`/records`}
-          className={linkClass}
-        >
-          Records
-        </Link>
+      <Link
+        to={doctorId ? "/invoices" : "#"}
+        className={`${accLinkClass} ${location.pathname === '/invoices' ? activeLinkClass : ''}`}
+      >
+        Invoices
+      </Link>
 
-        {/* Management Tool */}
-        <Link
-          to={`/profiles`}
-          className={linkClass}
-        >
-          Profiles
-        </Link>
-      </div>
-    </>
-  )
+      <p className="text-gray-light px-2">|</p>
+      <Link
+        to="/records"
+        className={`${linkClass} ${location.pathname === '/records' ? activeLinkClass : ''}`}
+      >
+        Records
+      </Link>
+
+      <Link
+        to="/profiles"
+        className={`${linkClass} ${location.pathname === '/profiles' ? activeLinkClass : ''}`}
+      >
+        Profiles
+      </Link>
+
+      <p className="text-gray-light px-2">|</p>
+      <Link
+        to="/dashboard"
+        className={`${linkClass} ${location.pathname === '/dashboard' ? activeLinkClass : ''}`}
+      >
+        Dashboard
+      </Link>
+
+      <Link
+        to="/tools"
+        className={`${linkClass} ${location.pathname === '/tools' ? activeLinkClass : ''}`}
+      >
+        Tools
+      </Link>
+      <p className="text-gray-light px-2">|</p>
+      <Logout />
+    </div>
+  );
 }

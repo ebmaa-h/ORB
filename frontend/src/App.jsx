@@ -1,6 +1,7 @@
 import './App.css';
 import { useContext } from 'react';
 import { BrowserRouter as Router, Route, Routes, Navigate } from 'react-router-dom';
+import { Logout } from './components/index'
 import { Login, Dashboard, ProtectedLayout, Tools, TimeSheet, Profiles, ProfileDetails, AccountDetails, InvoiceDetails, Accounts, Invoices, PersonRecords, PersonRecordDetails } from './pages/index';
 import { UserContext } from './context/UserContext';
 
@@ -33,6 +34,7 @@ function App() {
           <Route path="/records/:recordId" element={<PersonRecordDetails />} />
 
           <Route path="/time" element={<TimeSheet />} />
+          <Route path="/logout" element={<Logout />} />
         </Route>
 
         {/* Catch-all route to redirect to login */}

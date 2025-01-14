@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import axios from 'axios';
-import { Nav, SearchBar, Table, Button } from '../../components';
+import { SearchBar, Table, Button } from '../../components';
 import ENDPOINTS from '../../config/apiEndpoints';
 import { useNavigate } from 'react-router-dom';
 
@@ -52,7 +52,6 @@ export default function AccountDetails() {
 
   return (
     <>
-      <Nav />
 
       {account && Object.keys(account).length > 0 ? (
         <>

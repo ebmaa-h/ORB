@@ -12,10 +12,11 @@ export const UserProvider = ({ children }) => {
   useEffect(() => {
     const fetchUser = async () => {
 
-      if (user !== null) {
-        console.log("User already loaded");
-        return;
-      }
+      // if (user !== null) {
+      //   console.log("User fetch skipped, user already loaded.");
+      //   //  add a pure JWT backend check here -> better security and no need to re
+      //   return;
+      // }
 
       try {
         // Fetch user data
@@ -24,22 +25,22 @@ export const UserProvider = ({ children }) => {
         });
 
         if (response.data.user) {
-          console.log("User fetched and in context: ", response.data.user);
-          setUser(response.data.user); // Set user data if valid
+          console.log("User Set.", response.data.user);
+          setUser(response.data.user); // Valid
         } else {
           console.log("User not logged in. Redirecting to login.");
-          setUser(null); // In case no user data is returned
+          setUser(null); // No data
         }
       } catch (error) {
-        console.log("Error fetching user data or verifying JWT:", error);
-        setUser(null); // If an error occurs, ensure user state is cleared
+        console.log("No JWT/Cookie prob not set", error);
+        setUser(null); // No jwt or fetch issue
       } finally {
-        setLoading(false); // Set loading to false after the fetch completes
+        setLoading(false);
       }
     };
 
     fetchUser();
-  }, [user]); // Run the effect whenever the user state changes -> still deciding whether to remove this or not, as it might lead to unncessary re-renders. If removed, will only run on mount
+  }, []); // should run on mount, on refresh, on page change -> which includes validate jwt and get/refresh user data
 
   return (
     <UserContext.Provider value={{ user, setUser, loading }}>

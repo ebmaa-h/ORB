@@ -51,8 +51,6 @@ export default function ProfileDetails() {
 
   return (
     <>
-      <Nav />
-
       {profile ? (
         <>
           <div className="bg-white rounded m-4 p-4 flex flex-row justify-between items-center text-center text-sm text-gray-dark">

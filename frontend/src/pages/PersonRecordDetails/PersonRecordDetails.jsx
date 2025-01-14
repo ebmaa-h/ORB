@@ -38,11 +38,17 @@ export default function PersonRecordDetails() {
 
   return (
     <>
-      <Nav />
-
       {record ? (
         <div className="flex flex-col gap-4 m-4 p-4 bg-white rounded text-gray-dark">
-          {/* Name */}
+          {/* Back Button */}
+          {/* <Button
+            btnName={
+              <>
+                <span className="material-symbols-outlined text-sm">arrow_back</span> Back
+              </>
+            }
+            className="text-sm bg-white w-[100px] text-gray-dark flex justify-center gap-2 items-center"
+          /> */}
           <div className='flex flex-row gap-4'>
             <InputField
               label="Title"

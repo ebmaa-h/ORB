@@ -1,7 +1,7 @@
 import { useContext, useState } from 'react';
 import { UserContext } from '../../context/UserContext';
 import { Outlet, Navigate } from 'react-router-dom';
-import { SideNav } from '../../components'; // Ensure the import path is correct
+import { Nav, SideNav } from '../../components'; // Ensure the import path is correct
 
 const ProtectedLayout = () => {
   const { user, loading } = useContext(UserContext);
@@ -18,23 +18,22 @@ const ProtectedLayout = () => {
   }
 
   return (
-    <div className="flex h-screen">
+    <div className="">
       {/* SideNav with dynamic width */}
-      <SideNav setNavWidth={setNavWidth} />
-
+      {/* <SideNav setNavWidth={setNavWidth} /> */}
       {/* Main content area */}
-      <div
+      {/* <div
         className="flex-1 flex flex-col"
         style={{
           marginLeft: navWidth, // Dynamic margin based on SideNav width
           transition: 'margin-left 0.2s ease',
         }}
-      >
-        {/* <Nav /> */}
+      > */}
+        <Nav />
         <main className="h-dvh overflow-y-auto"> 
           <Outlet />
         </main>
-      </div>
+      {/* </div> */}
     </div>
   );
 };

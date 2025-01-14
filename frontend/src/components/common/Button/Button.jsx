@@ -6,7 +6,7 @@ export default function Button({ btnName, onClick, type = 'button', className = 
     <button
       type={type}
       onClick={onClick}
-      className={`border py-1 px-1 border-gray-light min-w-[100px] rounded ${className} hover:bg-gray-light hover:border-white transition duration-200`}
+      className={`text-sm py-1 px-2 mx-2 min-w-[100px] rounded hover:bg-ebmaa-purple hover:border-white hover:text-white transition duration-10 text-center`}
       aria-label={btnName} // Accessibility
     >
       {btnName}
