@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import axios from 'axios';
-import { SearchBar, Table, Button } from '../../components';
+import { SearchBar, Table } from '../../components';
 import ENDPOINTS from '../../config/apiEndpoints';
 import { useNavigate } from 'react-router-dom';
 
@@ -57,11 +57,21 @@ export default function AccountDetails() {
         <>
           <div className="bg-white rounded m-4 p-4 flex flex-row justify-between items-center text-center text-sm text-gray-dark">
             <p>
-              <Button
+              {/* <Button
                 btnName={`Profile ID: ${account.profile_id}`}
-                onClick={() => navigate(`/profiles/${account.profile_id}`)} 
+
                 className=""
-              />
+              /> */}
+  
+              <button
+                value={`Profile ID: ${account.profile_id}`}
+                onClick={() => navigate(`/profiles/${account.profile_id}`)} 
+                type='submit'
+                className='btn-class'
+                aria-label='Log In' // Accessibility
+              >
+                {`Profile ID: ${account.profile_id}`}
+              </button>
             </p>
             <p><strong>Account ID:</strong> {account.account_id}</p>
             <p><strong>Medical Aid Nr:</strong> {account.medical_aid_nr}</p>
@@ -109,10 +119,13 @@ export default function AccountDetails() {
               idField="invoice_id"
             />
             <div className="flex justify-start">
-              <Button
-                btnName="New Invoice"
-                className="text-sm bg-white w-[90px] text-gray-dark"
-              />
+             {/* <button
+                type='submit'
+                className='text-sm py-1 px-2 mx-2 min-w-[100px] border border-white rounded hover:border hover:border-ebmaa-purple text-center'
+                aria-label='New Invoice' // Accessibility
+              >
+                New Invoice
+              </button> */}
             </div>
           </div>
         </>

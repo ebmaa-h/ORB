@@ -1,11 +1,11 @@
-import { useContext, useState } from 'react';
+import { useContext } from 'react';
 import { UserContext } from '../../context/UserContext';
 import { Outlet, Navigate } from 'react-router-dom';
-import { Nav, SideNav } from '../../components'; // Ensure the import path is correct
+import { Nav } from '../../components';
 
 const ProtectedLayout = () => {
   const { user, loading } = useContext(UserContext);
-  const [navWidth, setNavWidth] = useState('4rem'); // Default width of the SideNav
+  // const [navWidth, setNavWidth] = useState('4rem'); // Default width of the SideNav
 
   // If loading user data, show a loading message
   if (loading) {

@@ -42,6 +42,14 @@ export default {
       }
     }
   },
-  plugins: [],
+  plugins: [
+    // function ({ addUtilities }) {
+    //   addUtilities({
+    //     '.link-class': {
+    //       '@apply': 'text-sm text-center min-w-[100px] rounded hover:border hover:border-ebmaa-purple',
+    //     },
+    //   });
+    // },
+  ],
 }
 

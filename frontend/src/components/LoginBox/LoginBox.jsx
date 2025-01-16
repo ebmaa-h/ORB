@@ -4,7 +4,6 @@ import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 import { UserContext } from '../../context/UserContext';
 import ENDPOINTS from '../../config/apiEndpoints';
-import { Button } from '../common/index'
  
 // Set Axios to include cookies by default
 axios.defaults.withCredentials = true;
@@ -46,7 +45,7 @@ export default function LoginBox() {
 
   return (
     <div className="flex justify-center items-center min-h-screen text-sm">
-      <div className="min-w-[300px] min-h-[425px] bg-white flex flex-col justify-between items-center rounded-lg py-8">
+      <div className="min-w-[300px] min-h-[425px] bg-white flex flex-col justify-evenly items-center rounded-lg">
         <img className='max-w-[190px] h-auto translate-x-[-15px]' src="/ebmaa-orb-logo.svg" alt="" />
         <form className="flex flex-col justify-center items-center gap-6" onSubmit={handleLogin}>
           <input 
@@ -69,10 +68,13 @@ export default function LoginBox() {
             required 
             onFocus={() => setLoginError(false)} // Reset error when refocusing
           />
-          <Button 
-            btnName="Log In" 
-            type="submit"
-          />
+            <button
+              type='submit'
+              className='btn-class px-6'
+              aria-label='Log In' // Accessibility
+            >
+              Log In
+            </button>
         </form>
       </div>
     </div>  

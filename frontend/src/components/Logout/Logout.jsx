@@ -1,7 +1,6 @@
 import { useContext } from 'react';
 import { UserContext } from '../../context/UserContext';
 import { DoctorContext } from '../../context/DoctorContext';
-import { Button } from '../common/index';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import ENDPOINTS from '../../config/apiEndpoints';
@@ -32,11 +31,16 @@ export default function Logout() {
 
   return (
     <div>
-      <Button 
-        btnName="Log out" 
-        onClick={handleLogout} 
-        className=""
-      />
+
+      <button
+      type='submit'
+      onClick={handleLogout} 
+      className='link-class'
+      aria-label='Log out' // Accessibility
+    >
+      Log out
+    </button>
     </div>
+    
   );
 }

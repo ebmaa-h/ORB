@@ -2,8 +2,8 @@ import { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import ENDPOINTS from '../../config/apiEndpoints';
 import axios from 'axios';
-import { Nav } from '../../components';
-import { Button, InputField } from '../../components';
+import { InputField } from '../../components';
+import BackButton from '../../utility/BackButton';
 
 export default function PersonRecordDetails() {
   const { recordId } = useParams();
@@ -49,6 +49,7 @@ export default function PersonRecordDetails() {
             }
             className="text-sm bg-white w-[100px] text-gray-dark flex justify-center gap-2 items-center"
           /> */}
+        <BackButton />
           <div className='flex flex-row gap-4'>
             <InputField
               label="Title"
@@ -135,10 +136,15 @@ export default function PersonRecordDetails() {
               onChange={handleChange}
             />
           </div>
-          <Button
-            btnName="Update"
-            className="text-sm bg-white w-[90px] text-gray-dark"
-          />
+
+            <div className='flex justify-end'>
+            <button
+              type='submit'
+              className='btn-class w-[100px]'
+            >
+              Update
+            </button>
+            </div>
         </div>
       ) : (
         <p>Loading record details...</p>

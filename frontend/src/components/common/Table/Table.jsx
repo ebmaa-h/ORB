@@ -9,6 +9,8 @@ export default function Table({ data, columns, linkPrefix, idField }) {
     navigate(`/${linkPrefix}/${id}`);
   };
 
+  console.log("DATA: ",data); // {patient_full: 'Mrs Jo-Anne Smith', patient_id: '7207240000000'}
+
   return (
       <table className="table-auto w-full border-collapse border border-gray-light text-sm text-gray-dark">
         <thead>

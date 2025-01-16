@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom'; // For accessing profile_id from the URL
 import axios from 'axios';
-import { Nav, SearchBar, Table, Button } from '../../components';
+import { SearchBar, Table } from '../../components';
 import ENDPOINTS from '../../config/apiEndpoints';
 
 export default function ProfileDetails() {
@@ -73,10 +73,7 @@ export default function ProfileDetails() {
                 linkPrefix="accounts"
                 idField="account_id"
               />
-              <Button
-                btnName="New Account"
-                className="text-sm bg-white w-[90px] text-gray-dark"
-              />
+  
             </div>
             {/* Dependents Table */}
             <div className='w-[50%]'>
@@ -88,7 +85,6 @@ export default function ProfileDetails() {
                 linkPrefix="records" 
               />
             </div>
-
           </div>
 
           {/* Invoices Table with Search */}
