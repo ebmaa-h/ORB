@@ -2,7 +2,7 @@
 
 export default function InputField({ type, value, label, id, onChange, readOnly = false }) {
   return (
-    <div className='border-b border-gray-light flex-1'>
+    <div className='border-b border-gray-light'>
       <label htmlFor={id || label.toLowerCase()} className="font-bold text-sm">
         {label}:
       </label>

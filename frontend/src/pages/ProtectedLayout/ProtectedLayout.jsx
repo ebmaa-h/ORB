@@ -29,8 +29,8 @@ const ProtectedLayout = () => {
           transition: 'margin-left 0.2s ease',
         }}
       > */}
-        <Nav />
         <main className="h-dvh overflow-y-auto"> 
+          <Nav />
           <Outlet />
         </main>
       {/* </div> */}
