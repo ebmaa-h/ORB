@@ -49,8 +49,7 @@ export default function PersonRecordDetails() {
             }
             className="text-sm bg-white w-[100px] text-gray-dark flex justify-center gap-2 items-center"
           /> */}
-        <BackButton />
-          <div className='flex flex-row gap-4'>
+          <div className='flex gap-4'>
             <InputField
               label="Title"
               value={record.title}
@@ -137,13 +136,14 @@ export default function PersonRecordDetails() {
             />
           </div>
 
-            <div className='flex justify-end'>
-            <button
-              type='submit'
-              className='btn-class w-[100px]'
-            >
-              Update
-            </button>
+            <div className='flex justify-end gap-4'>
+              <BackButton />
+              <button
+                type='submit'
+                className='btn-class w-[100px]'
+              >
+                Update
+              </button>
             </div>
         </div>
       ) : (

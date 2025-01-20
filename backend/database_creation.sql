@@ -178,6 +178,21 @@ CREATE TABLE person_records (
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 );
 
+CREATE TABLE addresses (
+    address_id INT AUTO_INCREMENT PRIMARY KEY,
+    person_id INT NOT NULL,
+    address_type ENUM('Postal', 'Street', 'Other') DEFAULT 'Other',
+    is_domicilium BOOLEAN DEFAULT FALSE,
+    line1 VARCHAR(255) NOT NULL,
+    line2 VARCHAR(255),
+    line3 VARCHAR(255),
+    line4 VARCHAR(255),
+    postal_code VARCHAR(20),
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    FOREIGN KEY (person_id) REFERENCES person_records(person_id) ON DELETE CASCADE
+);
+
 -- Create profile_person_map table
 CREATE TABLE profile_person_map (
     map_id INT AUTO_INCREMENT PRIMARY KEY,

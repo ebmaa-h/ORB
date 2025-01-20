@@ -2,8 +2,8 @@
 
 export default function InputField({ type, value, label, id, onChange, readOnly = false }) {
   return (
-    <div className='border-b border-gray-light'>
-      <label htmlFor={id || label.toLowerCase()} className="font-bold text-sm">
+    <div className='flex items-end gap-2 text-sm'>
+      <label htmlFor={id || label.toLowerCase()} className="font-bold">
         {label}:
       </label>
       <input
@@ -12,7 +12,7 @@ export default function InputField({ type, value, label, id, onChange, readOnly 
         value={value}
         onChange={onChange}
         readOnly={readOnly}
-        className="w-full h-[30px] text-sm"
+        className="border-b"
       />
     </div>
   );

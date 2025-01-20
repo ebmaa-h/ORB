@@ -75,8 +75,8 @@ export default function InvoiceDetails() {
         <>
           <div className="bg-white rounded m-4 p-4 flex flex-row gap-4 text-sm justify-between">
           <h1><strong>Invoice Nr: {invoice.invoice_id}</strong></h1>
-          <p>Account ID: {invoice.account_id}</p>
-          <p>Account ID: {invoice.account_id}</p>
+          {/* <p>Account ID: {invoice.account_id}</p>
+          <p>Account ID: {invoice.account_id}</p> */}
           </div>
           <div className="bg-white rounded m-4 p-4 flex flex-col gap-4">
 
