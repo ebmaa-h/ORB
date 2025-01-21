@@ -29,7 +29,7 @@ const personController = {
       return res.status(400).json({ message: 'Record ID is required' });
     }
 
-    Person.onePerson(recordId, (err, record) => {
+    Person.getPersonDetails(recordId, (err, record) => {
       if (err) {
         console.error('Error finding record:', err);
         return res.status(500).json({ message: 'Internal server error', error: err });

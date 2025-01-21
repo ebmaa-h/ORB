@@ -114,7 +114,7 @@ export default function AccountDetails() {
             {/* {console.log("DATA FOR TABLE ", filteredInvoices)} */}
             <Table
               data={filteredInvoices}
-              columns={['Invoice ID','Patient', 'Patient ID', 'Main Member', 'Guarantor ID', 'Balance', 'Date of Service', 'Status', 'Doctor', 'Practice Nr']}
+              columns={['Invoice ID','Patient', 'Patient ID', 'Main Member', 'Guarantor ID', 'Balance', 'Date of Service', 'Status']}
               linkPrefix="invoices"
               idField="invoice_id"
             />
