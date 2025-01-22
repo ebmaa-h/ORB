@@ -35,13 +35,8 @@ getPersonDetails: (personId, callback) => {
     const addressesQuery = `
       SELECT
         ad.address_id,
-        ad.address_type,
         ad.is_domicilium,
-        ad.line1,
-        ad.line2,
-        ad.line3,
-        ad.line4,
-        ad.postal_code,
+        ad.address,
         DATE_FORMAT(ad.created_at, '%Y-%m-%d') AS created_date,
         DATE_FORMAT(ad.updated_at, '%Y-%m-%d') AS updated_date
       FROM addresses ad

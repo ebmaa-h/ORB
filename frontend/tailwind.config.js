@@ -33,6 +33,10 @@ export default {
       serif: ['Merriweather', 'serif'],
     },
     extend: {
+      fontSize: {
+        'uxss': '0.525rem',
+        'xss': '0.625rem',
+      },
       spacing: {
         '128': '32rem',
         '144': '36rem',
