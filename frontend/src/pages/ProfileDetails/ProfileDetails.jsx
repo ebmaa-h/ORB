@@ -6,11 +6,11 @@ import ENDPOINTS from '../../config/apiEndpoints';
 
 export default function ProfileDetails() {
   const { profileId } = useParams(); 
-  const [profile, setProfile] = useState(null); // Stores the overall profile details
-  const [dependents, setDependents] = useState([]); // Stores the dependents
-  const [accounts, setAccounts] = useState([]); // Stores the accounts
-  const [invoices, setInvoices] = useState([]); // Stores the invoices
-  const [invoiceSearchTerm, setInvoiceSearchTerm] = useState(''); // Search term for filtering invoices
+  const [profile, setProfile] = useState(null);
+  const [dependents, setDependents] = useState([])
+  const [accounts, setAccounts] = useState([]);
+  const [invoices, setInvoices] = useState([]);
+  const [invoiceSearchTerm, setInvoiceSearchTerm] = useState('');
 
   const filteredInvoices = invoices.filter((invoice) =>
     Object.values(invoice).join(' ').toLowerCase().includes(invoiceSearchTerm.toLowerCase())
@@ -31,14 +31,14 @@ export default function ProfileDetails() {
         
         // Logging each extracted part
         // console.log('Dependents:', dependents);
-        // console.log('Accounts:', accounts);
-        console.log('Invoices:', invoices);
+        console.log('Accounts:', accounts);
+        // console.log('Invoices:', invoices);
         // console.log('Profile Data:', profileData);
 
-        setProfile(profileData || {});
-        setDependents(dependents || {});
-        setAccounts(accounts || {});
-        setInvoices(invoices || {});
+        setProfile(profileData || []);
+        setDependents(dependents || []);
+        setAccounts(accounts || []);
+        setInvoices(invoices || []);
       } catch (error) {
         console.error('Error fetching profile details:', error);
       }

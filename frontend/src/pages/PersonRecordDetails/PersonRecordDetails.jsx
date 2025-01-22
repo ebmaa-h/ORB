@@ -4,10 +4,14 @@ import ENDPOINTS from '../../config/apiEndpoints';
 import axios from 'axios';
 import { InputField } from '../../components';
 import BackButton from '../../utility/BackButton';
+import { Table } from '../../components';
 
 export default function PersonRecordDetails() {
   const { recordId } = useParams();
   const [record, setRecord] = useState({});
+  const [addresses, setAddresses] = useState([]);
+  const [accounts, setAccounts] = useState([]);
+  const [invoices, setInvoices] = useState([]);
 
   // Fetch record details
   useEffect(() => {
@@ -16,7 +20,17 @@ export default function PersonRecordDetails() {
         const response = await axios.get(`${ENDPOINTS.records}/${recordId}`, {
           withCredentials: true,
         });
-        setRecord(response.data.record[0] || {});
+
+        // console.log(response.data.record.person);
+
+        // Extract
+        const { person, addresses, accounts, invoices } = response.data.record;
+    
+        // Set
+        setRecord(person || []);
+        setAddresses(addresses || []);
+        setAccounts(accounts || []);
+        setInvoices(invoices || []);
       } catch (error) {
         console.error('Error fetching record details:', error);
       }
@@ -40,16 +54,7 @@ export default function PersonRecordDetails() {
     <>
       {record ? (
         <div className="flex flex-col gap-4 m-4 p-4 bg-white rounded text-gray-dark">
-          {/* Back Button */}
-          {/* <Button
-            btnName={
-              <>
-                <span className="material-symbols-outlined text-sm">arrow_back</span> Back
-              </>
-            }
-            className="text-sm bg-white w-[100px] text-gray-dark flex justify-center gap-2 items-center"
-          /> */}
-          <div className='flex gap-4'>
+          <div className='flex gap-4 w-full'>
             <InputField
               label="Title"
               value={record.title}
@@ -68,10 +73,6 @@ export default function PersonRecordDetails() {
               id="last"
               onChange={handleChange}
             />
-          </div>
-
-          {/* Date of Birth */}
-          <div className='flex flex-row gap-4'>
             <InputField
               label="Date of Birth"
               value={record.date_of_birth}
@@ -90,10 +91,6 @@ export default function PersonRecordDetails() {
               id="gender"
               onChange={handleChange}
             />
-          </div>
-
-          {/* Contact Information */}
-          <div className='flex flex-row gap-4'>
             <InputField
               label="Cell Number"
               value={record.cell_nr}
@@ -112,30 +109,34 @@ export default function PersonRecordDetails() {
               id="work_nr"
               onChange={handleChange}
             />
-          </div>
-
-          {/* Address */}
-          <div className='flex flex-row gap-4'>
             <InputField
               label="Email"
               value={record.email}
               id="email"
               onChange={handleChange}
             />
-            <InputField
-              label="Postal Address"
-              value={record.post_address || 'N/A'}
-              id="post_address"
-              onChange={handleChange}
-            />
-            <InputField
-              label="Street Address"
-              value={record.str_address || 'N/A'}
-              id="str_address"
-              onChange={handleChange}
-            />
           </div>
 
+          <div className="bg-white rounded gap-4 flex">
+            <div className='w-[50%] flex flex-col'>
+              <h3 className="text-sm uppercase font-bold pb-4">Accounts</h3>
+              <Table 
+                data={accounts}
+                columns={['Account ID','Balance', 'Doctor', 'Active Invoices']}
+                linkPrefix="accounts"
+                idField="account_id"
+              />
+            </div>
+              <div className='w-[50%] flex flex-col'>
+              <h3 className="text-sm uppercase font-bold pb-4">Invoices</h3>
+              <Table 
+                data={invoices}
+                columns={['Invoice ID','Date of Service', 'Status', 'Balance' ,'Date Created' , 'Date Updated']}
+                linkPrefix="invoices"
+                idField="invoice_id"
+                />
+              </div>
+          </div>
             <div className='flex justify-end gap-4'>
               <BackButton />
               <button

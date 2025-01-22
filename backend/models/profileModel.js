@@ -81,8 +81,6 @@ const Profile = {
             CONCAT('R ', FORMAT(i.balance, 2)) AS invoice_balance,
             DATE_FORMAT(i.date_of_service, '%Y-%m-%d') AS date_of_service,
             i.status AS 'Status',
-            CONCAT('Dr ', LEFT(d.first, 1), ' ', d.last) AS doctor_name,
-            d.practice_nr AS 'Doctor Practice Number',
             DATE_FORMAT(i.updated_at, '%Y-%m-%d') AS updated_at
         FROM invoices i
         JOIN accounts a ON i.account_id = a.account_id

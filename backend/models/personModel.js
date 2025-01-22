@@ -33,29 +33,46 @@ getPersonDetails: (personId, callback) => {
 
     // Query for addresses
     const addressesQuery = `
-        SELECT
-            ad.address_id,
-            ad.address_type,
-            ad.is_domicilium,
-            ad.line1,
-            ad.line2,
-            ad.line3,
-            ad.line4,
-            ad.postal_code,
-            DATE_FORMAT(ad.created_at, '%Y-%m-%d') AS created_date,
-            DATE_FORMAT(ad.updated_at, '%Y-%m-%d') AS updated_date
-        FROM addresses ad
-        WHERE ad.person_id = ?;
+      SELECT
+        ad.address_id,
+        ad.address_type,
+        ad.is_domicilium,
+        ad.line1,
+        ad.line2,
+        ad.line3,
+        ad.line4,
+        ad.postal_code,
+        DATE_FORMAT(ad.created_at, '%Y-%m-%d') AS created_date,
+        DATE_FORMAT(ad.updated_at, '%Y-%m-%d') AS updated_date
+      FROM addresses ad
+      WHERE ad.person_id = ?;
     `;
 
     // Query for accounts
     const accountsQuery = `
-
-    `;
+    SELECT
+      a.account_id,
+      CONCAT('R ', FORMAT(SUM(i.balance), 2)) AS acc_balance,
+      CONCAT('Dr ', LEFT(d.first, 1), ' ', d.last) AS doctor,
+      COUNT(i.invoice_id) AS total_invoices
+    FROM accounts a
+    LEFT JOIN invoices i on a.account_id = i.account_id
+    LEFT JOIN doctors d on a.doctor_id = d.doctor_id
+    WHERE a.patient_id = ?
+    GROUP BY a.account_id, doctor;`;
 
     // Query for invoices
     const invoicesQuery = `
-
+       SELECT
+            i.invoice_id,
+            DATE_FORMAT(i.date_of_service, '%Y-%m-%d') AS date_of_service,
+            i.status,
+            i.balance,
+            DATE_FORMAT(i.created_at, '%Y-%m-%d') AS created_date,
+            DATE_FORMAT(i.updated_at, '%Y-%m-%d') AS updated_date
+        FROM invoices i
+        LEFT JOIN accounts a ON i.account_id = a.account_id
+        WHERE a.patient_id = 14;
     `;
 
     // Retrieve data sequentially

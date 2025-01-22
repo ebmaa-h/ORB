@@ -24,7 +24,7 @@ const profilesController = {
 
   getProfile: (req, res) => {
     const profileId = req.params.profileId;
-    console.log(req.params)
+    // console.log(req.params)
 
     if (!profileId) {
       return res.status(400).json({ message: 'Profile ID is required' });

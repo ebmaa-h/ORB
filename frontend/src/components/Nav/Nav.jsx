@@ -10,6 +10,8 @@ export default function Nav() {
   const { doctorId, setDoctorId } = useContext(DoctorContext);
   const location = useLocation(); // Get the current path
   
+  const disabled = 'opacity-40 cursor-not-allowed';
+  
 
   const accLinkClass = doctorId
     ? `link-class`
@@ -19,8 +21,8 @@ export default function Nav() {
     <div className="bg-white flex justify-between items-center flex-row h-[60px]">
       <div className='flex flex-row gap-4 ml-4'>
         <select
-          className="border rounded border-gray-light text-sm px-2 hover:border-ebmaa-purple transition duration-300 cursor-pointer"
-          value={doctorId || ""}
+          className={`border rounded border-gray-light text-sm px-2 hover:border-ebmaa-purple transition duration-300 ${location.pathname === '/records' || location.pathname === '/profiles' ? disabled : ''}`}
+          disabled={location.pathname === '/records' || location.pathname === '/profiles'}
           onChange={(e) => {
             setDoctorId(e.target.value);
           }}
@@ -38,6 +40,9 @@ export default function Nav() {
         <Link
           to={doctorId ? "/accounts" : "#"}
           className={`${accLinkClass} ${location.pathname === '/accounts' ? 'active-link' : ''}`}
+          onClick={(e) => {
+            if (!doctorId) e.preventDefault();
+          }}
         >
           Accounts
         </Link>
@@ -45,6 +50,9 @@ export default function Nav() {
         <Link
           to={doctorId ? "/invoices" : "#"}
           className={`${accLinkClass} ${location.pathname === '/invoices' ? 'active-link' : ''}`}
+          onClick={(e) => {
+            if (!doctorId) e.preventDefault();
+          }}
         >
           Invoices
         </Link>
