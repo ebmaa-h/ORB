@@ -34,7 +34,7 @@ export default function InvoiceDetails() {
     <>
       {doctorId ? (
         <>
-          <div className="bg-white rounded m-4 p-4 flex flex-row gap-4  justify-between">
+          <div className="bg-white shadow rounded m-4 p-4 flex flex-row gap-4  justify-between">
             Doctor Info page
           </div>
         </>

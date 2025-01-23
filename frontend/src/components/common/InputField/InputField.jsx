@@ -14,7 +14,7 @@ export default function InputField({ classes, type, value, label, id, onChange, 
         value={value}
         onChange={onChange}
         readOnly={readOnly}
-        className={`${classes || ''} border-b focus:outline-none focus:ring-0 focus:border-b-1 w-full`}
+        className={`${classes || ''} border-gray-light border-b focus:outline-none focus:ring-0 focus:border-b-1 w-full`}
 
       />
     </div>

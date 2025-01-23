@@ -13,11 +13,11 @@ export default function Dashboard() {
 
   return (
     <>        
-      <div className='bg-white rounded m-4 p-4'>
+      <div className='bg-white shadow rounded m-4 p-4'>
         <p>Hello {user.first}.</p>
       </div>
 
-      {/* <div className='bg-white rounded m-4 p-4 flex gap-4'>
+      {/* <div className='bg-white shadow rounded m-4 p-4 flex gap-4'>
         {findFeature("profiles") && (
           <FeatureBlock feature="Profiles" />
         )}

@@ -31,7 +31,7 @@ export default function Accounts() {
   return (
     <>
       {doctorId ? 
-        <div className='flex flex-col gap-4 m-4 p-4 bg-white rounded'>
+        <div className='flex flex-col gap-4 m-4 p-4 bg-white shadow rounded'>
           <SearchBar searchTerm={searchTerm} setSearchTerm={setSearchTerm} />
           <Table data={filteredAccounts} columns={columns} linkPrefix="accounts" idField="account_id"/>
         </div>

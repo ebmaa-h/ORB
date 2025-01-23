@@ -10,7 +10,7 @@ export default function Tools() {
     user.features.find((feature) => feature.feature_name === featureName && feature.is_active);
 
   return (
-    <div className='bg-white rounded m-4 p-4'>
+    <div className='bg-white shadow rounded m-4 p-4'>
       tools
     </div>
   )

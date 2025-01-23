@@ -12,11 +12,11 @@ export default function Table({ data, columns, linkPrefix, idField }) {
   // console.log("DATA: ",data); // {patient_full: 'Mrs Jo-Anne Smith', patient_id: '7207240000000'}
 
   return (
-      <table className="table-auto w-full border-collapse border border-gray-light  text-gray-dark">
+      <table className="table-auto w-full border-collapse border-b border-gray-light  text-gray-dark">
         <thead>
           <tr>
             {columns.map((col, idx) => (
-              <th key={idx} className="border border-gray-light p-2">{col}</th>
+              <th key={idx} className="border-b border-gray-light p-2">{col}</th>
             ))}
           </tr>
         </thead>
@@ -31,7 +31,7 @@ export default function Table({ data, columns, linkPrefix, idField }) {
                 {Object.values(item).map((value, key) => (
                   <td 
                     key={key} 
-                    className="border border-gray-light p-2 text-center"
+                    className="border-b border-gray-light p-2 text-center"
                     >
 
                     {value}

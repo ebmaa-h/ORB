@@ -53,7 +53,7 @@ export default function ProfileDetails() {
     <>
       {profile ? (
         <>
-          <div className="bg-white rounded m-4 p-4 flex flex-row justify-between items-center text-center  text-gray-dark">
+          <div className="bg-white shadow rounded m-4 p-4 flex flex-row justify-between items-center text-center  text-gray-dark">
             <p><strong>Profile ID:</strong> {profile.profile_id}</p>
             <p><strong>Medical Aid Nr:</strong> {profile.medical_aid_nr}</p>
             <p><strong>Medical Aid:</strong> {profile.medical_aid_name} - {profile.plan_name}</p>
@@ -63,7 +63,7 @@ export default function ProfileDetails() {
             <p><strong>Balance:</strong> {profile.profile_balance}</p>
           </div>
 
-          <div className="bg-white rounded m-4 p-4 gap-4 flex">
+          <div className="bg-white shadow rounded m-4 p-4 gap-4 flex">
             {/* Accounts Table */}
             <div className='w-[50%] flex flex-col gap-4'>
               <h3 className=" uppercase font-bold">Accounts</h3>
@@ -88,7 +88,7 @@ export default function ProfileDetails() {
           </div>
 
           {/* Invoices Table with Search */}
-          <div className="bg-white rounded m-4 p-4 flex flex-col gap-4">
+          <div className="bg-white shadow rounded m-4 p-4 flex flex-col gap-4">
             <h3 className=" uppercase font-bold">Invoices</h3>
             <SearchBar
               searchTerm={invoiceSearchTerm}

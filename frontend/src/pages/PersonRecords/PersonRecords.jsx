@@ -28,7 +28,7 @@ export default function PersonRecords() {
 
   return (
     <>
-      <div className='flex flex-col gap-4 m-4 p-4 bg-white rounded'>
+      <div className='flex flex-col gap-4 m-4 p-4 bg-white shadow rounded'>
         <SearchBar searchTerm={searchTerm} setSearchTerm={setSearchTerm} />
         <Table 
           data={filteredPersons.map(person => ({

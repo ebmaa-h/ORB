@@ -73,12 +73,12 @@ export default function InvoiceDetails() {
     <>
       {invoice ? (
         <>
-          <div className="bg-white rounded m-4 p-4 flex flex-row gap-4  justify-between">
+          <div className="bg-white shadow rounded m-4 p-4 flex flex-row gap-4  justify-between">
           <h1><strong>Invoice Nr: {invoice.invoice_id}</strong></h1>
           {/* <p>Account ID: {invoice.account_id}</p>
           <p>Account ID: {invoice.account_id}</p> */}
           </div>
-          <div className="bg-white rounded m-4 p-4 flex flex-col gap-4">
+          <div className="bg-white shadow rounded m-4 p-4 flex flex-col gap-4">
 
             <div className='flex flex-row gap-4'>
               <div className="flex-1 ">
@@ -121,7 +121,7 @@ export default function InvoiceDetails() {
               </div>
             </div>
 
-            <div className="bg-white rounded mx-4 p-4 flex flex-row gap-4 justify-end ">
+            <div className="mx-4 p-4 flex flex-row gap-4 justify-end ">
               <label className='flex items-center'>Status:</label>
                 <select
                   className="border rounded border-gray-light px-2 hover:border-ebmaa-purple transition duration-300 cursor-pointer"

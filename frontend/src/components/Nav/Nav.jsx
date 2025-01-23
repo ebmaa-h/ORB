@@ -19,7 +19,7 @@ export default function Nav() {
     : `link-class hidden`;
 
   return (
-    <div className="bg-white flex justify-between items-center flex-row h-[60px]">
+    <div className="bg-white shadow flex justify-between items-center flex-row h-[60px]">
       <div className='flex flex-row gap-4 ml-4'>
         <select
           className={`border rounded border-gray-light  px-2 hover:border-ebmaa-purple transition duration-300 ${!!doctorId && !disabledPaths.includes(location.pathname) ? disabled : ''}`}

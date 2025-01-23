@@ -55,7 +55,7 @@ export default function AccountDetails() {
 
       {account && Object.keys(account).length > 0 ? (
         <>
-          <div className="bg-white rounded m-4 p-4 flex flex-row justify-between items-center text-center  text-gray-dark">
+          <div className="bg-white shadow rounded m-4 p-4 flex flex-row justify-between items-center text-center  text-gray-dark">
             <p>
               {/* <Button
                 btnName={`Profile ID: ${account.profile_id}`}
@@ -81,7 +81,7 @@ export default function AccountDetails() {
             <p><strong>Balance:</strong> 0.00</p>
           </div>
 
-          <div className="bg-white rounded m-4 p-4 gap-4 flex">
+          <div className="bg-white shadow rounded m-4 p-4 gap-4 flex">
             {/* Member Table */}
             <div className='w-[50%]'>
               <h3 className=" uppercase font-bold pb-4">GUARANTOR</h3>
@@ -105,7 +105,7 @@ export default function AccountDetails() {
           </div>
 
           {/* Invoices Table with Search */}
-          <div className="bg-white rounded m-4 p-4 flex flex-col gap-4">
+          <div className="bg-white shadow rounded m-4 p-4 flex flex-col gap-4">
             <h3 className=" uppercase font-bold">Invoices</h3>
             <SearchBar
               searchTerm={invoiceSearchTerm}
