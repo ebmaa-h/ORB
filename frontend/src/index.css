@@ -4,10 +4,10 @@
 
 @layer components {
   .link-class {
-    @apply border-b border-white text-sm py-1 px-2 hover:border-ebmaa-purple transition duration-300; 
+    @apply border-b border-white py-1 px-2 hover:border-ebmaa-purple transition duration-300; 
   }
   .btn-class {
-    @apply text-sm border rounded border-gray-light py-1 px-2 hover:border-ebmaa-purple transition duration-300; 
+    @apply border rounded border-gray-light py-1 px-2 hover:border-ebmaa-purple transition duration-300; 
   }
   .active-link {
     @apply border-ebmaa-purple border-b;

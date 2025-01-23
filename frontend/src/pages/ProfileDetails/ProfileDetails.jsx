@@ -31,8 +31,8 @@ export default function ProfileDetails() {
         
         // Logging each extracted part
         // console.log('Dependents:', dependents);
-        console.log('Accounts:', accounts);
-        // console.log('Invoices:', invoices);
+        // console.log('Accounts:', accounts);
+        console.log('Invoices:', invoices);
         // console.log('Profile Data:', profileData);
 
         setProfile(profileData || []);
@@ -53,7 +53,7 @@ export default function ProfileDetails() {
     <>
       {profile ? (
         <>
-          <div className="bg-white rounded m-4 p-4 flex flex-row justify-between items-center text-center text-sm text-gray-dark">
+          <div className="bg-white rounded m-4 p-4 flex flex-row justify-between items-center text-center  text-gray-dark">
             <p><strong>Profile ID:</strong> {profile.profile_id}</p>
             <p><strong>Medical Aid Nr:</strong> {profile.medical_aid_nr}</p>
             <p><strong>Medical Aid:</strong> {profile.medical_aid_name} - {profile.plan_name}</p>
@@ -66,7 +66,7 @@ export default function ProfileDetails() {
           <div className="bg-white rounded m-4 p-4 gap-4 flex">
             {/* Accounts Table */}
             <div className='w-[50%] flex flex-col gap-4'>
-              <h3 className="text-sm uppercase font-bold">Accounts</h3>
+              <h3 className=" uppercase font-bold">Accounts</h3>
               <Table
                 data={accounts}
                 columns={['Account ID', 'Doctor', 'Patient', 'Patient ID', 'Balance', 'Invoices']}
@@ -77,7 +77,7 @@ export default function ProfileDetails() {
             </div>
             {/* Dependents Table */}
             <div className='w-[50%]'>
-              <h3 className="text-sm uppercase font-bold pb-4">Dependents</h3>
+              <h3 className=" uppercase font-bold pb-4">Dependents</h3>
               <Table
                 data={dependents}
                 columns={['Record ID','Name', 'Date of Birth', 'ID' ,'Gender' , 'Dependent Nr']}
@@ -89,7 +89,7 @@ export default function ProfileDetails() {
 
           {/* Invoices Table with Search */}
           <div className="bg-white rounded m-4 p-4 flex flex-col gap-4">
-            <h3 className="text-sm uppercase font-bold">Invoices</h3>
+            <h3 className=" uppercase font-bold">Invoices</h3>
             <SearchBar
               searchTerm={invoiceSearchTerm}
               setSearchTerm={setInvoiceSearchTerm}
@@ -97,7 +97,7 @@ export default function ProfileDetails() {
             {/* {console.log("DATA FOR TABLE ", filteredInvoices)} */}
             <Table
               data={filteredInvoices}
-              columns={['Invoice ID', 'Account ID', 'Patient', 'Patient ID', 'Guarantor', 'Guarantor ID', 'Balance', 'Date of Service', 'Status', 'Doctor', 'Practice Nr', 'Last Update']}
+              columns={['Invoice ID', 'Patient', 'Patient ID', 'Guarantor', 'Guarantor ID', 'Balance', 'Date of Service', 'Status', 'Last Update']}
               linkPrefix="invoices"
               idField="invoice_id"
             />

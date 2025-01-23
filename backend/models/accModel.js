@@ -39,6 +39,7 @@ const Account = {
   },
 
   doctorAccounts: (doctorId, callback) => {
+        //         COUNT(i.invoice_id) AS total_invoices,
     const query = `
       SELECT 
         a.account_id,
@@ -46,7 +47,6 @@ const Account = {
         ppm.dependent_nr AS patient_dependent_number,
         CONCAT(pr_main.title, ' ', pr_main.first, ' ', pr_main.last) AS member_name,
         pr_main.id_nr AS main_member_id,
-        COUNT(i.invoice_id) AS total_invoices,
         CONCAT('R ', FORMAT(SUM(i.balance), 2)) AS total_invoice_balance
       FROM accounts a
       LEFT JOIN profiles p ON a.profile_id = p.profile_id
@@ -67,6 +67,7 @@ const Account = {
 
     `;
   
+
     db.query(query, [doctorId], (err, results) => {
       if (err) {
         return callback(err, null);

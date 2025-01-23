@@ -14,6 +14,7 @@ const ENDPOINTS = {
   userData : `${API_URL}/users/data`,
   logout : `${API_URL}/logout`,
   records : `${API_URL}/records`,
+  doctorInfo : `${API_URL}/doctor/info`,
 };
 
 export default ENDPOINTS;

@@ -11,7 +11,8 @@ export default function Nav() {
   const location = useLocation(); // Get the current path
   
   const disabled = 'opacity-40 cursor-not-allowed';
-  
+  const disabledPaths = ['/accounts', '/invoices', '/doctor/info'];
+
 
   const accLinkClass = doctorId
     ? `link-class`
@@ -21,13 +22,13 @@ export default function Nav() {
     <div className="bg-white flex justify-between items-center flex-row h-[60px]">
       <div className='flex flex-row gap-4 ml-4'>
         <select
-          className={`border rounded border-gray-light text-sm px-2 hover:border-ebmaa-purple transition duration-300 ${location.pathname === '/records' || location.pathname === '/profiles' ? disabled : ''}`}
-          disabled={location.pathname === '/records' || location.pathname === '/profiles'}
+          className={`border rounded border-gray-light  px-2 hover:border-ebmaa-purple transition duration-300 ${!!doctorId && !disabledPaths.includes(location.pathname) ? disabled : ''}`}
+          disabled={!!doctorId && !disabledPaths.includes(location.pathname)}
           onChange={(e) => {
             setDoctorId(e.target.value);
           }}
         >
-          <option className='' value="" disabled>
+          <option disabled={!!doctorId} value=""> {/* Disabled didnt work */}
             Select Doctor
           </option>
           {user.doctor_access.map((doctor, i) => (
@@ -55,6 +56,16 @@ export default function Nav() {
           }}
         >
           Invoices
+        </Link>
+
+        <Link
+          to={doctorId ? "/doctor/info" : "#"}
+          className={`${accLinkClass} ${location.pathname === '/doctor/info' ? 'active-link' : ''}`}
+          onClick={(e) => {
+            if (!doctorId) e.preventDefault();
+          }}
+        >
+          Doctor Info
         </Link>
 
         <p className="text-gray-light">|</p>

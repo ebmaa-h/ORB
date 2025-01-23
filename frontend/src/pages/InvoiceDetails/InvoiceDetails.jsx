@@ -73,7 +73,7 @@ export default function InvoiceDetails() {
     <>
       {invoice ? (
         <>
-          <div className="bg-white rounded m-4 p-4 flex flex-row gap-4 text-sm justify-between">
+          <div className="bg-white rounded m-4 p-4 flex flex-row gap-4  justify-between">
           <h1><strong>Invoice Nr: {invoice.invoice_id}</strong></h1>
           {/* <p>Account ID: {invoice.account_id}</p>
           <p>Account ID: {invoice.account_id}</p> */}
@@ -81,7 +81,7 @@ export default function InvoiceDetails() {
           <div className="bg-white rounded m-4 p-4 flex flex-col gap-4">
 
             <div className='flex flex-row gap-4'>
-              <div className="flex-1 text-sm">
+              <div className="flex-1 ">
                 <p>{medical.medical_aid_name} - {medical.medical_aid_plan_name}</p>
                 <p>Medical Aid Number: {medical.profile_medical_aid_nr}</p>
                 <p>Auth: {medical.profile_authorization_nr}</p>
@@ -92,13 +92,13 @@ export default function InvoiceDetails() {
 
               </div>
               
-              <div className="flex-1 text-sm">
+              <div className="flex-1 ">
                 <h2><strong>Guarantor</strong></h2>
                 <p>{member.member_title} {member.member_first} {member.member_last}</p>
                 <p>ID: {member.member_id_nr}</p>
               </div>
 
-              <div className="flex-1 text-sm">
+              <div className="flex-1 ">
                 <h2><strong>Patient</strong></h2>
                 <p>{patient.patient_title} {patient.patient_first} {patient.patient_last}</p>
                 <p>ID: {patient.patient_id_nr}</p>
@@ -121,7 +121,7 @@ export default function InvoiceDetails() {
               </div>
             </div>
 
-            <div className="bg-white rounded mx-4 p-4 flex flex-row gap-4 justify-end text-sm">
+            <div className="bg-white rounded mx-4 p-4 flex flex-row gap-4 justify-end ">
               <label className='flex items-center'>Status:</label>
                 <select
                   className="border rounded border-gray-light px-2 hover:border-ebmaa-purple transition duration-300 cursor-pointer"
@@ -152,7 +152,7 @@ export default function InvoiceDetails() {
                 className="btn-class w-[100px]"
                 onClick={handleDiscard}
               >
-                Discard
+                Back
               </button>
 
               <button

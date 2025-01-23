@@ -23,7 +23,7 @@ export default function Accounts() {
     fetchAccounts();
   }, [doctorId]);
 
-  const columns = ['Account ID', 'Patient', 'Dependent Nr', 'Guarantor', 'Guarantor ID', 'Invoices', 'Balance'];
+  const columns = ['Account ID', 'Patient', 'Dependent Nr', 'Guarantor', 'Guarantor ID', 'Balance'];
   const filteredAccounts = accounts.filter((account) =>
     Object.values(account).join(' ').toLowerCase().includes(searchTerm.toLowerCase())
   );

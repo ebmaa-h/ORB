@@ -55,7 +55,7 @@ export default function AccountDetails() {
 
       {account && Object.keys(account).length > 0 ? (
         <>
-          <div className="bg-white rounded m-4 p-4 flex flex-row justify-between items-center text-center text-sm text-gray-dark">
+          <div className="bg-white rounded m-4 p-4 flex flex-row justify-between items-center text-center  text-gray-dark">
             <p>
               {/* <Button
                 btnName={`Profile ID: ${account.profile_id}`}
@@ -84,7 +84,7 @@ export default function AccountDetails() {
           <div className="bg-white rounded m-4 p-4 gap-4 flex">
             {/* Member Table */}
             <div className='w-[50%]'>
-              <h3 className="text-sm uppercase font-bold pb-4">GUARANTOR</h3>
+              <h3 className=" uppercase font-bold pb-4">GUARANTOR</h3>
               <Table
                 data={Array.isArray(member) ? member : [member]} 
                 columns={['Record ID', 'Name', 'Cell', 'Email', 'Date of Birth', 'Gender', 'Depedent Nr']}
@@ -94,7 +94,7 @@ export default function AccountDetails() {
             </div>
             {/* Patient Table */}
             <div className='w-[50%]'>
-              <h3 className="text-sm uppercase font-bold pb-4">Patient</h3>
+              <h3 className=" uppercase font-bold pb-4">Patient</h3>
               <Table
                 data={Array.isArray(patient) ? patient : [patient]} 
                 columns={['Record ID', 'Name', 'Cell', 'Email', 'Date of Birth', 'Gender', 'Dependent Nr']}
@@ -106,7 +106,7 @@ export default function AccountDetails() {
 
           {/* Invoices Table with Search */}
           <div className="bg-white rounded m-4 p-4 flex flex-col gap-4">
-            <h3 className="text-sm uppercase font-bold">Invoices</h3>
+            <h3 className=" uppercase font-bold">Invoices</h3>
             <SearchBar
               searchTerm={invoiceSearchTerm}
               setSearchTerm={setInvoiceSearchTerm}
@@ -121,7 +121,7 @@ export default function AccountDetails() {
             <div className="flex justify-start">
              {/* <button
                 type='submit'
-                className='text-sm py-1 px-2 mx-2 min-w-[100px] border border-white rounded hover:border hover:border-ebmaa-purple text-center'
+                className=' py-1 px-2 mx-2 min-w-[100px] border border-white rounded hover:border hover:border-ebmaa-purple text-center'
                 aria-label='New Invoice' // Accessibility
               >
                 New Invoice
