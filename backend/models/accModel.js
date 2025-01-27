@@ -5,7 +5,7 @@ const Account = {
     const query = `
       SELECT 
         a.account_id,
-        CONCAT('Dr ', LEFT(d.first, 1), ' ', d.last) AS doctor_name,
+        CONCAT('Dr ', LEFT(d.first, 1), ' ', d.last) AS client_name,
         d.practice_nr,
         CONCAT(pr_dep.title, ' ', pr_dep.first, ' ', pr_dep.last) AS patient_name,
         ppm.dependent_nr AS patient_dependent_number, -- Add dependent number
@@ -15,7 +15,7 @@ const Account = {
         CONCAT('R ', FORMAT(SUM(i.balance), 2)) AS total_invoice_balance
       FROM accounts a
       LEFT JOIN profiles p ON a.profile_id = p.profile_id
-      LEFT JOIN doctors d ON a.doctor_id = d.doctor_id
+      LEFT JOIN clients d ON a.client_id = d.client_id
       LEFT JOIN person_records pr_main ON a.main_member_id = pr_main.person_id
       LEFT JOIN person_records pr_dep ON a.patient_id = pr_dep.person_id
       LEFT JOIN profile_person_map ppm 
@@ -23,7 +23,7 @@ const Account = {
       LEFT JOIN invoices i ON a.account_id = i.account_id
       GROUP BY 
         a.account_id, 
-        d.doctor_id, 
+        d.client_id, 
         d.practice_nr, 
         pr_main.person_id, 
         pr_dep.person_id,
@@ -38,7 +38,7 @@ const Account = {
     });
   },
 
-  doctorAccounts: (doctorId, callback) => {
+  clientAccounts: (clientId, callback) => {
         //         COUNT(i.invoice_id) AS total_invoices,
     const query = `
       SELECT 
@@ -50,16 +50,16 @@ const Account = {
         CONCAT('R ', FORMAT(SUM(i.balance), 2)) AS total_invoice_balance
       FROM accounts a
       LEFT JOIN profiles p ON a.profile_id = p.profile_id
-      LEFT JOIN doctors d ON a.doctor_id = d.doctor_id
+      LEFT JOIN clients d ON a.client_id = d.client_id
       LEFT JOIN person_records pr_main ON a.main_member_id = pr_main.person_id
       LEFT JOIN person_records pr_dep ON a.patient_id = pr_dep.person_id
       LEFT JOIN profile_person_map ppm 
         ON ppm.profile_id = p.profile_id AND ppm.person_id = a.patient_id
       LEFT JOIN invoices i ON a.account_id = i.account_id
-      WHERE d.doctor_id = ?
+      WHERE d.client_id = ?
       GROUP BY 
         a.account_id, 
-        d.doctor_id, 
+        d.client_id, 
         d.practice_nr, 
         pr_main.person_id, 
         pr_dep.person_id,
@@ -68,7 +68,7 @@ const Account = {
     `;
   
 
-    db.query(query, [doctorId], (err, results) => {
+    db.query(query, [clientId], (err, results) => {
       if (err) {
         return callback(err, null);
       }
@@ -81,17 +81,17 @@ const Account = {
       SELECT
         a.account_id,
         a.profile_id,
-        a.doctor_id,
+        a.client_id,
         a.main_member_id,
         a.patient_id,
-        CONCAT('Dr ', LEFT(d.first, 1), ' ', d.last) AS doctor_name,
+        CONCAT('Dr ', LEFT(d.first, 1), ' ', d.last) AS client_name,
         p.authorization_nr,
         p.medical_aid_nr, 
         mp.plan_name,
         mp.plan_code,
         ma.name AS medical_aid_name
       FROM accounts a
-      LEFT JOIN doctors d ON a.doctor_id = d.doctor_id
+      LEFT JOIN clients d ON a.client_id = d.client_id
       LEFT JOIN profiles p ON a.profile_id = p.profile_id
       LEFT JOIN medical_aid_plans mp ON p.plan_id = mp.plan_id
       LEFT JOIN medical_aids ma ON p.medical_aid_id = ma.medical_aid_id

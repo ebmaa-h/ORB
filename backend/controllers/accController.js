@@ -21,15 +21,15 @@ const accController = {
     });
   },
 
-  getAccountsByDoctor: (req, res) => {
-    const doctorId = req.params.doctorId;
+  getAccountsByClient: (req, res) => {
+    const clientId = req.params.clientId;
 
-    if (!doctorId) {
-      return res.status(400).json({ message: 'Doctor ID is required' });
+    if (!clientId) {
+      return res.status(400).json({ message: 'Client ID is required' });
     }
 
 
-    Account.doctorAccounts(doctorId, (err, accounts) => {
+    Account.clientAccounts(clientId, (err, accounts) => {
       if (err) {
         console.error('Error finding accounts:', err);
         return res.status(500).json({ message: 'Internal server error', error: err });

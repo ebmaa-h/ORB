@@ -64,12 +64,12 @@ export default function PersonRecordDetails() {
   return (
     <>
       {record ? (
-        <div className="flex flex-col gap-4 p-4">
-          {/* Main Container */}
-          <div className="flex gap-4">
+
+          <div className="flex justify-between">
             {/* Left Container: Details and Addresses */}
-            <div className="flex-1 bg-white rounded p-4 shadow">
-              <h3 className="uppercase font-bold pb-4">Details</h3>
+            <div className="container-col">
+              {/* Record details */}
+              <h3 className="uppercase font-bold">Details</h3>
               <div className="grid grid-cols-2 gap-4">
                 <InputField label="Title" value={record.title} id="title" onChange={handleChange} />
                 <InputField label="Name" value={record.first} id="first" onChange={handleChange} />
@@ -83,38 +83,39 @@ export default function PersonRecordDetails() {
                 <InputField label="Email" value={record.email} id="email" onChange={handleChange} />
               </div>
 
-              <h3 className="font-bold pt-6 pb-3">Addresses</h3>
-              <div className="space-y-4">
-                {addresses.map((address) => (
-                  <div key={address.address_id} className=" grid grid-cols-1">
-                    <input
-                      type="checkbox"
-                      checked={address.is_domicilium}
-                      onChange={(e) =>
-                        handleAddressChange(address.address_id, 'is_domicilium', e.target.checked)
-                      }
-                      className="w-4 h-4 checked:bg-ebmaa-purple"
-                    />
-                    <InputField
-                      value={address.address}
-                      classes="flex-1"
-                      id={`address-${address.address_id}`}
-                      onChange={(e) =>
-                        handleAddressChange(address.address_id, 'address', e.target.value)
-                      }
-                    />
-                  </div>
-                ))}
+              {/* Record addresses */}
+              <div className="flex flex-col gap-4">
+              <h3 className="font-bold">Addresses</h3>
+                  {addresses.map((address) => (
+                    <div key={address.address_id} className=" grid grid-cols-1">
+                      <input
+                        type="checkbox"
+                        checked={address.is_domicilium}
+                        onChange={(e) =>
+                          handleAddressChange(address.address_id, 'is_domicilium', e.target.checked)
+                        }
+                        className="w-4 h-4 checked:bg-ebmaa-purple"
+                      />
+                      <InputField
+                        value={address.address}
+                        classes="flex-1"
+                        id={`address-${address.address_id}`}
+                        onChange={(e) =>
+                          handleAddressChange(address.address_id, 'address', e.target.value)
+                        }
+                      />
+                    </div>
+                  ))}
+                </div>
               </div>
-            </div>
 
             {/* Right Container: Accounts and Invoices */}
-            <div className="flex-1 bg-white rounded p-4 shadow">
-              <div className="pb-6">
+            <div className="container-col">
+              <div className="">
                 <h3 className="uppercase font-bold pb-4">Accounts</h3>
                 <Table
                   data={accounts}
-                  columns={['Account ID', 'Balance', 'Doctor', 'Active Invoices']}
+                  columns={['Account ID', 'Balance', 'Client', 'Active Invoices']}
                   linkPrefix="accounts"
                   idField="account_id"
                 />
@@ -129,17 +130,16 @@ export default function PersonRecordDetails() {
                   idField="invoice_id"
                 />
               </div>
-            </div>
-          </div>
-
           {/* Bottom Buttons (optional) */}
-          {/* <div className="flex justify-end gap-4">
+          <div className="flex justify-end gap-4">
             <BackButton />
             <button type="submit" className="btn-class w-[100px]">
               Update
             </button>
-          </div> */}
-        </div>
+          </div>
+            </div>
+          </div>
+
       ) : (
         <p>Loading record details...</p>
       )}

@@ -69,7 +69,7 @@ export default function ProfileDetails() {
               <h3 className=" uppercase font-bold">Accounts</h3>
               <Table
                 data={accounts}
-                columns={['Account ID', 'Doctor', 'Patient', 'Patient ID', 'Balance', 'Invoices']}
+                columns={['Account ID', 'Client', 'Patient', 'Patient ID', 'Balance', 'Invoices']}
                 linkPrefix="accounts"
                 idField="account_id"
               />

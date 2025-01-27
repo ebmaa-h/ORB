@@ -1,13 +1,13 @@
 import { useContext } from 'react';
 import { UserContext } from '../../context/UserContext';
-import { DoctorContext } from '../../context/DoctorContext';
+import { ClientContext } from '../../context/ClientContext';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import ENDPOINTS from '../../config/apiEndpoints';
 
 export default function Logout() {
   const { setUser } = useContext(UserContext);
-  const { setDoctorId } = useContext(DoctorContext);
+  const { setClientId } = useContext(ClientContext);
   const navigate = useNavigate();
 
   const handleLogout = async () => {
@@ -17,7 +17,7 @@ export default function Logout() {
       
       // Clear the user context
       setUser(null);
-      setDoctorId(null);
+      setClientId(null);
       
 
       // Redirect to the login page

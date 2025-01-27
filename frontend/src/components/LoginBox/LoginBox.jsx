@@ -44,7 +44,7 @@ export default function LoginBox() {
   };
 
   return (
-    <div className="flex justify-center items-center min-h-screen ">
+    <div className="flex justify-center items-center min-h-screen bg-gray-light ">
       <div className="min-w-[300px] min-h-[425px] bg-white shadow flex flex-col justify-evenly items-center rounded-lg">
         <img className='max-w-[190px] h-auto translate-x-[-15px]' src="/ebmaa-orb-logo.svg" alt="" />
         <form className="flex flex-col justify-center items-center gap-6" onSubmit={handleLogin}>

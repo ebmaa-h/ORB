@@ -9,7 +9,7 @@ export default function InvoiceDetails() {
   const { invoiceId } = useParams();
   const navigate = useNavigate();
   const [medical, setMedical] = useState([]);
-  const [doctor, setDoctor] = useState([]);
+  const [client, setClient] = useState([]);
   const [invoice, setInvoice] = useState([]);
   const [member, setMember] = useState([]);
   const [patient, setPatient] = useState([]);
@@ -24,9 +24,9 @@ export default function InvoiceDetails() {
 
         const data = response.data.invoice; 
         console.log(data.member)
-        const { invoice, medical, member, doctor,  patient } = data; 
+        const { invoice, medical, member, client,  patient } = data; 
 
-        setDoctor(doctor || {});
+        setClient(client || {});
         setMedical(medical || {});
         setInvoice(invoice || {});
         setMember(member || {});
@@ -73,22 +73,22 @@ export default function InvoiceDetails() {
     <>
       {invoice ? (
         <>
-          <div className="bg-white shadow rounded m-4 p-4 flex flex-row gap-4  justify-between">
+          <div className="container-col">
           <h1><strong>Invoice Nr: {invoice.invoice_id}</strong></h1>
           {/* <p>Account ID: {invoice.account_id}</p>
           <p>Account ID: {invoice.account_id}</p> */}
           </div>
-          <div className="bg-white shadow rounded m-4 p-4 flex flex-col gap-4">
+          <div className="container-col">
 
             <div className='flex flex-row gap-4'>
               <div className="flex-1 ">
                 <p>{medical.medical_aid_name} - {medical.medical_aid_plan_name}</p>
                 <p>Medical Aid Number: {medical.profile_medical_aid_nr}</p>
                 <p>Auth: {medical.profile_authorization_nr}</p>
-                <p>Doctor: {doctor.doctor_name}</p>
+                <p>Client: {client.client_name}</p>
                 <br></br>
-                <p>{doctor.doctor_name}</p>
-                <p>Practice Number: {doctor.doctor_practice_number}</p>
+                <p>{client.client_name}</p>
+                <p>Practice Number: {client.client_practice_number}</p>
 
               </div>
               

@@ -7,14 +7,14 @@ if (!API_URL) {
 const ENDPOINTS = {
   login: `${API_URL}/login`,
   invoices : `${API_URL}/invoices`,
-  doctorInvoices: (doctorId) => `${API_URL}/invoices/doctors/${doctorId}`,
+  clientInvoices: (clientId) => `${API_URL}/invoices/clients/${clientId}`,
   accounts : `${API_URL}/accounts`,
-  doctorAccounts: (doctorId) => `${API_URL}/accounts/doctors/${doctorId}`,
+  clientAccounts: (clientId) => `${API_URL}/accounts/clients/${clientId}`,
   profiles : `${API_URL}/profiles`,
   userData : `${API_URL}/users/data`,
   logout : `${API_URL}/logout`,
   records : `${API_URL}/records`,
-  doctorInfo : `${API_URL}/doctor/info`,
+  clientInfo : `${API_URL}/client/info`,
 };
 
 export default ENDPOINTS;

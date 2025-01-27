@@ -48,13 +48,13 @@ getPersonDetails: (personId, callback) => {
     SELECT
       a.account_id,
       CONCAT('R ', FORMAT(SUM(i.balance), 2)) AS acc_balance,
-      CONCAT('Dr ', LEFT(d.first, 1), ' ', d.last) AS doctor,
+      CONCAT('Dr ', LEFT(d.first, 1), ' ', d.last) AS client,
       COUNT(i.invoice_id) AS total_invoices
     FROM accounts a
     LEFT JOIN invoices i on a.account_id = i.account_id
-    LEFT JOIN doctors d on a.doctor_id = d.doctor_id
+    LEFT JOIN clients d on a.client_id = d.client_id
     WHERE a.patient_id = ?
-    GROUP BY a.account_id, doctor;`;
+    GROUP BY a.account_id, client;`;
 
     // Query for invoices
     const invoicesQuery = `

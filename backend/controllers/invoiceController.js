@@ -22,14 +22,14 @@ const invoiceController = {
     });
   },
 
-  getInvoicesByDoctor: (req, res) => {
-    const doctorId = req.params.doctorId;
+  getInvoicesByClient: (req, res) => {
+    const clientId = req.params.clientId;
 
-    if (!doctorId) {
-      return res.status(400).json({ message: 'Doctor ID is required' });
+    if (!clientId) {
+      return res.status(400).json({ message: 'Client ID is required' });
     }
 
-    Invoice.doctorInvoices(doctorId, (err, invoices) => {
+    Invoice.clientInvoices(clientId, (err, invoices) => {
       if (err) {
         console.error('Error finding invoices:', err);
         return res.status(500).json({ message: 'Internal server error', error: err });

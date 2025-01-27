@@ -29,25 +29,25 @@ const User = {
         });
       };
 
-      // Fetch user doctor access
-      const fetchDoctorAccess = (callback) => {
-        let doctorAccessQuery = `
-          SELECT d.doctor_id, CONCAT('Dr ', d.first, ' ', d.last) AS doctor_name, d.practice_nr, uda.permissions
-          FROM user_doctor_access uda
-          JOIN doctors d ON uda.doctor_id = d.doctor_id
+      // Fetch user client access
+      const fetchClientAccess = (callback) => {
+        let clientAccessQuery = `
+          SELECT d.client_id, CONCAT('Dr ', d.first, ' ', d.last) AS client_name, d.practice_nr, uda.permissions
+          FROM user_client_access uda
+          JOIN clients d ON uda.client_id = d.client_id
           WHERE uda.user_id = ?`;
-        db.query(doctorAccessQuery, [user.user_id], (err, doctorAccess) => {
+        db.query(clientAccessQuery, [user.user_id], (err, clientAccess) => {
           if (err) return callback(err);
-          user.doctor_access = doctorAccess; // Attach doctor access array to user
+          user.client_access = clientAccess; // Attach client access array to user
           callback(null);
         });
       };
 
-      // Execute features and doctor access retrieval
+      // Execute features and client access retrieval
       fetchFeatures((err) => {
         if (err) return callback(err, null);
 
-        fetchDoctorAccess((err) => {
+        fetchClientAccess((err) => {
           if (err) return callback(err, null);
 
           callback(null, user); // Final enriched user object
@@ -75,13 +75,13 @@ const User = {
     });
   },
 
-  // Create new doctor
-  createDoctor: (doctorDetails, callback) => {
-    const { email, password, first, last, registration_nr, practice_nr, doctor_type, tell_nr } = doctorDetails;
+  // Create new client
+  createClient: (clientDetails, callback) => {
+    const { email, password, first, last, registration_nr, practice_nr, client_type, tell_nr } = clientDetails;
 
-    // Insert doctor into the doctors table
-    let query = `INSERT INTO doctors ( email, password, first, last, registration_nr, practice_nr, doctor_type, tell_nr) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`;
-    db.query(query, [ email, password, first, last, registration_nr, practice_nr, doctor_type, tell_nr], (err, result) => {
+    // Insert client into the clients table
+    let query = `INSERT INTO clients ( email, password, first, last, registration_nr, practice_nr, client_type, tell_nr) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`;
+    db.query(query, [ email, password, first, last, registration_nr, practice_nr, client_type, tell_nr], (err, result) => {
       if (err) {
         if (err.code === 'ER_DUP_ENTRY') {
           return callback({ message: 'Email already exists' }, null); 
@@ -89,8 +89,8 @@ const User = {
         return callback({ message: 'Database error', details: err }, null);
       }
 
-      const doctorId = result.insertId;
-      callback(null, { doctorId });
+      const clientId = result.insertId;
+      callback(null, { clientId });
     });
   },
 

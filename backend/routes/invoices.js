@@ -4,6 +4,6 @@ const router = express.Router();
 
 router.get('/', invoiceController.getInvoices); // Get all invoices
 router.get('/:invoiceId', invoiceController.getInvoice); // Get a invoice by id
-router.get('/doctors/:doctorId', invoiceController.getInvoicesByDoctor); // Get invoices by doctor ID
+router.get('/clients/:clientId', invoiceController.getInvoicesByClient); // Get invoices by client ID
 
 module.exports = router;

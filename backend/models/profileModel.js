@@ -56,17 +56,17 @@ const Profile = {
     const accQuery = `
         SELECT 
             a.account_id,
-            CONCAT('Dr ', LEFT(d.first, 1), ' ', d.last) AS doctor_name,
+            CONCAT('Dr ', LEFT(d.first, 1), ' ', d.last) AS client_name,
             CONCAT(pr.title, ' ', pr.first, ' ', pr.last) AS patient_name,
             pr.id_nr AS id_nr,
             CONCAT('R ', FORMAT(SUM(i.balance), 2)) AS total_balance,
             COUNT(i.invoice_id) AS total_invoices
         FROM accounts a
-        LEFT JOIN doctors d ON d.doctor_id = a.doctor_id
+        LEFT JOIN clients d ON d.client_id = a.client_id
         LEFT JOIN person_records pr ON pr.person_id = COALESCE(a.patient_id, a.main_member_id)
         LEFT JOIN invoices i ON i.account_id = a.account_id
         WHERE a.profile_id = ?
-        GROUP BY a.account_id, a.doctor_id, a.profile_id, d.first, d.last, pr.title, pr.first, pr.last, pr.id_nr;
+        GROUP BY a.account_id, a.client_id, a.profile_id, d.first, d.last, pr.title, pr.first, pr.last, pr.id_nr;
     `;
 
 
@@ -83,7 +83,7 @@ const Profile = {
             DATE_FORMAT(i.updated_at, '%Y-%m-%d') AS updated_at
         FROM invoices i
         JOIN accounts a ON i.account_id = a.account_id
-        JOIN doctors d ON a.doctor_id = d.doctor_id
+        JOIN clients d ON a.client_id = d.client_id
         WHERE i.profile_id = ?
     `;
 

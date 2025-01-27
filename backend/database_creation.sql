@@ -1,5 +1,5 @@
 
-DROP TABLE IF EXISTS profile_person_map, invoices, accounts, person_records, profiles, medical_aid_plans, medical_aids, employers, service_centers, service_centers_list, ref_doctors, ref_doctors_list, doctors_logs, logs, user_feature, features, doctors, users, user_feature_access, user_doctor_access;
+DROP TABLE IF EXISTS profile_person_map, invoices, accounts, person_records, profiles, medical_aid_plans, medical_aids, employers, service_centers, service_centers_list, ref_clients, ref_clients_list, clients_logs, logs, user_feature, features, clients, users, user_feature_access, user_client_access;
 
 -- Create users table
 CREATE TABLE users (
@@ -14,9 +14,9 @@ CREATE TABLE users (
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 );
 
--- Create doctors table
-CREATE TABLE doctors (
-    doctor_id INT AUTO_INCREMENT PRIMARY KEY,
+-- Create clients table
+CREATE TABLE clients (
+    client_id INT AUTO_INCREMENT PRIMARY KEY,
     email VARCHAR(255) NOT NULL UNIQUE,
     password VARCHAR(512) NOT NULL,
     first VARCHAR(255),
@@ -24,19 +24,19 @@ CREATE TABLE doctors (
     registration_nr VARCHAR(255),
     practice_nr VARCHAR(255),
     tell_nr VARCHAR(20),
-    doctor_type ENUM('Specialist', 'Anaesthetist', 'Surgeon') DEFAULT 'Anaesthetist',
+    client_type ENUM('Specialist', 'Anaesthetist', 'Surgeon') DEFAULT 'Anaesthetist',
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 );
 
--- Create user_doctor_access table
-CREATE TABLE user_doctor_access (
-    user_doctor_access_id INT AUTO_INCREMENT PRIMARY KEY,
+-- Create user_client_access table
+CREATE TABLE user_client_access (
+    user_client_access_id INT AUTO_INCREMENT PRIMARY KEY,
     user_id INT,
-    doctor_id INT,
+    client_id INT,
     permissions ENUM('View', 'Edit', 'Delete') DEFAULT 'View',
     FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE SET NULL,
-    FOREIGN KEY (doctor_id) REFERENCES doctors(doctor_id) ON DELETE SET NULL
+    FOREIGN KEY (client_id) REFERENCES clients(client_id) ON DELETE SET NULL
 );
 
 -- Create features table
@@ -56,7 +56,7 @@ CREATE TABLE user_feature_access (
     FOREIGN KEY (feature_id) REFERENCES features(feature_id) ON DELETE SET NULL
 );
 
--- doctor_features inc or doctor_feature_access
+-- client_features inc or client_feature_access
 
 
 -- Create logs table
@@ -72,34 +72,34 @@ CREATE TABLE logs (
     FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE SET NULL
 );
 
--- Create doctors_logs table
-CREATE TABLE doctors_logs (
+-- Create clients_logs table
+CREATE TABLE clients_logs (
     log_id INT AUTO_INCREMENT PRIMARY KEY,
-    doctor_id INT,
+    client_id INT,
     action VARCHAR(255),
     old_value JSON,
     new_value JSON,
     target_table VARCHAR(255),
     target_id INT,
     timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (doctor_id) REFERENCES doctors(doctor_id) ON DELETE SET NULL
+    FOREIGN KEY (client_id) REFERENCES clients(client_id) ON DELETE SET NULL
 );
 
--- Create ref_doctors_list table
-CREATE TABLE ref_doctors_list (
-    ref_doctor_list_id INT AUTO_INCREMENT PRIMARY KEY,
+-- Create ref_clients_list table
+CREATE TABLE ref_clients_list (
+    ref_client_list_id INT AUTO_INCREMENT PRIMARY KEY,
     first VARCHAR(255),
     last VARCHAR(255),
     practice_nr VARCHAR(255) UNIQUE
 );
 
--- Create ref_doctors table
-CREATE TABLE ref_doctors (
-    ref_doctor_id INT AUTO_INCREMENT PRIMARY KEY,
-    ref_doctor_list_id INT,
-    doctor_id INT,
-    FOREIGN KEY (doctor_id) REFERENCES doctors(doctor_id) ON DELETE SET NULL,
-    FOREIGN KEY (ref_doctor_list_id) REFERENCES ref_doctors_list(ref_doctor_list_id) ON DELETE SET NULL
+-- Create ref_clients table
+CREATE TABLE ref_clients (
+    ref_client_id INT AUTO_INCREMENT PRIMARY KEY,
+    ref_client_list_id INT,
+    client_id INT,
+    FOREIGN KEY (client_id) REFERENCES clients(client_id) ON DELETE SET NULL,
+    FOREIGN KEY (ref_client_list_id) REFERENCES ref_clients_list(ref_client_list_id) ON DELETE SET NULL
 );
 
 -- Create service_centers_list table
@@ -113,8 +113,8 @@ CREATE TABLE service_centers_list (
 CREATE TABLE service_centers (
     service_center_id INT AUTO_INCREMENT PRIMARY KEY,
     service_center_list_id INT,
-    doctor_id INT,
-    FOREIGN KEY (doctor_id) REFERENCES doctors(doctor_id) ON DELETE SET NULL,
+    client_id INT,
+    FOREIGN KEY (client_id) REFERENCES clients(client_id) ON DELETE SET NULL,
     FOREIGN KEY (service_center_list_id) REFERENCES service_centers_list(service_center_list_id) ON DELETE SET NULL
 );
 
@@ -208,10 +208,10 @@ CREATE TABLE profile_person_map (
 CREATE TABLE accounts (
     account_id INT AUTO_INCREMENT PRIMARY KEY,
     profile_id INT,
-    doctor_id INT,
+    client_id INT,
     main_member_id INT NULL,
     patient_id INT NULL,
-    FOREIGN KEY (doctor_id) REFERENCES doctors(doctor_id) ON DELETE SET NULL,
+    FOREIGN KEY (client_id) REFERENCES clients(client_id) ON DELETE SET NULL,
     FOREIGN KEY (profile_id) REFERENCES profiles(profile_id) ON DELETE SET NULL,
     FOREIGN KEY (main_member_id) REFERENCES person_records(person_id) ON DELETE SET NULL,
     FOREIGN KEY (patient_id) REFERENCES person_records(person_id) ON DELETE SET NULL
@@ -241,11 +241,11 @@ VALUES
 ('user1@example.com', 'password_hash_1', 'John', 'Doe', '123 Main St', '123-456-7890'),
 ('user2@example.com', 'password_hash_2', 'Jane', 'Smith', '456 Elm St', '987-654-3210');
 
--- Inserting sample data for doctors
-INSERT INTO doctors (email, password, first, last, registration_nr, practice_nr, tell_nr, doctor_type)
+-- Inserting sample data for clients
+INSERT INTO clients (email, password, first, last, registration_nr, practice_nr, tell_nr, client_type)
 VALUES 
-('doctor1@example.com', 'password_hash_1', 'Dr. Alice', 'Johnson', 'REG1234', 'PRACTICE001', '111-222-3333', 'Surgeon'),
-('doctor2@example.com', 'password_hash_2', 'Dr. Bob', 'Williams', 'REG5678', 'PRACTICE002', '444-555-6666', 'Specialist');
+('client1@example.com', 'password_hash_1', 'Dr. Alice', 'Johnson', 'REG1234', 'PRACTICE001', '111-222-3333', 'Surgeon'),
+('client2@example.com', 'password_hash_2', 'Dr. Bob', 'Williams', 'REG5678', 'PRACTICE002', '444-555-6666', 'Specialist');
 
 -- Inserting sample data for medical aids
 INSERT INTO medical_aids (name)
@@ -321,13 +321,13 @@ VALUES
 
 
 -- Inserting data into accounts
-INSERT INTO accounts (profile_id, doctor_id, main_member_id, patient_id)
+INSERT INTO accounts (profile_id, client_id, main_member_id, patient_id)
 VALUES
 -- Profile 1: Thabo (main member), Naledi, and Lerato (Total: 1200.00)
 (1, 1, 1, 1), -- Thabo's account
 (1, 1, 1, 2), -- Naledi's account
 (1, 1, 1, 3), -- Lerato's account
-(1, 2, 1, 3), -- Lerato's account second account with a diff doctor
+(1, 2, 1, 3), -- Lerato's account second account with a diff client
 
 -- Profile 2: Pieter (main member), Annelize, Jaco, and Saki (Total: 1050.00)
 (2, 2, 4, 4), -- Pieter's account
@@ -437,7 +437,7 @@ VALUES
 ('invoices'),
 ('records'),
 ('profiles'),
-('doctors');
+('clients');
 
 -- Inserting sample data for user features
 INSERT INTO user_feature_access (user_id, feature_id, is_active, permissions)
@@ -480,7 +480,7 @@ VALUES
 ('Private Rooms', 'Rooms');
 
 -- Inserting sample data for service centers associations
-INSERT INTO service_centers (service_center_list_id, doctor_id)
+INSERT INTO service_centers (service_center_list_id, client_id)
 VALUES 
 (1, 1),
 (1, 2),
@@ -492,15 +492,22 @@ VALUES
 ('TechCorp', '555-123-4567', '123 Tech Ave', 'Building 3', 'EMP123'),
 ('HealthOrg', '555-987-6543', '456 Health St', 'Suite 101', 'EMP456');
 
--- Inserting sample data for ref_doctors
-INSERT INTO ref_doctors_list (first, last, practice_nr)
+-- Inserting sample data for ref_clients
+INSERT INTO ref_clients_list (first, last, practice_nr)
 VALUES 
 ('Clara', 'Green', 'PRACTICE003'),
 ('David', 'Blue', 'PRACTICE004');
 
--- Inserting sample data for doctor referrals
-INSERT INTO ref_doctors (ref_doctor_list_id, doctor_id)
+-- Inserting sample data for client referrals
+INSERT INTO ref_clients (ref_client_list_id, client_id)
 VALUES 
 (1, 1),
 (1, 2),
 (2, 3);
+
+-- Insert data into user_client_access table
+INSERT INTO user_client_access (user_id, client_id, permissions)
+VALUES
+(1, 1, 'Edit'),
+(1, 2, 'Edit'),
+(1, 3, 'Edit');

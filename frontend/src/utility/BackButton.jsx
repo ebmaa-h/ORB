@@ -11,7 +11,7 @@ export default function BackButton() {
       <button
       onClick={() => previousPath ? navigate(previousPath) : navigate(-1)}
       type='submit'
-      className='btn-class min-w-[100px]'
+      className='btn-class min-w-[100px] max-h-[35px]'
     >
       Back
     </button>

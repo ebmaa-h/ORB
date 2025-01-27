@@ -12,6 +12,14 @@
   .active-link {
     @apply border-ebmaa-purple border-b;
   }
+
+  .container-col {
+    @apply flex flex-col gap-6 m-4 p-4 bg-white shadow rounded w-full;
+  }
+
+  .container-row {
+    @apply flex flex-row gap-6 m-4 p-4 bg-white shadow rounded w-full;
+  }
 }
  /* text-sm text-center min-w-[100px] rounded hover:border hover:border-ebmaa-purple */
 
@@ -23,5 +31,6 @@
 }
 
 body, html {
-  background: #eee;
+  /* background: #eee; */
+  background: #f7f7f7;
 }

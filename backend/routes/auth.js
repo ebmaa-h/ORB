@@ -14,7 +14,7 @@ router.post('/logout', authController.logout);
 // Verify route
 router.get('/verify', authController.verify);
 
-// Doctor Register routes
-router.post('/register/doctor', authController.doctorRegister);
+// Client Register routes
+router.post('/register/client', authController.clientRegister);
 
 module.exports = router;

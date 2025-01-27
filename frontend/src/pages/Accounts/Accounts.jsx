@@ -2,26 +2,26 @@ import { useEffect, useState } from 'react';
 import axios from 'axios';
 import ENDPOINTS from '../../config/apiEndpoints';
 import { useContext } from 'react';
-import { DoctorContext } from '../../context/DoctorContext'; 
+import { ClientContext } from '../../context/ClientContext'; 
 import { SearchBar, Table } from '../../components';
 
 export default function Accounts() {
   const [accounts, setAccounts] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
-  const { doctorId } = useContext(DoctorContext); 
+  const { clientId } = useContext(ClientContext); 
 
   // Fetch Accounts on component mount
   useEffect(() => {
     const fetchAccounts = async () => {
       try {
-        const response = await axios.get(ENDPOINTS.doctorAccounts(doctorId));
+        const response = await axios.get(ENDPOINTS.clientAccounts(clientId));
         setAccounts(response.data.accounts);
       } catch (error) {
         console.error('Error fetching accounts:', error);
       }
     };
     fetchAccounts();
-  }, [doctorId]);
+  }, [clientId]);
 
   const columns = ['Account ID', 'Patient', 'Dependent Nr', 'Guarantor', 'Guarantor ID', 'Balance'];
   const filteredAccounts = accounts.filter((account) =>
@@ -30,8 +30,8 @@ export default function Accounts() {
 
   return (
     <>
-      {doctorId ? 
-        <div className='flex flex-col gap-4 m-4 p-4 bg-white shadow rounded'>
+      {clientId ? 
+        <div className='container-col'>
           <SearchBar searchTerm={searchTerm} setSearchTerm={setSearchTerm} />
           <Table data={filteredAccounts} columns={columns} linkPrefix="accounts" idField="account_id"/>
         </div>

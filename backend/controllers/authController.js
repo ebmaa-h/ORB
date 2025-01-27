@@ -87,9 +87,9 @@ const authController = {
     });
   },
 
-  doctorRegister: (req, res) => {
-    console.log("Registering Doctor...");
-    const { email, password, first, last, registration_nr, practice_nr, doctor_type, tell_nr } = req.body;
+  clientRegister: (req, res) => {
+    console.log("Registering Client...");
+    const { email, password, first, last, registration_nr, practice_nr, client_type, tell_nr } = req.body;
   
     bcrypt.hash(password, 10, (err, hashedPassword) => {
       if (err) {
@@ -97,7 +97,7 @@ const authController = {
         return res.status(500).json({ message: "Error hashing password" });
       }
         
-      const doctorDetails = {
+      const clientDetails = {
         email,
         password: hashedPassword,
         first,
@@ -105,19 +105,19 @@ const authController = {
         registration_nr,
         practice_nr,
         tell_nr,
-        doctor_type,
+        client_type,
       }
 
-      User.createDoctor(doctorDetails, (err, result) => {
+      User.createClient(clientDetails, (err, result) => {
         if (err) {
           console.error("Database Error:", err);
-          return res.status(400).json({ message: err.message || "Error creating doctor", details: err.details || {} });
+          return res.status(400).json({ message: err.message || "Error creating client", details: err.details || {} });
 
         }
-        console.log("Doctor created successfully with ID:", result.doctorId);
+        console.log("Client created successfully with ID:", result.clientId);
         res.status(201).json({
-          message: "Doctor Registered",
-          doctor_id: result.userId,
+          message: "Client Registered",
+          client_id: result.userId,
         });
       });
     });

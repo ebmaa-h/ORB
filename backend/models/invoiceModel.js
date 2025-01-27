@@ -20,11 +20,11 @@ allInvoices: (callback) => {
       CONCAT('R ', FORMAT(i.balance, 2)) AS invoice_balance,
       DATE_FORMAT(i.updated_at, '%Y-%m-%d') AS updated_date,
       i.status,
-      CONCAT('Dr ', LEFT(d.first, 1), ' ', d.last) AS doctor_name,
-      d.practice_nr AS doctor_practice_number
+      CONCAT('Dr ', LEFT(d.first, 1), ' ', d.last) AS client_name,
+      d.practice_nr AS client_practice_number
     FROM invoices i
     LEFT JOIN accounts a ON i.account_id = a.account_id
-    LEFT JOIN doctors d ON a.doctor_id = d.doctor_id;
+    LEFT JOIN clients d ON a.client_id = d.client_id;
   `;
 
   db.query(query, (err, results) => {
@@ -43,8 +43,8 @@ allInvoices: (callback) => {
       invoice_balance: invoice.invoice_balance,
       date_of_service: invoice.date_of_service,
       status: invoice.status,
-      doctor_name: invoice.doctor_name,
-      doctor_practice_number: invoice.doctor_practice_number,
+      client_name: invoice.client_name,
+      client_practice_number: invoice.client_practice_number,
       updated_date: invoice.updated_date,
     }));
 
@@ -52,7 +52,7 @@ allInvoices: (callback) => {
   });
 },
 
-doctorInvoices: (doctorId, callback) => {
+clientInvoices: (clientId, callback) => {
   const query = `
     SELECT 
       i.invoice_id,
@@ -70,11 +70,11 @@ doctorInvoices: (doctorId, callback) => {
       i.status
     FROM invoices i
     LEFT JOIN accounts a ON i.account_id = a.account_id
-    LEFT JOIN doctors d ON a.doctor_id = d.doctor_id
-    WHERE d.doctor_id = ?;
+    LEFT JOIN clients d ON a.client_id = d.client_id
+    WHERE d.client_id = ?;
   `;
 
-  db.query(query, [doctorId], (err, results) => {
+  db.query(query, [clientId], (err, results) => {
     if (err) {
       return callback(err, null);
     }
@@ -136,14 +136,14 @@ doctorInvoices: (doctorId, callback) => {
         WHERE i.invoice_id = ?;
     `;
 
-    // Query for doctor details
-    const doctorDetailsQuery = `
+    // Query for client details
+    const clientDetailsQuery = `
         SELECT
-            CONCAT('Dr ', LEFT(d.first, 1), ' ', d.last) AS doctor_name,
-            d.practice_nr AS doctor_practice_number
+            CONCAT('Dr ', LEFT(d.first, 1), ' ', d.last) AS client_name,
+            d.practice_nr AS client_practice_number
         FROM invoices i
         LEFT JOIN accounts a ON i.account_id = a.account_id
-        LEFT JOIN doctors d ON a.doctor_id = d.doctor_id
+        LEFT JOIN clients d ON a.client_id = d.client_id
         WHERE i.invoice_id = ?;
     `;
 
@@ -177,9 +177,9 @@ doctorInvoices: (doctorId, callback) => {
                 if (err) return callback(err, null);
                 const memberDetails = memberDetailsResults[0];
 
-                db.query(doctorDetailsQuery, [invoiceId], (err, doctorDetailsResults) => {
+                db.query(clientDetailsQuery, [invoiceId], (err, clientDetailsResults) => {
                     if (err) return callback(err, null);
-                    const doctorDetails = doctorDetailsResults[0];
+                    const clientDetails = clientDetailsResults[0];
 
                     db.query(medicalAidDetailsQuery, [invoiceId], (err, medicalAidDetailsResults) => {
                         if (err) return callback(err, null);
@@ -188,7 +188,7 @@ doctorInvoices: (doctorId, callback) => {
                         // Prepare result object
                           const result = {
                             invoice: invoiceDetails,
-                            doctor: doctorDetailsResults[0],
+                            client: clientDetailsResults[0],
                             medical: medicalAidDetails,
                             member: memberDetailsResults[0],
                             patient: patientDetailsResults[0],

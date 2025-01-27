@@ -13,7 +13,7 @@ export default function Dashboard() {
 
   return (
     <>        
-      <div className='bg-white shadow rounded m-4 p-4'>
+      <div className='container-col'>
         <p>Hello {user.first}.</p>
       </div>
 

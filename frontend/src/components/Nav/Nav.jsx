@@ -2,19 +2,19 @@ import { Link, useLocation } from 'react-router-dom';
 import { useContext } from 'react';
 
 import { UserContext } from '../../context/UserContext';
-import { DoctorContext } from '../../context/DoctorContext';
+import { ClientContext } from '../../context/ClientContext';
 import Logout from '../Logout/Logout';
 
 export default function Nav() {
   const { user } = useContext(UserContext);
-  const { doctorId, setDoctorId } = useContext(DoctorContext);
+  const { clientId, setClientId } = useContext(ClientContext);
   const location = useLocation(); // Get the current path
   
   const disabled = 'opacity-40 cursor-not-allowed';
-  const disabledPaths = ['/accounts', '/invoices', '/doctor/info'];
+  const disabledPaths = ['/accounts', '/invoices', '/client/info'];
 
 
-  const accLinkClass = doctorId
+  const accLinkClass = clientId
     ? `link-class`
     : `link-class hidden`;
 
@@ -22,50 +22,50 @@ export default function Nav() {
     <div className="bg-white shadow flex justify-between items-center flex-row h-[60px]">
       <div className='flex flex-row gap-4 ml-4'>
         <select
-          className={`border rounded border-gray-light  px-2 hover:border-ebmaa-purple transition duration-300 ${!!doctorId && !disabledPaths.includes(location.pathname) ? disabled : ''}`}
-          disabled={!!doctorId && !disabledPaths.includes(location.pathname)}
+          className={`border rounded border-gray-light  px-2 hover:border-ebmaa-purple transition duration-300 ${!!clientId && !disabledPaths.includes(location.pathname) ? disabled : ''}`}
+          disabled={!!clientId && !disabledPaths.includes(location.pathname)}
           onChange={(e) => {
-            setDoctorId(e.target.value);
+            setClientId(e.target.value);
           }}
         >
-          <option disabled={!!doctorId} value=""> {/* Disabled didnt work */}
-            Select Doctor
+          <option disabled={!!clientId} value=""> {/* Disabled didnt work */}
+            Select client
           </option>
-          {user.doctor_access.map((doctor, i) => (
-            <option key={i} className='hover:bg-ebmaa-purple' value={doctor.doctor_id}>
-              {doctor.doctor_name}
+          {user.client_access.map((client, i) => (
+            <option key={i} className='hover:bg-ebmaa-purple' value={client.client_id}>
+              {client.client_name}
             </option>
           ))}
         </select>
 
         <Link
-          to={doctorId ? "/accounts" : "#"}
+          to={clientId ? "/accounts" : "#"}
           className={`${accLinkClass} ${location.pathname === '/accounts' ? 'active-link' : ''}`}
           onClick={(e) => {
-            if (!doctorId) e.preventDefault();
+            if (!clientId) e.preventDefault();
           }}
         >
           Accounts
         </Link>
 
         <Link
-          to={doctorId ? "/invoices" : "#"}
+          to={clientId ? "/invoices" : "#"}
           className={`${accLinkClass} ${location.pathname === '/invoices' ? 'active-link' : ''}`}
           onClick={(e) => {
-            if (!doctorId) e.preventDefault();
+            if (!clientId) e.preventDefault();
           }}
         >
           Invoices
         </Link>
 
         <Link
-          to={doctorId ? "/doctor/info" : "#"}
-          className={`${accLinkClass} ${location.pathname === '/doctor/info' ? 'active-link' : ''}`}
+          to={clientId ? "/client/info" : "#"}
+          className={`${accLinkClass} ${location.pathname === '/client/info' ? 'active-link' : ''}`}
           onClick={(e) => {
-            if (!doctorId) e.preventDefault();
+            if (!clientId) e.preventDefault();
           }}
         >
-          Doctor Info
+          Client Info
         </Link>
 
         <p className="text-gray-light">|</p>
