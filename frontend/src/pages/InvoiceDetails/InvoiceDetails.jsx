@@ -166,7 +166,9 @@ export default function InvoiceDetails() {
           </div>
         </>
       ) : (
-        <p>Loading invoice details...</p>
+        <div className='container-col items-center'>
+          <p>Loading invoice details...</p>
+        </div>
       )}
     </>
   );

@@ -67,8 +67,9 @@ export default function Nav() {
         >
           Client Info
         </Link>
+      </div>
+      <div className='flex flex-row gap-4 mr-4'>
 
-        <p className="text-gray-light">|</p>
         <Link
           to="/records"
           className={`link-class ${location.pathname === '/records' ? 'active-link' : ''}`}
@@ -82,8 +83,8 @@ export default function Nav() {
         >
           Profiles
         </Link>
-      </div>
-      <div className='flex flex-row gap-4 mr-4'>
+
+        <p className="text-gray-light">|</p>
         <Link
           to="/dashboard"
           className={`link-class ${location.pathname === '/dashboard' ? 'active-link' : ''}`}

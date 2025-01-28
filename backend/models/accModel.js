@@ -100,47 +100,67 @@ const Account = {
 
     const memberQuery = `
       SELECT 
-      pr.person_id,
-      CONCAT(pr.title, ' ', pr.first, ' ', pr.last) AS member_name,
-      pr.cell_nr AS member_cell, 
-      pr.tell_nr AS member_cell, 
-      pr.email AS member_email,
-      DATE_FORMAT(pr.date_of_birth, '%Y-%m-%d') AS date_of_birth,
-      pr.gender,
-      ppm.dependent_nr
+        pr.person_id,
+        CONCAT(pr.title, ' ', pr.first, ' ', pr.last) AS member_name,
+        pr.cell_nr AS member_cell, 
+        pr.tell_nr AS member_tell, 
+        pr.email AS member_email,
+        DATE_FORMAT(pr.date_of_birth, '%Y-%m-%d') AS date_of_birth,
+        pr.gender,
+        ppm.dependent_nr
       FROM person_records pr
       LEFT JOIN profile_person_map ppm ON pr.person_id = ppm.person_id
       WHERE pr.person_id = ?;
+    `;
+
+    // Query for member addresses
+    const memberAddresses = `
+      SELECT 
+        ad.address_id,
+        ad.is_domicilium,
+        ad.address
+      FROM addresses ad
+      WHERE ad.person_id = ?;
     `;
 
     const patientQuery = `
       SELECT 
-      pr.person_id,
-      CONCAT(pr.title, ' ', pr.first, ' ', pr.last) AS member_name,
-      pr.cell_nr AS member_cell, 
-      pr.tell_nr AS member_cell, 
-      pr.email AS member_email,
-      DATE_FORMAT(pr.date_of_birth, '%Y-%m-%d') AS date_of_birth,
-      pr.gender,
-      ppm.dependent_nr
+        pr.person_id,
+        CONCAT(pr.title, ' ', pr.first, ' ', pr.last) AS patient_name,
+        pr.cell_nr AS patient_cell, 
+        pr.tell_nr AS patient_tell, 
+        pr.email AS patient_email,
+        DATE_FORMAT(pr.date_of_birth, '%Y-%m-%d') AS date_of_birth,
+        pr.gender,
+        ppm.dependent_nr
       FROM person_records pr
       LEFT JOIN profile_person_map ppm ON pr.person_id = ppm.person_id
       WHERE pr.person_id = ?;
     `;
 
+    // Query for patient addresses
+    const patientAddresses = `
+      SELECT 
+        ad.address_id,
+        ad.is_domicilium,
+        ad.address
+      FROM addresses ad
+      WHERE ad.person_id = ?;
+    `;
+
     const invQuery = `
-        SELECT
-            i.invoice_id,
-            CONCAT(JSON_UNQUOTE(JSON_EXTRACT(i.patient_snapshot, '$.patient.first')), ' ', JSON_UNQUOTE(JSON_EXTRACT(i.patient_snapshot, '$.patient.last'))) AS 'Patient Name',
-            JSON_UNQUOTE(JSON_EXTRACT(i.patient_snapshot, '$.patient.id_nr')) AS 'Patient ID',
-            CONCAT(JSON_UNQUOTE(JSON_EXTRACT(i.member_snapshot, '$.member.first')), ' ', JSON_UNQUOTE(JSON_EXTRACT(i.member_snapshot, '$.member.last'))) AS 'Member Name',
-            JSON_UNQUOTE(JSON_EXTRACT(i.member_snapshot, '$.member.id_nr')) AS 'Member ID',
-            CONCAT('R ', FORMAT(i.balance, 2)) AS invoice_balance,
-            DATE_FORMAT(i.date_of_service , '%Y-%m-%d') AS date_of_service,
-            i.status AS 'Status'
-        FROM invoices i
-        JOIN accounts a ON i.account_id = a.account_id
-        WHERE i.account_id = ?
+      SELECT
+        i.invoice_id,
+        CONCAT(JSON_UNQUOTE(JSON_EXTRACT(i.patient_snapshot, '$.patient.first')), ' ', JSON_UNQUOTE(JSON_EXTRACT(i.patient_snapshot, '$.patient.last'))) AS 'Patient Name',
+        JSON_UNQUOTE(JSON_EXTRACT(i.patient_snapshot, '$.patient.id_nr')) AS 'Patient ID',
+        CONCAT(JSON_UNQUOTE(JSON_EXTRACT(i.member_snapshot, '$.member.first')), ' ', JSON_UNQUOTE(JSON_EXTRACT(i.member_snapshot, '$.member.last'))) AS 'Member Name',
+        JSON_UNQUOTE(JSON_EXTRACT(i.member_snapshot, '$.member.id_nr')) AS 'Member ID',
+        CONCAT('R ', FORMAT(i.balance, 2)) AS invoice_balance,
+        DATE_FORMAT(i.date_of_service , '%Y-%m-%d') AS date_of_service,
+        i.status AS 'Status'
+      FROM invoices i
+      JOIN accounts a ON i.account_id = a.account_id
+      WHERE i.account_id = ?
     `;
 
     db.query(accQuery, [accountId], (err, accResults) => {
@@ -150,20 +170,30 @@ const Account = {
         db.query(memberQuery, [account.main_member_id], (err, memberResults) => {
             if (err) return callback(err, null);
 
-            db.query(patientQuery, [account.patient_id], (err, patientResults) => {
+            db.query(memberAddresses, [account.main_member_id], (err, memberAddressesResults) => {
                 if (err) return callback(err, null);
 
-                db.query(invQuery, [accountId], (err, invoiceResults) => {
+                db.query(patientQuery, [account.patient_id], (err, patientResults) => {
                     if (err) return callback(err, null);
 
-                    const result = {
-                        account,
-                        member: memberResults[0],
-                        patient: patientResults[0],
-                        invoices: invoiceResults,
-                    };
+                    db.query(patientAddresses, [account.patient_id], (err, patientAddressesResults) => {
+                        if (err) return callback(err, null);
 
-                    callback(null, result);
+                        db.query(invQuery, [accountId], (err, invoiceResults) => {
+                            if (err) return callback(err, null);
+
+                            const result = {
+                              account: account,
+                              member: memberResults[0],
+                              memberAddress: memberAddressesResults,
+                              patient: patientResults[0],
+                              patientAddress: patientAddressesResults,
+                              invoices: invoiceResults,
+                            };
+
+                            callback(null, result);
+                        });
+                    });
                 });
             });
         });

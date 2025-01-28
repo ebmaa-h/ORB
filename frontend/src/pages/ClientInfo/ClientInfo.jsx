@@ -39,7 +39,9 @@ export default function ClientInfo() {
           </div>
         </>
       ) : (
-        <p>Loading invoice details...</p>
+        <div className='container-col items-center'>
+          <p>Loading client details...</p>
+        </div>
       )}
     </>
   );

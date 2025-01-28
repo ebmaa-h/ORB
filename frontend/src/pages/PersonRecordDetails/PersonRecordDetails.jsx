@@ -141,7 +141,9 @@ export default function PersonRecordDetails() {
           </div>
 
       ) : (
-        <p>Loading record details...</p>
+        <div className='container-col items-center'>
+          <p>Loading record details...</p>
+        </div>
       )}
     </>
   );

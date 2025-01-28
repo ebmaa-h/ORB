@@ -7,6 +7,7 @@ if (!API_URL) {
 const ENDPOINTS = {
   login: `${API_URL}/login`,
   invoices : `${API_URL}/invoices`,
+  newInvoice : (accountId) => `${API_URL}/invoices/new/${accountId}`,
   clientInvoices: (clientId) => `${API_URL}/invoices/clients/${clientId}`,
   accounts : `${API_URL}/accounts`,
   clientAccounts: (clientId) => `${API_URL}/accounts/clients/${clientId}`,

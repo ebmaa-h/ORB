@@ -30,16 +30,16 @@ export default function Invoices() {
 
   return (
     <>
-      {clientId ? 
+      {clientId ? (
         <div className='container-col'>
           <SearchBar searchTerm={searchTerm} setSearchTerm={setSearchTerm} />
           <Table data={filteredInvoices} columns={columns} linkPrefix="invoices" idField="invoice_id"/>
         </div>
-        : 
-        <div> 
-          Invoice Info Here
-        </div> 
-        }
+      ) : (
+        <div className='container-col items-center'>
+          <p>Loading invoices...</p>
+        </div>
+      )}
     </>
   );
 }

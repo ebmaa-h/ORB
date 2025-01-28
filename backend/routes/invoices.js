@@ -2,8 +2,8 @@ const express = require('express');
 const invoiceController = require('../controllers/invoiceController.js');
 const router = express.Router();
 
-router.get('/', invoiceController.getInvoices); // Get all invoices
-router.get('/:invoiceId', invoiceController.getInvoice); // Get a invoice by id
-router.get('/clients/:clientId', invoiceController.getInvoicesByClient); // Get invoices by client ID
+router.get('/', invoiceController.getInvoices);
+router.get('/:invoiceId', invoiceController.getInvoice);
+router.get('/clients/:clientId', invoiceController.getInvoicesByClient);
 
 module.exports = router;

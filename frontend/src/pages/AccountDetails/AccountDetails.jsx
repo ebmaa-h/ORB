@@ -29,11 +29,12 @@ export default function AccountDetails() {
 
         const { account, invoices, member, patient } = response.data.account;
 
-        console.log("Account:", response.data);
-        // console.log("Account:", response.data.account);
+        // console.log("Account:", response.data.account.account.account_id);
+        // console.log("Account:", response.data.account.member);
         // console.log("Invoices:", response.data.account.invoices);
         // console.log("Member:", response.data.member);
         // console.log("Patient:", response.data.patient);
+        console.log("Patient:", response);
 
         setAccount(account || {});
         setInvoices(invoices || []);
@@ -53,7 +54,7 @@ export default function AccountDetails() {
   return (
     <>
 
-      {account && Object.keys(account).length > 0 ? (
+      {account ? (
         <>
           <div className="bg-white shadow rounded m-4 p-4 flex flex-row justify-between items-center text-center  text-gray-dark">
             <p>
@@ -118,19 +119,23 @@ export default function AccountDetails() {
               linkPrefix="invoices"
               idField="invoice_id"
             />
-            <div className="flex justify-start">
-             {/* <button
-                type='submit'
-                className=' py-1 px-2 mx-2 min-w-[100px] border border-white rounded hover:border hover:border-ebmaa-purple text-center'
-                aria-label='New Invoice' // Accessibility
+            <div className="flex justify-end">
+              <button
+                type="submit"
+                className="btn-class w-[100px]"
+                onClick={() => navigate(`/invoices/new/${account.account_id}`)}
               >
+                {console.log("Account ID:", account.account_id)}
                 New Invoice
-              </button> */}
+              </button>
+
             </div>
           </div>
         </>
       ) : (
-        <p>Loading account details...</p>
+        <div className='container-col'>
+          <p>Loading account details...</p>
+        </div>
       )}
     </>
   );

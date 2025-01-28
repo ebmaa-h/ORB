@@ -30,16 +30,16 @@ export default function Accounts() {
 
   return (
     <>
-      {clientId ? 
+      {clientId ? (
         <div className='container-col'>
           <SearchBar searchTerm={searchTerm} setSearchTerm={setSearchTerm} />
           <Table data={filteredAccounts} columns={columns} linkPrefix="accounts" idField="account_id"/>
         </div>
-      : 
-        <div> 
-          Accounts Info Here
-        </div> 
-      }
+      ) : (
+        <div className='container-col items-center'>
+          <p>Loading accounts...</p>
+        </div>
+      )}
     </>
   );
 }

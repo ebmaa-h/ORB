@@ -104,7 +104,9 @@ export default function ProfileDetails() {
           </div>
         </>
       ) : (
-        <p>Loading profile details...</p>
+        <div className='container-col items-center'>
+          <p>Loading profile details...</p>
+        </div>
       )}
     </>
   );

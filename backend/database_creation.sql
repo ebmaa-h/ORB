@@ -244,8 +244,9 @@ VALUES
 -- Inserting sample data for clients
 INSERT INTO clients (email, password, first, last, registration_nr, practice_nr, tell_nr, client_type)
 VALUES 
-('client1@example.com', 'password_hash_1', 'Dr. Alice', 'Johnson', 'REG1234', 'PRACTICE001', '111-222-3333', 'Surgeon'),
-('client2@example.com', 'password_hash_2', 'Dr. Bob', 'Williams', 'REG5678', 'PRACTICE002', '444-555-6666', 'Specialist');
+('client1@email.com', 'test', 'van der Wolt', 'James', 'REG1234', '21515151', '012-222-3333', 'Surgeon'),
+('client2@email.com', 'test', 'Lievenberg', 'Alicia', 'REG5678', '21235151', '012-555-6666', 'Specialist'),
+('client1@email.com', 'test', 'Bellings', 'Sando', 'REG1234', '21775151', '012-222-3333', 'Anaesthetist'),
 
 -- Inserting sample data for medical aids
 INSERT INTO medical_aids (name)
@@ -299,56 +300,56 @@ VALUES
 INSERT INTO profile_person_map (profile_id, person_id, is_main_member, dependent_nr)
 VALUES 
 (1, 1, TRUE, 0), -- Thabo is the main member of profile 1
-(1, 2, FALSE, 1), -- Naledi is dependent 1
-(1, 3, FALSE, 2), -- Lerato is dependent 2
+(1, 2, FALSE, 1),
+(1, 3, FALSE, 2),
 
 (5, 2, TRUE, 0),  -- Naledi is the main member of profile 5 example of a user that is involved in two profiles
-(5, 3, FALSE, 1), -- Lerato is dependent 2
+(5, 3, FALSE, 1),
 
 (2, 4, TRUE, 0), -- Pieter is the main member of profile 2
-(2, 5, FALSE, 1), -- Annelize is dependent 1
-(2, 6, FALSE, 2), -- Jaco is dependent 2
-(2, 7, FALSE, 3), -- Saki is dependent 3
+(2, 5, FALSE, 1),
+(2, 6, FALSE, 2),
+(2, 7, FALSE, 3),
 
 (3, 8, TRUE, 0), -- Jo-Anne is the main member of profile 3
-(3, 9, FALSE, 1), -- John is dependent 1
-(3, 10, FALSE, 2), -- Emily is dependent 2
+(3, 9, FALSE, 1),
+(3, 10, FALSE, 2),
 
 (4, 11, TRUE, 0), -- Rajesh is the main member of profile 4
-(4, 12, FALSE, 1), -- Priya is dependent 1
-(4, 13, FALSE, 2), -- Kavita is dependent 2
-(4, 14, FALSE, 3); -- Sanjay is dependent 3
+(4, 12, FALSE, 1),
+(4, 13, FALSE, 2), 
+(4, 14, FALSE, 3); 
 
 
 -- Inserting data into accounts
 INSERT INTO accounts (profile_id, client_id, main_member_id, patient_id)
 VALUES
 -- Profile 1: Thabo (main member), Naledi, and Lerato (Total: 1200.00)
-(1, 1, 1, 1), -- Thabo's account
-(1, 1, 1, 2), -- Naledi's account
-(1, 1, 1, 3), -- Lerato's account
-(1, 2, 1, 3), -- Lerato's account second account with a diff client
+(1, 1, 1, 1), 
+(1, 1, 1, 2),
+(1, 1, 1, 3), 
+(1, 2, 1, 3),
 
 -- Profile 2: Pieter (main member), Annelize, Jaco, and Saki (Total: 1050.00)
-(2, 2, 4, 4), -- Pieter's account
-(2, 2, 4, 5), -- Annelize's account
-(2, 2, 4, 6), -- Jaco's account
-(2, 2, 4, 7), -- Saki's account
+(2, 2, 4, 4),
+(2, 2, 4, 5),
+(2, 2, 4, 6),
+(2, 2, 4, 7),
 
 -- Profile 3: Jo-Anne (main member), John, and Emily (Total: 500.00)
-(3, 1, 8, 8), -- Jo-Anne's account
-(3, 1, 8, 9), -- John's account
-(3, 1, 8, 10), -- Emily's account
+(3, 1, 8, 8),
+(3, 1, 8, 9),
+(3, 1, 8, 10),
 
 -- Profile 4: Rajesh (main member), Priya, Kavita, and Sanjay (Total: 5050.00)
-(4, 2, 11, 11), -- Rajesh's account
-(4, 2, 11, 12), -- Priya's account
-(4, 2, 11, 13), -- Kavita's account
-(4, 2, 11, 14), -- Sanjay's account
+(4, 2, 11, 11),
+(4, 2, 11, 12),
+(4, 2, 11, 13),
+(4, 2, 11, 14),
 
 -- Profile 5: Naledi Second Profile
-(5, 3, 2, 2), -- Naledi's account
-(5, 3, 2, 3); -- Lerato's account
+(5, 3, 2, 2),
+(5, 3, 2, 3);
 
 -- Inserting sample data for invoices
 INSERT INTO invoices (account_id, profile_id, date_of_service, status, member_snapshot, patient_snapshot)
@@ -510,4 +511,24 @@ INSERT INTO user_client_access (user_id, client_id, permissions)
 VALUES
 (1, 1, 'Edit'),
 (1, 2, 'Edit'),
-(1, 3, 'Edit');
+(1, 3, 'Edit'),
+
+(2, 1, 'Edit'),
+(2, 2, 'Edit'),
+(2, 3, 'Edit'),
+
+(3, 1, 'Edit'),
+(3, 2, 'Edit'),
+(3, 3, 'Edit'),
+
+(4, 1, 'Edit'),
+(4, 2, 'Edit'),
+(4, 3, 'Edit'),
+
+(5, 1, 'Edit'),
+(5, 2, 'Edit'),
+(5, 3, 'Edit'),
+
+(6, 1, 'Edit'),
+(6, 2, 'Edit'),
+(6, 3, 'Edit');
