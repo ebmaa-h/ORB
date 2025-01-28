@@ -65,7 +65,7 @@ export default function PersonRecordDetails() {
     <>
       {record ? (
 
-          <div className="flex justify-between">
+          <div className="flex gap-4">
             {/* Left Container: Details and Addresses */}
             <div className="container-col">
               {/* Record details */}
@@ -110,7 +110,7 @@ export default function PersonRecordDetails() {
               </div>
 
             {/* Right Container: Accounts and Invoices */}
-            <div className="container-col">
+            <div className="container-col justify-between">
               <div className="">
                 <h3 className="uppercase font-bold pb-4">Accounts</h3>
                 <Table

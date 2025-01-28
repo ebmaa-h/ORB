@@ -31,7 +31,9 @@ const ProtectedLayout = () => {
       > */}
         <main className="h-dvh overflow-y-auto"> 
           <Nav />
-          <Outlet />
+          <div className='m-4'>
+            <Outlet />
+          </div>
         </main>
       {/* </div> */}
     </div>

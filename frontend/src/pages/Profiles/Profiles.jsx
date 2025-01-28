@@ -27,7 +27,7 @@ export default function Profiles() {
   console.log (filteredProfiles);
   return (
     <>
-      <div className='flex flex-col gap-4 m-4 p-4 bg-white rounded'>
+      <div className='container-col'>
         <SearchBar searchTerm={searchTerm} setSearchTerm={setSearchTerm} />
         <Table data={filteredProfiles} columns={columns} linkPrefix="profiles" idField="profile_id"/>
       </div>
