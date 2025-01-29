@@ -29,7 +29,7 @@ export default function Nav() {
           }}
         >
           <option disabled={!!clientId} value=""> {/* Disabled didnt work */}
-            Select client
+            Select Client
           </option>
           {user.client_access.map((client, i) => (
             <option key={i} className='hover:bg-ebmaa-purple' value={client.client_id}>

@@ -1,14 +1,15 @@
 const db = require('../config/db');
 
 const Account = {
-  allAccounts: (callback) => {
+  // Get all accounts
+  allAccounts: async () => {
     const query = `
       SELECT 
         a.account_id,
         CONCAT('Dr ', LEFT(d.first, 1), ' ', d.last) AS client_name,
         d.practice_nr,
         CONCAT(pr_dep.title, ' ', pr_dep.first, ' ', pr_dep.last) AS patient_name,
-        ppm.dependent_nr AS patient_dependent_number, -- Add dependent number
+        ppm.dependent_nr AS patient_dependent_number,
         CONCAT(pr_main.title, ' ', pr_main.first, ' ', pr_main.last) AS member_name,
         pr_main.id_nr AS main_member_id,
         COUNT(i.invoice_id) AS total_invoices,
@@ -29,17 +30,17 @@ const Account = {
         pr_dep.person_id,
         ppm.dependent_nr;
     `;
-  
-    db.query(query, (err, results) => {
-      if (err) {
-        return callback(err, null);
-      }
-      callback(null, results);
-    });
+
+    try {
+      const [results] = await db.query(query);
+      return results;
+    } catch (err) {
+      throw err;
+    }
   },
 
-  clientAccounts: (clientId, callback) => {
-        //         COUNT(i.invoice_id) AS total_invoices,
+  // Get accounts by client
+  clientAccounts: async (clientId) => {
     const query = `
       SELECT 
         a.account_id,
@@ -64,142 +65,140 @@ const Account = {
         pr_main.person_id, 
         pr_dep.person_id,
         ppm.dependent_nr;
-
     `;
-  
 
-    db.query(query, [clientId], (err, results) => {
-      if (err) {
-        return callback(err, null);
-      }
-      callback(null, results);
-    });
+    try {
+      const [results] = await db.query(query, [clientId]);
+      return results;
+    } catch (err) {
+      throw err;
+    }
   },
 
-  oneAccount: (accountId, callback) => {
-    const accQuery = `
-      SELECT
-        a.account_id,
-        a.profile_id,
-        a.client_id,
-        a.main_member_id,
-        a.patient_id,
+  // Get partial account details
+  partialAccount: async (accountId) => {
+    const accQuery = `SELECT
+        a.account_id, a.profile_id, a.client_id, a.main_member_id, a.patient_id,
         CONCAT('Dr ', LEFT(d.first, 1), ' ', d.last) AS client_name,
-        p.authorization_nr,
-        p.medical_aid_nr, 
-        mp.plan_name,
-        mp.plan_code,
+        p.authorization_nr, p.medical_aid_nr, mp.plan_name, mp.plan_code,
         ma.name AS medical_aid_name
       FROM accounts a
       LEFT JOIN clients d ON a.client_id = d.client_id
       LEFT JOIN profiles p ON a.profile_id = p.profile_id
       LEFT JOIN medical_aid_plans mp ON p.plan_id = mp.plan_id
       LEFT JOIN medical_aids ma ON p.medical_aid_id = ma.medical_aid_id
-      WHERE a.account_id = ?;
-    `;
+      WHERE a.account_id = ?;`;
 
-    const memberQuery = `
-      SELECT 
-        pr.person_id,
-        CONCAT(pr.title, ' ', pr.first, ' ', pr.last) AS member_name,
-        pr.cell_nr AS member_cell, 
-        pr.tell_nr AS member_tell, 
-        pr.email AS member_email,
-        DATE_FORMAT(pr.date_of_birth, '%Y-%m-%d') AS date_of_birth,
-        pr.gender,
+    const personQuery = `SELECT 
+        pr.person_id, CONCAT(pr.title, ' ', pr.first, ' ', pr.last) AS name,
+        DATE_FORMAT(pr.date_of_birth, '%Y-%m-%d') AS date_of_birth, pr.gender,
         ppm.dependent_nr
       FROM person_records pr
       LEFT JOIN profile_person_map ppm ON pr.person_id = ppm.person_id
-      WHERE pr.person_id = ?;
-    `;
+      WHERE pr.person_id = ?;`;
 
-    // Query for member addresses
-    const memberAddresses = `
-      SELECT 
-        ad.address_id,
-        ad.is_domicilium,
-        ad.address
-      FROM addresses ad
-      WHERE ad.person_id = ?;
-    `;
-
-    const patientQuery = `
-      SELECT 
-        pr.person_id,
-        CONCAT(pr.title, ' ', pr.first, ' ', pr.last) AS patient_name,
-        pr.cell_nr AS patient_cell, 
-        pr.tell_nr AS patient_tell, 
-        pr.email AS patient_email,
-        DATE_FORMAT(pr.date_of_birth, '%Y-%m-%d') AS date_of_birth,
-        pr.gender,
-        ppm.dependent_nr
-      FROM person_records pr
-      LEFT JOIN profile_person_map ppm ON pr.person_id = ppm.person_id
-      WHERE pr.person_id = ?;
-    `;
-
-    // Query for patient addresses
-    const patientAddresses = `
-      SELECT 
-        ad.address_id,
-        ad.is_domicilium,
-        ad.address
-      FROM addresses ad
-      WHERE ad.person_id = ?;
-    `;
-
-    const invQuery = `
-      SELECT
+    const invQuery = `SELECT
         i.invoice_id,
-        CONCAT(JSON_UNQUOTE(JSON_EXTRACT(i.patient_snapshot, '$.patient.first')), ' ', JSON_UNQUOTE(JSON_EXTRACT(i.patient_snapshot, '$.patient.last'))) AS 'Patient Name',
-        JSON_UNQUOTE(JSON_EXTRACT(i.patient_snapshot, '$.patient.id_nr')) AS 'Patient ID',
-        CONCAT(JSON_UNQUOTE(JSON_EXTRACT(i.member_snapshot, '$.member.first')), ' ', JSON_UNQUOTE(JSON_EXTRACT(i.member_snapshot, '$.member.last'))) AS 'Member Name',
-        JSON_UNQUOTE(JSON_EXTRACT(i.member_snapshot, '$.member.id_nr')) AS 'Member ID',
+        CONCAT(JSON_UNQUOTE(JSON_EXTRACT(i.patient_snapshot, '$.patient.first')), ' ', 
+                JSON_UNQUOTE(JSON_EXTRACT(i.patient_snapshot, '$.patient.last'))) AS patient_name,
+        JSON_UNQUOTE(JSON_EXTRACT(i.patient_snapshot, '$.patient.id_nr')) AS patient_id,
+        CONCAT(JSON_UNQUOTE(JSON_EXTRACT(i.member_snapshot, '$.member.first')), ' ', 
+                JSON_UNQUOTE(JSON_EXTRACT(i.member_snapshot, '$.member.last'))) AS member_name,
+        JSON_UNQUOTE(JSON_EXTRACT(i.member_snapshot, '$.member.id_nr')) AS member_id,
         CONCAT('R ', FORMAT(i.balance, 2)) AS invoice_balance,
         DATE_FORMAT(i.date_of_service , '%Y-%m-%d') AS date_of_service,
-        i.status AS 'Status'
+        i.status AS status
       FROM invoices i
-      JOIN accounts a ON i.account_id = a.account_id
-      WHERE i.account_id = ?
-    `;
+      WHERE i.account_id = ?;`;
 
-    db.query(accQuery, [accountId], (err, accResults) => {
-        if (err) return callback(err, null);
-        const account = accResults[0];
+    try {
+      const [accountResults] = await db.query(accQuery, [accountId]);
+      if (!accountResults.length) {
+        return null; // No account found
+      }
+      const account = accountResults[0];
 
-        db.query(memberQuery, [account.main_member_id], (err, memberResults) => {
-            if (err) return callback(err, null);
+      const [memberResults, patientResults, invoiceResults] = await Promise.all([
+        db.query(personQuery, [account.main_member_id]),
+        db.query(personQuery, [account.patient_id]),
+        db.query(invQuery, [accountId]),
+      ]);
 
-            db.query(memberAddresses, [account.main_member_id], (err, memberAddressesResults) => {
-                if (err) return callback(err, null);
+      const result = {
+        invoices: invoiceResults[0],
+        account: accountResults[0],
+        member: memberResults[0],
+        patient: patientResults[0],
+      };
 
-                db.query(patientQuery, [account.patient_id], (err, patientResults) => {
-                    if (err) return callback(err, null);
-
-                    db.query(patientAddresses, [account.patient_id], (err, patientAddressesResults) => {
-                        if (err) return callback(err, null);
-
-                        db.query(invQuery, [accountId], (err, invoiceResults) => {
-                            if (err) return callback(err, null);
-
-                            const result = {
-                              account: account,
-                              member: memberResults[0],
-                              memberAddress: memberAddressesResults,
-                              patient: patientResults[0],
-                              patientAddress: patientAddressesResults,
-                              invoices: invoiceResults,
-                            };
-
-                            callback(null, result);
-                        });
-                    });
-                });
-            });
-        });
-    });
+      return result;
+    } catch (err) {
+      throw err;
+    }
   },
 
+  // Get full account details
+  account: async (accountId) => {
+    try {
+      const accQuery = `SELECT
+          a.account_id, a.profile_id, a.client_id, a.main_member_id, a.patient_id,
+          CONCAT('Dr ', LEFT(d.first, 1), ' ', d.last) AS client_name,
+          p.authorization_nr, p.medical_aid_nr, mp.plan_name, mp.plan_code,
+          ma.name AS medical_aid_name
+        FROM accounts a
+        LEFT JOIN clients d ON a.client_id = d.client_id
+        LEFT JOIN profiles p ON a.profile_id = p.profile_id
+        LEFT JOIN medical_aid_plans mp ON p.plan_id = mp.plan_id
+        LEFT JOIN medical_aids ma ON p.medical_aid_id = ma.medical_aid_id
+        WHERE a.account_id = ?;`;
+
+      const personQuery = `SELECT 
+          pr.person_id, CONCAT(pr.title, ' ', pr.first, ' ', pr.last) AS name,
+          DATE_FORMAT(pr.date_of_birth, '%Y-%m-%d') AS date_of_birth, pr.gender,
+          ppm.dependent_nr, pa.address_id, pa.is_domicilium, pa.address
+        FROM person_records pr
+        LEFT JOIN profile_person_map ppm ON pr.person_id = ppm.person_id
+        LEFT JOIN person_addresses pa ON pr.person_id = pa.person_id
+        WHERE pr.person_id = ?;`;
+
+      const invQuery = `SELECT
+          i.invoice_id,
+          CONCAT(JSON_UNQUOTE(JSON_EXTRACT(i.patient_snapshot, '$.patient.first')), ' ', 
+                 JSON_UNQUOTE(JSON_EXTRACT(i.patient_snapshot, '$.patient.last'))) AS patient_name,
+          JSON_UNQUOTE(JSON_EXTRACT(i.patient_snapshot, '$.patient.id_nr')) AS patient_id,
+          CONCAT(JSON_UNQUOTE(JSON_EXTRACT(i.member_snapshot, '$.member.first')), ' ', 
+                 JSON_UNQUOTE(JSON_EXTRACT(i.member_snapshot, '$.member.last'))) AS member_name,
+          JSON_UNQUOTE(JSON_EXTRACT(i.member_snapshot, '$.member.id_nr')) AS member_id,
+          CONCAT('R ', FORMAT(i.balance, 2)) AS invoice_balance,
+          DATE_FORMAT(i.date_of_service , '%Y-%m-%d') AS date_of_service,
+          i.status AS status
+        FROM invoices i
+        WHERE i.account_id = ?;`;
+
+      const [accountResults] = await db.query(accQuery, [accountId]);
+      if (!accountResults.length) {
+        return null; // No account found
+      }
+      const account = accountResults[0];
+
+      const [memberResults, patientResults, invoiceResults] = await Promise.all([
+        db.query(personQuery, [account.main_member_id]),
+        db.query(personQuery, [account.patient_id]),
+        db.query(invQuery, [accountId]),
+      ]);
+
+      account.member = memberResults[0];
+      account.patient = patientResults[0];
+      account.invoices = invoiceResults[0];
+
+      return account;
+    } catch (err) {
+      throw err;
+    }
+  },
+  
+
+  
 };
 
 module.exports = Account;

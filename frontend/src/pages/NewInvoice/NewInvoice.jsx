@@ -6,6 +6,8 @@ import axios from 'axios';
 export default function NewInvoice() {
   const { accountId } = useParams();
 
+  // make reuqest to backend to get all patient & member & account info
+
   return (
     <>
       {accountId ? (

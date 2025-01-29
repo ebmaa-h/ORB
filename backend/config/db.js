@@ -1,4 +1,5 @@
-const mysql = require('mysql2');
+// const mysql = require('mysql2');  old
+const mysql = require('mysql2/promise'); //new
 
 // Create a connection pool to manage MySQL connections
 const db = mysql.createPool({

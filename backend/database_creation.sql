@@ -1,5 +1,5 @@
 
-DROP TABLE IF EXISTS profile_person_map, invoices, accounts, person_records, profiles, medical_aid_plans, medical_aids, employers, service_centers, service_centers_list, ref_clients, ref_clients_list, clients_logs, logs, user_feature, features, clients, users, user_feature_access, user_client_access;
+DROP TABLE IF EXISTS profile_person_map, invoices, accounts, profiles, medical_aid_plans, medical_aids, employers, service_centers, service_centers_list, ref_clients, ref_clients_list, clients_logs, logs, user_feature, user_feature_access, user_client_access, addresses, features, clients, users, person_addresses, person_records;
 
 -- Create users table
 CREATE TABLE users (
@@ -168,26 +168,31 @@ CREATE TABLE person_records (
     gender ENUM('M', 'F') DEFAULT NULL,
     id_type ENUM('Passport', 'SA ID', 'Other') DEFAULT NULL,
     id_nr VARCHAR(255) UNIQUE,
-    cell_nr VARCHAR(20),
-    tell_nr VARCHAR(20),
-    work_nr VARCHAR(20),
-    email VARCHAR(255),
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 );
 
-CREATE TABLE addresses (
+CREATE TABLE person_numbers (
+    number_id INT AUTO_INCREMENT PRIMARY KEY,
+    person_id INT NOT NULL,
+    num_type ENUM('Cell', 'Tell', 'Work', 'Other') DEFAULT 'Other',
+    num VARCHAR(255) NOT NULL,
+    FOREIGN KEY (person_id) REFERENCES person_records(person_id) ON DELETE CASCADE
+);
+
+CREATE TABLE person_emails (
+    email_id INT AUTO_INCREMENT PRIMARY KEY,
+    person_id INT NOT NULL,
+    email VARCHAR(255) NOT NULL,
+    FOREIGN KEY (person_id) REFERENCES person_records(person_id) ON DELETE CASCADE
+);
+
+CREATE TABLE person_addresses (
     address_id INT AUTO_INCREMENT PRIMARY KEY,
     person_id INT NOT NULL,
     address_type ENUM('Postal', 'Street', 'Other') DEFAULT 'Other',
     is_domicilium BOOLEAN DEFAULT FALSE,
-    line1 VARCHAR(255) NOT NULL,
-    line2 VARCHAR(255),
-    line3 VARCHAR(255),
-    line4 VARCHAR(255),
-    postal_code VARCHAR(20),
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    address VARCHAR(255) NOT NULL,
     FOREIGN KEY (person_id) REFERENCES person_records(person_id) ON DELETE CASCADE
 );
 
@@ -236,17 +241,18 @@ CREATE TABLE invoices (
 
 
 -- Inserting sample data for users
-INSERT INTO users (email, password, first, last, address, tell_nr)
-VALUES 
-('user1@example.com', 'password_hash_1', 'John', 'Doe', '123 Main St', '123-456-7890'),
-('user2@example.com', 'password_hash_2', 'Jane', 'Smith', '456 Elm St', '987-654-3210');
+-- INSERT INTO users (email, password, first, last, address, tell_nr)
+-- VALUES 
+-- ('user1@example.com', 'password_hash_1', 'John', 'Doe', '123 Main St', '123-456-7890'),
+-- ('user2@example.com', 'password_hash_2', 'Jane', 'Smith', '456 Elm St', '987-654-3210');
+
 
 -- Inserting sample data for clients
 INSERT INTO clients (email, password, first, last, registration_nr, practice_nr, tell_nr, client_type)
 VALUES 
 ('client1@email.com', 'test', 'van der Wolt', 'James', 'REG1234', '21515151', '012-222-3333', 'Surgeon'),
 ('client2@email.com', 'test', 'Lievenberg', 'Alicia', 'REG5678', '21235151', '012-555-6666', 'Specialist'),
-('client1@email.com', 'test', 'Bellings', 'Sando', 'REG1234', '21775151', '012-222-3333', 'Anaesthetist'),
+('client3@email.com', 'test', 'Bellings', 'Sando', 'REG1234', '21775151', '012-222-3333', 'Anaesthetist');
 
 -- Inserting sample data for medical aids
 INSERT INTO medical_aids (name)
@@ -276,25 +282,72 @@ VALUES
 (3, 3, '74566457', '4684681', TRUE);
 
 -- Inserting sample data for person_records
-INSERT INTO person_records (first, last, title, date_of_birth, gender, id_nr, cell_nr, tell_nr, email)
+INSERT INTO person_records (first, last, title, date_of_birth, gender, id_nr)
 VALUES 
-('Thabo', 'Mokoena', 'Mr', '1990-05-15', 'M', '9005150000000', '082-111-2222', '011-333-4444', 'thabo@mokoena.co.za'),
-('Naledi', 'Mokoena', 'Mrs', '1992-04-12', 'F', '9204120000000', '082-111-2223', '011-333-4445', 'naledi@mokoena.co.za'),
-('Lerato', 'Mokoena', 'Miss', '2010-02-01', 'F', '1002010000000', '082-111-2224', '011-333-4446', 'lerato@mokoena.co.za'),
+('Thabo', 'Mokoena', 'Mr', '1990-05-15', 'M', '9005150000000'),
+('Naledi', 'Mokoena', 'Mrs', '1992-04-12', 'F', '9204120000000'),
+('Lerato', 'Mokoena', 'Miss', '2010-02-01', 'F', '1002010000000'),
+('Pieter', 'van der Merwe', 'Mr', '1990-08-05', 'M', '9008050000000'),
+('Annelize', 'van der Merwe', 'Mrs', '1980-11-22', 'F', '8011220000000'),
+('Jaco', 'van der Merwe', 'Mr', '2017-03-30', 'M', '1703300000000'),
+('Saki', 'van der Merwe', 'Mr', '2011-06-10', 'M', '1106100000000'),
+('Jo-Anne', 'Smith', 'Mrs', '1972-07-20', 'F', '7207200000000'),
+('John', 'Smith', 'Mr', '1973-04-14', 'M', '7304140000000'),
+('Emily', 'Smith', 'Miss', '2001-06-22', 'F', '0106220000000'),
+('Rajesh', 'Naidoo', 'Mr', '1982-09-17', 'M', '8209170000000'),
+('Priya', 'Naidoo', 'Mrs', '1983-02-10', 'F', '8302100000000'),
+('Kavita', 'Naidoo', 'Miss', '2000-02-10', 'F', '0002100000000'),
+('Sanjay', 'Naidoo', 'Mr', '1999-02-10', 'M', '9902100000000');
 
-('Pieter', 'van der Merwe', 'Mr', '1990-08-05', 'M', '9008050000000', '082-111-2225', '011-333-4447', 'olivia@vdmerwe.co.za'),
-('Annelize', 'van der Merwe', 'Mrs', '1980-11-22', 'F', '8011220000000', '082-111-2226', '011-333-4448', 'annelize@vdmerwe.co.za'),
-('Jaco', 'van der Merwe', 'Mr', '2017-03-30', 'M', '1703300000000', '082-111-2227', '011-333-4449', 'jaco@vdmerwe.co.za'),
-('Saki', 'van der Merwe', 'Mr', '2011-06-10', 'M', '1106100000000', '082-111-2227', '011-333-4449', 'saki@vdmerwe.co.za'),
+-- Inserting phone numbers into person_numbers
+INSERT INTO person_numbers (person_id, num_type, num)
+VALUES 
+(1, 'Cell', '082-111-2222'),
+(1, 'Work', '011-333-4444'),
+(2, 'Cell', '082-111-2223'),
+(2, 'Work', '011-333-4445'),
+(3, 'Cell', '082-111-2224'),
+(3, 'Work', '011-333-4446'),
+(4, 'Cell', '082-111-2225'),
+(4, 'Work', '011-333-4447'),
+(5, 'Cell', '082-111-2226'),
+(5, 'Work', '011-333-4448'),
+(6, 'Cell', '082-111-2227'),
+(6, 'Work', '011-333-4449'),
+(7, 'Cell', '082-111-2227'),
+(7, 'Work', '011-333-4449'),
+(8, 'Cell', '082-222-3333'),
+(8, 'Work', '011-444-5555'),
+(9, 'Cell', '082-222-3334'),
+(9, 'Work', '011-444-5556'),
+(10, 'Cell', '082-222-3335'),
+(10, 'Work', '011-444-5557'),
+(11, 'Cell', '082-222-3336'),
+(11, 'Work', '011-444-5558'),
+(12, 'Cell', '082-222-3337'),
+(12, 'Work', '011-444-5559'),
+(13, 'Cell', '082-222-3337'),
+(13, 'Work', '011-444-5559'),
+(14, 'Cell', '082-222-3337'),
+(14, 'Work', '011-444-5559');
 
-('Jo-Anne', 'Smith', 'Mrs', '1972-07-20', 'F', '7207200000000', '082-222-3333', '011-444-5555', 'joanne@smith.co.za'),
-('John', 'Smith', 'Mr', '1973-04-14', 'M', '7304140000000', '082-222-3334', '011-444-5556', 'john@smith.co.za'),
-('Emily', 'Smith', 'Miss', '2001-06-22', 'F', '0106220000000', '082-222-3335', '011-444-5557', 'emily@smith.co.za'),
-
-('Rajesh', 'Naidoo', 'Mr', '1982-09-17', 'M', '8209170000000', '082-222-3336', '011-444-5558', 'rajesh@naidoo.co.za'),
-('Priya', 'Naidoo', 'Mrs', '1983-02-10', 'F', '8302100000000', '082-222-3337', '011-444-5559', 'priya@naidoo.co.za'),
-('Kavita', 'Naidoo', 'Miss', '2000-02-10', 'F', '0002100000000', '082-222-3337', '011-444-5559', 'kavita@naidoo.co.za'),
-('Sanjay', 'Naidoo', 'Mr', '1999-02-10', 'M', '9902100000000', '082-222-3337', '011-444-5559', 'sanjay@naidoo.co.za');
+-- Inserting emails into person_emails
+INSERT INTO person_emails (person_id, email)
+VALUES 
+(1, 'thabo@mokoena.co.za'),
+(2, 'naledi@mokoena.co.za'),
+(3, 'lerato@mokoena.co.za'),
+(4, 'olivia@vdmerwe.co.za'),
+(5, 'annelize@vdmerwe.co.za'),
+(6, 'jaco@vdmerwe.co.za'),
+(7, 'saki@vdmerwe.co.za'),
+(8, 'joanne@smith.co.za'),
+(9, 'john@smith.co.za'),
+(10, 'emily@smith.co.za'),
+(11, 'rajesh@naidoo.co.za'),
+(12, 'priya@naidoo.co.za'),
+(13, 'kavita@naidoo.co.za'),
+(14, 'sanjay@naidoo.co.za');
 
 -- Inserting sample data for profile_person_map
 INSERT INTO profile_person_map (profile_id, person_id, is_main_member, dependent_nr)
@@ -324,30 +377,27 @@ VALUES
 -- Inserting data into accounts
 INSERT INTO accounts (profile_id, client_id, main_member_id, patient_id)
 VALUES
--- Profile 1: Thabo (main member), Naledi, and Lerato (Total: 1200.00)
+
 (1, 1, 1, 1), 
 (1, 1, 1, 2),
 (1, 1, 1, 3), 
 (1, 2, 1, 3),
 
--- Profile 2: Pieter (main member), Annelize, Jaco, and Saki (Total: 1050.00)
 (2, 2, 4, 4),
 (2, 2, 4, 5),
 (2, 2, 4, 6),
 (2, 2, 4, 7),
 
--- Profile 3: Jo-Anne (main member), John, and Emily (Total: 500.00)
 (3, 1, 8, 8),
 (3, 1, 8, 9),
 (3, 1, 8, 10),
 
--- Profile 4: Rajesh (main member), Priya, Kavita, and Sanjay (Total: 5050.00)
 (4, 2, 11, 11),
 (4, 2, 11, 12),
 (4, 2, 11, 13),
 (4, 2, 11, 14),
 
--- Profile 5: Naledi Second Profile
+
 (5, 3, 2, 2),
 (5, 3, 2, 3);
 
@@ -532,3 +582,94 @@ VALUES
 (6, 1, 'Edit'),
 (6, 2, 'Edit'),
 (6, 3, 'Edit');
+
+-- person_addresses
+INSERT INTO person_addresses (person_id, address_type, is_domicilium, address)
+VALUES (1, 'Postal', TRUE, 'Apple Avenue, Suite 62, Block 5, Section 4, 5000');
+
+INSERT INTO person_addresses (person_id, address_type, is_domicilium, address)
+VALUES (2, 'Postal', TRUE, 'Avocado Road, Suite 18, Block 4, Section 3, 1000');
+
+INSERT INTO person_addresses (person_id, address_type, is_domicilium, address)
+VALUES (3, 'Postal', TRUE, 'Pineapple Drive, Suite 5, Block 4, Section 4, 6000');
+
+INSERT INTO person_addresses (person_id, address_type, is_domicilium, address)
+VALUES (4, 'Postal', TRUE, 'Apple Drive, Suite 63, Block 1, Section 4, 4000');
+
+INSERT INTO person_addresses (person_id, address_type, is_domicilium, address)
+VALUES (5, 'Postal', TRUE, 'Pomegranate Avenue, Suite 47, Block 3, Section 1, 5000');
+
+INSERT INTO person_addresses (person_id, address_type, is_domicilium, address)
+VALUES (6, 'Postal', TRUE, 'Grapes Avenue, Suite 73, Block 5, Section 5, 3000');
+
+INSERT INTO person_addresses (person_id, address_type, is_domicilium, address)
+VALUES (7, 'Postal', TRUE, 'Banana Road, Suite 30, Block 1, Section 1, 6000');
+
+INSERT INTO person_addresses (person_id, address_type, is_domicilium, address)
+VALUES (8, 'Postal', TRUE, 'Plum Street, Suite 28, Block 10, Section 4, 2000');
+
+INSERT INTO person_addresses (person_id, address_type, is_domicilium, address)
+VALUES (9, 'Postal', TRUE, 'Orange Drive, Suite 90, Block 1, Section 5, 5000');
+
+INSERT INTO person_addresses (person_id, address_type, is_domicilium, address)
+VALUES (10, 'Postal', TRUE, 'Pomegranate Drive, Suite 94, Block 5, Section 4, 5000');
+
+INSERT INTO person_addresses (person_id, address_type, is_domicilium, address)
+VALUES (11, 'Postal', TRUE, 'Avocado Drive, Suite 50, Block 5, Section 2, 2000');
+
+INSERT INTO person_addresses (person_id, address_type, is_domicilium, address)
+VALUES (12, 'Postal', TRUE, 'Guava Avenue, Suite 49, Block 8, Section 2, 6000');
+
+INSERT INTO person_addresses (person_id, address_type, is_domicilium, address)
+VALUES (13, 'Postal', TRUE, 'Lychee Boulevard, Suite 65, Block 2, Section 3, 4000');
+
+INSERT INTO person_addresses (person_id, address_type, is_domicilium, address)
+VALUES (14, 'Postal', TRUE, 'Avocado Boulevard, Suite 59, Block 1, Section 1, 4000');
+
+INSERT INTO person_addresses (person_id, address_type, is_domicilium, address)
+VALUES (1, 'Street', FALSE, 'Papaya Road, Suite 100, Block 4, Section 1, 3000');
+
+INSERT INTO person_addresses (person_id, address_type, is_domicilium, address)
+VALUES (2, 'Street', FALSE, 'Pineapple Avenue, Suite 99, Block 4, Section 1, 1000');
+
+INSERT INTO person_addresses (person_id, address_type, is_domicilium, address)
+VALUES (3, 'Street', FALSE, 'Grapes Boulevard, Suite 12, Block 7, Section 2, 1000');
+
+INSERT INTO person_addresses (person_id, address_type, is_domicilium, address)
+VALUES (4, 'Street', FALSE, 'Banana Boulevard, Suite 36, Block 3, Section 5, 1000');
+
+INSERT INTO person_addresses (person_id, address_type, is_domicilium, address)
+VALUES (5, 'Street', FALSE, 'Banana Street, Suite 62, Block 4, Section 1, 5000');
+
+INSERT INTO person_addresses (person_id, address_type, is_domicilium, address)
+VALUES (6, 'Street', FALSE, 'Lychee Avenue, Suite 63, Block 8, Section 3, 6000');
+
+INSERT INTO person_addresses (person_id, address_type, is_domicilium, address)
+VALUES (7, 'Street', FALSE, 'Guava Boulevard, Suite 91, Block 3, Section 4, 3000');
+
+INSERT INTO person_addresses (person_id, address_type, is_domicilium, address)
+VALUES (8, 'Street', FALSE, 'Grapes Street, Suite 31, Block 7, Section 1, 1000');
+
+INSERT INTO person_addresses (person_id, address_type, is_domicilium, address)
+VALUES (9, 'Street', FALSE, 'Grapes Boulevard, Suite 20, Block 7, Section 5, 1000');
+
+INSERT INTO person_addresses (person_id, address_type, is_domicilium, address)
+VALUES (10, 'Street', FALSE, 'Orange Road, Suite 83, Block 7, Section 5, 3000');
+
+INSERT INTO person_addresses (person_id, address_type, is_domicilium, address)
+VALUES (11, 'Street', FALSE, 'Lychee Street, Suite 84, Block 9, Section 5, 5000');
+
+INSERT INTO person_addresses (person_id, address_type, is_domicilium, address)
+VALUES (12, 'Street', FALSE, 'Apple Avenue, Suite 2, Block 10, Section 2, 2000');
+
+INSERT INTO person_addresses (person_id, address_type, is_domicilium, address)
+VALUES (13, 'Street', FALSE, 'Plum Avenue, Suite 77, Block 3, Section 5, 4000');
+
+INSERT INTO person_addresses (person_id, address_type, is_domicilium, address)
+VALUES (14, 'Street', FALSE, 'Banana Street, Suite 78, Block 4, Section 3, 3000');
+
+INSERT INTO person_addresses (person_id, address_type, is_domicilium, address)
+VALUES (1, 'Other', FALSE, 'Orange Avenue, Suite 23, Block 7, Section 3, 4000');
+
+INSERT INTO person_addresses (person_id, address_type, is_domicilium, address)
+VALUES (2, 'Other', FALSE, 'Pineapple Drive, Suite 89, Block 5, Section 4, 5000');

@@ -8,11 +8,12 @@ import BackButton from '../../utility/BackButton';
 export default function InvoiceDetails() {
   const { invoiceId } = useParams();
   const navigate = useNavigate();
-  const [medical, setMedical] = useState([]);
-  const [client, setClient] = useState([]);
-  const [invoice, setInvoice] = useState([]);
-  const [member, setMember] = useState([]);
-  const [patient, setPatient] = useState([]);
+  const [medical, setMedical] = useState({});
+  const [client, setClient] = useState({});
+  const [invoice, setInvoice] = useState({});
+  const [member, setMember] = useState({});
+  const [patient, setPatient] = useState({});
+  
 
   // Fetch invoice details
   useEffect(() => {
@@ -23,14 +24,14 @@ export default function InvoiceDetails() {
         });
 
         const data = response.data.invoice; 
-        console.log(data.member)
+        console.log(data)
         const { invoice, medical, member, client,  patient } = data; 
 
-        setClient(client || {});
-        setMedical(medical || {});
-        setInvoice(invoice || {});
-        setMember(member || {});
-        setPatient(patient || {});
+        setClient(client[0] || {});
+        setMedical(medical[0] || {});
+        setInvoice(invoice[0] || {});
+        setMember(member[0] || {});
+        setPatient(patient[0] || {});
 
       } catch (error) {
         console.error('Error fetching invoice details:', error);
@@ -71,7 +72,7 @@ export default function InvoiceDetails() {
 
   return (
     <>
-      {invoice ? (
+      {invoice.invoice_id ? (
         <>
           <div className="container-col">
           <h1><strong>Invoice Nr: {invoice.invoice_id}</strong></h1>

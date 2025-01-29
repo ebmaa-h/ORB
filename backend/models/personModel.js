@@ -34,13 +34,11 @@ getPersonDetails: (personId, callback) => {
     // Query for addresses
     const addressesQuery = `
       SELECT
-        ad.address_id,
-        ad.is_domicilium,
-        ad.address,
-        DATE_FORMAT(ad.created_at, '%Y-%m-%d') AS created_date,
-        DATE_FORMAT(ad.updated_at, '%Y-%m-%d') AS updated_date
-      FROM addresses ad
-      WHERE ad.person_id = ?;
+        pa.address_id,
+        pa.is_domicilium,
+        pa.address
+      FROM person_addresses pa
+      WHERE pa.person_id = ?;
     `;
 
     // Query for accounts

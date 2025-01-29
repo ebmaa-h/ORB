@@ -19,15 +19,18 @@ const generateToken = (user) => {
 const verifyToken = (token) => {
   const secretKey = process.env.JWT_SECRET;
 
-  try {
-    const decoded = jwt.verify(token, secretKey);
-    console.log("JWT verified...");
-    // console.log(`JWT verification success: ${JSON.stringify(decoded, null, 2)}`);
-    return decoded;
-  } catch (err) {
-    console.error(`JWT verification failure: ${err.message}`); 
-    return null;
-  }
+  return new Promise((resolve, reject) => {
+    jwt.verify(token, secretKey, (err, decoded) => {
+      if (err) {
+        console.error(`JWT verification failure: ${err.message}`);
+        reject(err);  // Reject the promise if verification fails
+      } else {
+        console.log("JWT verified...");
+        resolve(decoded);  // Resolve with the decoded token if successful
+      }
+    });
+  });
 };
+
 
 module.exports = { generateToken, verifyToken };

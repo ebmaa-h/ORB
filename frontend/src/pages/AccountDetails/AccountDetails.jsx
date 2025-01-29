@@ -9,8 +9,8 @@ export default function AccountDetails() {
   const { accountId } = useParams(); 
   const [account, setAccount] = useState({});
   const [invoices, setInvoices] = useState([]);
-  const [patient, setPatient] = useState([]); 
-  const [member, setMember] = useState([]);
+  const [patient, setPatient] = useState({}); 
+  const [member, setMember] = useState({});
   const [invoiceSearchTerm, setInvoiceSearchTerm] = useState('');
   const navigate = useNavigate();
 
@@ -20,26 +20,21 @@ export default function AccountDetails() {
 
   // Fetch account details
   useEffect(() => {
-    const fetchAccountDetails  = async () => {
+    const fetchAccountDetails = async () => {
       try {
-        console.log('Fetching account data for ID:', accountId); // Log the account ID being fetched
-        const response = await axios.get(`${ENDPOINTS.accounts}/${accountId}`, {
+        console.log('requesting with', accountId);
+        const response = await axios.get(`${ENDPOINTS.partialAcc}/${accountId}`, {
           withCredentials: true,
         });
 
-        const { account, invoices, member, patient } = response.data.account;
+        const data = response.data; 
+        console.log("response",response)
+        const { account, invoices, member, patient } = data;
 
-        // console.log("Account:", response.data.account.account.account_id);
-        // console.log("Account:", response.data.account.member);
-        // console.log("Invoices:", response.data.account.invoices);
-        // console.log("Member:", response.data.member);
-        // console.log("Patient:", response.data.patient);
-        console.log("Patient:", response);
-
-        setAccount(account || {});
-        setInvoices(invoices || []);
-        setMember(member || {});
-        setPatient(patient || {});
+        setAccount(account[0] || {});
+        setInvoices(invoices[0] || {});
+        setMember(member[0] || {});
+        setPatient(patient[0] || {});
 
       } catch (error) {
         console.error('Error fetching account details:', error);
@@ -47,23 +42,17 @@ export default function AccountDetails() {
     };
 
     if (accountId) {
-      fetchAccountDetails ();
+      fetchAccountDetails();
     }
   }, [accountId]);
 
   return (
     <>
 
-      {account ? (
+      {account.account_id ? (
         <div className='flex flex-col gap-4'>
           <div className='container-row justify-between'>
             <p>
-              {/* <Button
-                btnName={`Profile ID: ${account.profile_id}`}
-
-                className=""
-              /> */}
-  
               <button
                 value={`Profile ID: ${account.profile_id}`}
                 onClick={() => navigate(`/profiles/${account.profile_id}`)} 
@@ -88,7 +77,7 @@ export default function AccountDetails() {
               <h3 className=" uppercase font-bold pb-4">GUARANTOR</h3>
               <Table
                 data={Array.isArray(member) ? member : [member]} 
-                columns={['Record ID', 'Name', 'Cell', 'Email', 'Date of Birth', 'Gender', 'Depedent Nr']}
+                columns={['Record ID', 'Name', 'Email', 'Date of Birth', 'Gender', 'Depedent Nr']}
                 idField="person_id" 
                 linkPrefix="records" 
               />
@@ -98,7 +87,7 @@ export default function AccountDetails() {
               <h3 className=" uppercase font-bold pb-4">Patient</h3>
               <Table
                 data={Array.isArray(patient) ? patient : [patient]} 
-                columns={['Record ID', 'Name', 'Cell', 'Email', 'Date of Birth', 'Gender', 'Dependent Nr']}
+                columns={['Record ID', 'Name', 'Email', 'Date of Birth', 'Gender', 'Dependent Nr']}
                 idField="person_id" 
                 linkPrefix="records" 
               />

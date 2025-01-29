@@ -8,9 +8,11 @@ const ProtectedLayout = () => {
   // const [navWidth, setNavWidth] = useState('4rem'); // Default width of the SideNav
 
   // If loading user data, show a loading message
-  if (loading) {
-    return <div>Loading...</div>;
-  }
+
+  // Uhm not working ?
+  // if (loading) {
+  //   return <div>Loading...</div>;
+  // }
 
   // If user is not authenticated, redirect to login
   if (!user) {

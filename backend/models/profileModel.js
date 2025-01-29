@@ -2,6 +2,10 @@ const db = require('../config/db');
 
 const Profile = {
 
+    // COUNT(DISTINCT a.account_id) AS total_accounts,
+    // COUNT(DISTINCT ppm.person_id) AS total_dependents,
+    // COUNT(DISTINCT i.invoice_id) AS total_invoices
+
   allProfiles: (callback) => {
     const query = `
         SELECT 
@@ -11,10 +15,7 @@ const Profile = {
             map.plan_name AS plan_name,
             p.medical_aid_nr,
             p.authorization_nr,
-            CONCAT('R ', FORMAT(p.balance, 2)) AS profile_balance,
-            COUNT(DISTINCT a.account_id) AS total_accounts,
-            COUNT(DISTINCT ppm.person_id) AS total_dependents,
-            COUNT(DISTINCT i.invoice_id) AS total_invoices
+            CONCAT('R ', FORMAT(p.balance, 2)) AS profile_balance
         FROM 
             profiles p
         LEFT JOIN medical_aids ma ON p.medical_aid_id = ma.medical_aid_id

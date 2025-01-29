@@ -20,7 +20,7 @@ export default function Profiles() {
     fetchProfiles();
   }, []);
 
-  const columns = ['Profile ID', 'Main Member', 'Medical Aid', 'Plan', 'Medical Aid Number', 'Auth', 'Balance', 'Accounts', 'Dependents', 'Invoices'];
+  const columns = ['Profile ID', 'Main Member', 'Medical Aid', 'Plan', 'Medical Aid Number', 'Auth', 'Balance'];
   const filteredProfiles = profiles.filter((profile) =>
     Object.values(profile).join(' ').toLowerCase().includes(searchTerm.toLowerCase())
   );

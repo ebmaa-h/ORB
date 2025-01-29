@@ -34,19 +34,18 @@ app.use((req, res, next) => {
 });
 
 // Routes
-app.use('/', authRoutes);   // Authentication routes
-app.use('/users', userRoutes); // User-related routes
-app.use('/accounts', accRoutes); // Account-related routes
-app.use('/profiles', profRoutes); // Profiles-related routes
-app.use('/invoices', invRoutes); // Invoices-related routes
-app.use('/records', personRoutes); // Persons-records-related routes
+app.use('/', authRoutes);
+app.use('/users', userRoutes);
+app.use('/accounts', accRoutes);
+app.use('/profiles', profRoutes);
+app.use('/invoices', invRoutes);
+app.use('/records', personRoutes);
 
 // Error Handling Middleware
 app.use((err, req, res, next) => {
   console.error(err.stack);
   res.status(500).json({ message: "An internal error occurred." });
 });
-
 
 // Listen for requests
 const PORT = process.env.PORT;
