@@ -6,7 +6,6 @@ export default function BackButton() {
   const { previousPath } = useContext(NavigationContext);
   const navigate = useNavigate();
 
-
   return (
       <button
       onClick={() => previousPath ? navigate(previousPath) : navigate(-1)}

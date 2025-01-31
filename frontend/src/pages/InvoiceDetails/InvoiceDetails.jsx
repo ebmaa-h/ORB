@@ -65,11 +65,6 @@ export default function InvoiceDetails() {
     }
   };
 
-  // Handle discard changes
-  const handleDiscard = () => {
-    navigate(-1); // Go back to the previous page without saving
-  };
-
   return (
     <>
       {invoice.invoice_id ? (
@@ -148,14 +143,7 @@ export default function InvoiceDetails() {
                   </option>
                 </select>
               {/* <BackButton /> */}
-              <button
-                type="button"
-                className="btn-class w-[100px]"
-                onClick={handleDiscard}
-              >
-                Back
-              </button>
-
+              <BackButton />
               <button
                 type="button"
                 className="btn-class w-[100px]"
