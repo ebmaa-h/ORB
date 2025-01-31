@@ -20,21 +20,21 @@ export default function AccountDetails() {
 
   // Fetch account details
   useEffect(() => {
-    const fetchAccountDetails = async () => {
+    const getAccountDetails = async () => {
       try {
         console.log('requesting with', accountId);
-        const response = await axios.get(`${ENDPOINTS.partialAcc}/${accountId}`, {
+        const response = await axios.get(ENDPOINTS.partialAcc(accountId), {
           withCredentials: true,
         });
 
-        const data = response.data; 
-        console.log("response",response)
+        const data = response.data.account; 
+        console.log("response",response.data.account)
         const { account, invoices, member, patient } = data;
 
-        setAccount(account[0] || {});
-        setInvoices(invoices[0] || {});
-        setMember(member[0] || {});
-        setPatient(patient[0] || {});
+        setAccount(account || {});
+        setInvoices(invoices || {});
+        setMember(member || {});
+        setPatient(patient || {});
 
       } catch (error) {
         console.error('Error fetching account details:', error);
@@ -42,7 +42,7 @@ export default function AccountDetails() {
     };
 
     if (accountId) {
-      fetchAccountDetails();
+      getAccountDetails();
     }
   }, [accountId]);
 
@@ -77,7 +77,7 @@ export default function AccountDetails() {
               <h3 className=" uppercase font-bold pb-4">GUARANTOR</h3>
               <Table
                 data={Array.isArray(member) ? member : [member]} 
-                columns={['Record ID', 'Name', 'Email', 'Date of Birth', 'Gender', 'Depedent Nr']}
+                columns={['Record ID', 'Name', 'Date of Birth', 'Gender', 'Depedent Nr']}
                 idField="person_id" 
                 linkPrefix="records" 
               />
@@ -87,7 +87,7 @@ export default function AccountDetails() {
               <h3 className=" uppercase font-bold pb-4">Patient</h3>
               <Table
                 data={Array.isArray(patient) ? patient : [patient]} 
-                columns={['Record ID', 'Name', 'Email', 'Date of Birth', 'Gender', 'Dependent Nr']}
+                columns={['Record ID', 'Name', 'Date of Birth', 'Gender', 'Dependent Nr']}
                 idField="person_id" 
                 linkPrefix="records" 
               />

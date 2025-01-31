@@ -1,4 +1,3 @@
-import { FeatureBlock } from '../../components'
 import { useContext } from 'react';
 import { UserContext } from '../../context/UserContext'; 
 
@@ -11,7 +10,11 @@ export default function Tools() {
 
   return (
     <div className='container-col'>
-      tools
+      1. manage user accounts (doctor permissions / feature permissions)
+      <br></br>
+      2. time management
+      <br></br>
+      3. etc.
     </div>
   )
 }

@@ -22,6 +22,7 @@ function App() {
         <Route element={user ? <ProtectedLayout /> : <Navigate to="/" />}>
           <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/tools" element={<Tools />} />
+          
           <Route path="/profiles" element={<Profiles />} />
           <Route path="/profiles/:profileId" element={<ProfileDetails />} />
 

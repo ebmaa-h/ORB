@@ -19,7 +19,7 @@ export default function InvoiceDetails() {
   useEffect(() => {
     const getInvoiceDetails = async () => {
       try {
-        const response = await axios.get(`${ENDPOINTS.invoices}/${invoiceId}`, {
+        const response = await axios.get(ENDPOINTS.invoiceDetails(invoiceId), {
           withCredentials: true,
         });
 

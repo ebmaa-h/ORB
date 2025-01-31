@@ -90,12 +90,14 @@ const Account = {
       WHERE a.account_id = ?;`;
 
     const personQuery = `SELECT 
-        pr.person_id, CONCAT(pr.title, ' ', pr.first, ' ', pr.last) AS name,
-        DATE_FORMAT(pr.date_of_birth, '%Y-%m-%d') AS date_of_birth, pr.gender,
-        ppm.dependent_nr
-      FROM person_records pr
-      LEFT JOIN profile_person_map ppm ON pr.person_id = ppm.person_id
-      WHERE pr.person_id = ?;`;
+      pr.person_id, CONCAT(pr.title, ' ', pr.first, ' ', pr.last) AS name,
+      DATE_FORMAT(pr.date_of_birth, '%Y-%m-%d') AS date_of_birth, pr.gender,
+      ppm.dependent_nr
+    FROM person_records pr
+    LEFT JOIN profile_person_map ppm ON pr.person_id = ppm.person_id
+    LEFT JOIN accounts a ON ppm.profile_id = a.profile_id
+    WHERE pr.person_id = ? 
+      AND a.account_id = ?;`;
 
     const invQuery = `SELECT
         i.invoice_id,
@@ -119,8 +121,8 @@ const Account = {
       const account = accountResults[0];
 
       const [memberResults, patientResults, invoiceResults] = await Promise.all([
-        db.query(personQuery, [account.main_member_id]),
-        db.query(personQuery, [account.patient_id]),
+        db.query(personQuery, [account.main_member_id, accountId]),
+        db.query(personQuery, [account.patient_id, accountId]),
         db.query(invQuery, [accountId]),
       ]);
 

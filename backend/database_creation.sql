@@ -1,5 +1,5 @@
 
-DROP TABLE IF EXISTS profile_person_map, invoices, accounts, profiles, medical_aid_plans, medical_aids, employers, service_centers, service_centers_list, ref_clients, ref_clients_list, clients_logs, logs, user_feature, user_feature_access, user_client_access, addresses, features, clients, users, person_addresses, person_records;
+DROP TABLE IF EXISTS profile_person_map, person_contact_numbers,person_emails, person_numbers, invoices, accounts, profiles, medical_aid_plans, medical_aids, employers, service_centers, service_centers_list, ref_clients, ref_clients_list, clients_logs, logs, user_feature, user_feature_access, user_client_access, addresses, features, clients, users, person_addresses, person_records;
 
 -- Create users table
 CREATE TABLE users (
@@ -172,7 +172,7 @@ CREATE TABLE person_records (
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 );
 
-CREATE TABLE person_numbers (
+CREATE TABLE person_contact_numbers (
     number_id INT AUTO_INCREMENT PRIMARY KEY,
     person_id INT NOT NULL,
     num_type ENUM('Cell', 'Tell', 'Work', 'Other') DEFAULT 'Other',
@@ -299,8 +299,8 @@ VALUES
 ('Kavita', 'Naidoo', 'Miss', '2000-02-10', 'F', '0002100000000'),
 ('Sanjay', 'Naidoo', 'Mr', '1999-02-10', 'M', '9902100000000');
 
--- Inserting phone numbers into person_numbers
-INSERT INTO person_numbers (person_id, num_type, num)
+-- Inserting phone numbers into person_contact_numbers
+INSERT INTO person_contact_numbers (person_id, num_type, num)
 VALUES 
 (1, 'Cell', '082-111-2222'),
 (1, 'Work', '011-333-4444'),

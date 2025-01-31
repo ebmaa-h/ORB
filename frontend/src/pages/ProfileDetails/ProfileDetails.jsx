@@ -20,19 +20,19 @@ export default function ProfileDetails() {
   useEffect(() => {
     const fetchProfile = async () => {
       try {
-        // console.log('Fetching profile data for ID:', profileId); // Log the profile ID being fetched
-        const response = await axios.get(`${ENDPOINTS.profiles}/${profileId}`, {
+          const response = await axios.get(ENDPOINTS.profileDetails(profileId), {
           withCredentials: true,
         });
         
         // console.log('Profile data response:', response.data.profile); // Log the response data
-        
-        const { dependents, accounts, invoices, profileData } = response.data.profile;
+        const data = response.data.profileData; 
+        console.log(data);
+        const { dependents, accounts, invoices, profileData } = data;
         
         // Logging each extracted part
         // console.log('Dependents:', dependents);
         // console.log('Accounts:', accounts);
-        console.log('Invoices:', invoices);
+        console.log('response:', response);
         // console.log('Profile Data:', profileData);
 
         setProfile(profileData || []);

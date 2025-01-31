@@ -4,7 +4,7 @@ export default function InputField({ classes, type, value, label, id, onChange, 
   return (
     <div className="flex items-end gap-4 ">
       {label && (
-        <label htmlFor={id || label.toLowerCase()} className="font-bold whitespace-nowrap">
+        <label htmlFor={id || label.toLowerCase()} className=" whitespace-nowrap">
           {label}:
         </label>
       )}

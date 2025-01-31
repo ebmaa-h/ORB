@@ -2,36 +2,39 @@ const db = require('../config/db');
 
 const Person = {
   // Retrieve all persons
-  allPersons: (callback) => {
+  allPersons: async () => {
     const query = `
       SELECT 
         person_id,
-        CONCAT(title,' ',first,' ',last) as name,
+        CONCAT(title, ' ', first, ' ', last) AS name,
         gender,
-        DATE_FORMAT(date_of_birth, '%Y-%m-%d') AS date_of_birth,
         id_nr,
-        email,
         DATE_FORMAT(created_at, '%Y-%m-%d') AS created_at
       FROM person_records;
     `;
 
-    db.query(query, (err, results) => {
-      if (err) {
-        return callback(err, null);
-      }
-      callback(null, results);
-    });
+    try {
+      const [results] = await db.query(query);
+      return results;
+    } catch (err) {
+      console.error('Error fetching persons:', err);
+      throw new Error('Error fetching persons');
+    }
   },
 
-getPersonDetails: (personId, callback) => {
-    // Query for person details
+  getPersonDetails: async (personId) => {
     const personDetailsQuery = `
-      SELECT *
-      from person_records pr
+      SELECT 
+      pr.title,
+      pr.first,
+      pr.last,
+      DATE_FORMAT(pr.date_of_birth, '%Y-%m-%d') AS date_of_birth,
+      pr.id_nr,
+      pr.gender
+      FROM person_records pr
       WHERE pr.person_id = ?;
     `;
 
-    // Query for addresses
     const addressesQuery = `
       SELECT
         pa.address_id,
@@ -41,62 +44,71 @@ getPersonDetails: (personId, callback) => {
       WHERE pa.person_id = ?;
     `;
 
-    // Query for accounts
-    const accountsQuery = `
-    SELECT
-      a.account_id,
-      CONCAT('R ', FORMAT(SUM(i.balance), 2)) AS acc_balance,
-      CONCAT('Dr ', LEFT(d.first, 1), ' ', d.last) AS client,
-      COUNT(i.invoice_id) AS total_invoices
-    FROM accounts a
-    LEFT JOIN invoices i on a.account_id = i.account_id
-    LEFT JOIN clients d on a.client_id = d.client_id
-    WHERE a.patient_id = ?
-    GROUP BY a.account_id, client;`;
-
-    // Query for invoices
-    const invoicesQuery = `
-       SELECT
-            i.invoice_id,
-            DATE_FORMAT(i.date_of_service, '%Y-%m-%d') AS date_of_service,
-            i.status,
-            i.balance,
-            DATE_FORMAT(i.created_at, '%Y-%m-%d') AS created_date,
-            DATE_FORMAT(i.updated_at, '%Y-%m-%d') AS updated_date
-        FROM invoices i
-        LEFT JOIN accounts a ON i.account_id = a.account_id
-        WHERE a.patient_id = 14;
+    const contactNumbersQuery = `
+      SELECT
+        pc.number_id,
+        pc.num_type,
+        pc.num
+      FROM person_contact_numbers pc
+      WHERE pc.person_id = ?;
     `;
 
-    // Retrieve data sequentially
-    db.query(personDetailsQuery, [personId], (err, personDetailsResults) => {
-        if (err) return callback(err, null);
-        if (personDetailsResults.length === 0) return callback(null, null); // No person found
+    const emailsQuery = `
+      SELECT
+        pe.email_id,
+        pe.email
+      FROM person_emails pe
+      WHERE pe.person_id = ?;
+    `;
 
-        const personDetails = personDetailsResults[0];
+    const accountsQuery = `
+      SELECT
+        a.account_id,
+        CONCAT('R ', FORMAT(SUM(i.balance), 2)) AS acc_balance,
+        CONCAT('Dr ', LEFT(d.first, 1), ' ', d.last) AS client,
+        COUNT(i.invoice_id) AS total_invoices
+      FROM accounts a
+      LEFT JOIN invoices i ON a.account_id = i.account_id
+      LEFT JOIN clients d ON a.client_id = d.client_id
+      WHERE a.patient_id = ?
+      GROUP BY a.account_id, client;
+    `;
 
-        db.query(addressesQuery, [personId], (err, addressesResults) => {
-            if (err) return callback(err, null);
+    const invoicesQuery = `
+      SELECT
+        i.invoice_id,
+        DATE_FORMAT(i.date_of_service, '%Y-%m-%d') AS date_of_service,
+        i.status,
+        i.balance,
+        DATE_FORMAT(i.created_at, '%Y-%m-%d') AS created_date,
+        DATE_FORMAT(i.updated_at, '%Y-%m-%d') AS updated_date
+      FROM invoices i
+      LEFT JOIN accounts a ON i.account_id = a.account_id
+      WHERE a.patient_id = ?;
+    `;
 
-            db.query(accountsQuery, [personId], (err, accountsResults) => {
-                if (err) return callback(err, null);
+    try {
+      const [personDetails] = await db.query(personDetailsQuery, [personId]);
+      if (!personDetails.length) return null;
 
-                db.query(invoicesQuery, [personId], (err, invoicesResults) => {
-                    if (err) return callback(err, null);
+      const [addresses] = await db.query(addressesQuery, [personId]);
+      const [contactNumbers] = await db.query(contactNumbersQuery, [personId]);
+      const [emails] = await db.query(emailsQuery, [personId]);
+      const [accounts] = await db.query(accountsQuery, [personId]);
+      const [invoices] = await db.query(invoicesQuery, [personId]);
 
-                    // Prepare result object
-                    const result = {
-                        person: personDetails,
-                        addresses: addressesResults,
-                        accounts: accountsResults,
-                        invoices: invoicesResults,
-                    };
-
-                    callback(null, result);
-                });
-            });
-        });
-    });
+      return {
+        person: personDetails[0],
+        addresses,
+        contactNumbers,
+        emails,
+        accounts,
+        invoices,
+      };
+    } catch (err) {
+      console.error('Error fetching person details:', err);
+      throw new Error('Error fetching person details');
+    }
   },
 };
 
