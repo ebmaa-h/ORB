@@ -24,12 +24,11 @@ export default function ProfileDetails() {
           withCredentials: true,
         });
         
-        // console.log('Profile data response:', response.data.profile); // Log the response data
+        // console.log('Profile data response:', response.data.profile);
         const data = response.data.profileData; 
         console.log(data);
         const { dependents, accounts, invoices, profileData } = data;
         
-        // Logging each extracted part
         // console.log('Dependents:', dependents);
         // console.log('Accounts:', accounts);
         console.log('response:', response);
@@ -81,7 +80,7 @@ export default function ProfileDetails() {
               <Table
                 data={dependents}
                 columns={['Record ID','Name', 'Date of Birth', 'ID' ,'Gender' , 'Dependent Nr']}
-                idField="person_id" 
+                idField="record_id" 
                 linkPrefix="records" 
               />
             </div>

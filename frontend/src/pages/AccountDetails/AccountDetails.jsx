@@ -79,7 +79,7 @@ export default function AccountDetails() {
               <Table
                 data={Array.isArray(member) ? member : [member]} 
                 columns={['Record ID', 'Name', 'Date of Birth', 'Gender', 'Depedent Nr']}
-                idField="person_id" 
+                idField="record_id" 
                 linkPrefix="records" 
               />
             </div>
@@ -89,7 +89,7 @@ export default function AccountDetails() {
               <Table
                 data={Array.isArray(patient) ? patient : [patient]} 
                 columns={['Record ID', 'Name', 'Date of Birth', 'Gender', 'Dependent Nr']}
-                idField="person_id" 
+                idField="record_id" 
                 linkPrefix="records" 
               />
             </div>

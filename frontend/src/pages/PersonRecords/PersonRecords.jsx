@@ -4,26 +4,26 @@ import ENDPOINTS from '../../config/apiEndpoints';
 import { SearchBar, Table } from '../../components';
 
 export default function PersonRecords() {
-  const [persons, setPersons] = useState([]);
+  const [records, setRecords] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
 
-  // Fetch person records on component mount
+  // Fetch record records on component mount
   useEffect(() => {
-    const fetchPersons = async () => {
+    const fetchRecords = async () => {
       try {
         const response = await axios.get(ENDPOINTS.records);
         console.log(response)
-        setPersons(response.data.persons);
+        setRecords(response.data.records);
       } catch (error) {
-        console.error('Error fetching persons:', error);
+        console.error('Error fetching records:', error);
       }
     };
-    fetchPersons();
+    fetchRecords();
   }, []);
 
-  const columns = ['Person ID', 'Name','Gender' , 'Date of Birth', 'ID'];
-  const filteredPersons = persons.filter((person) =>
-    Object.values(person).join(' ').toLowerCase().includes(searchTerm.toLowerCase())
+  const columns = ['Record ID', 'Name','Gender' , 'Date of Birth', 'ID'];
+  const filteredRecords = records.filter((record) =>
+    Object.values(record).join(' ').toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   return (
@@ -31,11 +31,11 @@ export default function PersonRecords() {
       <div className='container-col'>
         <SearchBar searchTerm={searchTerm} setSearchTerm={setSearchTerm} />
         <Table 
-          data={filteredPersons.map(person => ({
-            ...person
+          data={filteredRecords.map(record => ({
+            ...record
           }))}
           columns={columns} 
-          idField="person_id" 
+          idField="record_id" 
           linkPrefix="records" 
         />
       </div>

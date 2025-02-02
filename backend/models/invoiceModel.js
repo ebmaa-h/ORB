@@ -1,39 +1,13 @@
 const db = require('../config/db');
+const queries = require('./queries/invoiceQueries')
 
 const Invoice = {
   // Retrieve all invoices
-// Retrieve all invoices
-allInvoices: (callback) => {
-  const query = `
-    SELECT 
-      i.invoice_id,
-      i.account_id,
-      DATE_FORMAT(i.date_of_service, '%Y-%m-%d') AS date_of_service,
-      JSON_UNQUOTE(JSON_EXTRACT(i.patient_snapshot, '$.patient.title')) AS patient_title,
-      JSON_UNQUOTE(JSON_EXTRACT(i.patient_snapshot, '$.patient.first')) AS patient_first,
-      JSON_UNQUOTE(JSON_EXTRACT(i.patient_snapshot, '$.patient.last')) AS patient_last,
-      JSON_UNQUOTE(JSON_EXTRACT(i.patient_snapshot, '$.patient.id_nr')) AS patient_id_nr,
-      JSON_UNQUOTE(JSON_EXTRACT(i.member_snapshot, '$.member.title')) AS member_title,
-      JSON_UNQUOTE(JSON_EXTRACT(i.member_snapshot, '$.member.first')) AS member_first,
-      JSON_UNQUOTE(JSON_EXTRACT(i.member_snapshot, '$.member.last')) AS member_last,
-      JSON_UNQUOTE(JSON_EXTRACT(i.member_snapshot, '$.member.id_nr')) AS member_id_nr,
-      CONCAT('R ', FORMAT(i.balance, 2)) AS invoice_balance,
-      DATE_FORMAT(i.updated_at, '%Y-%m-%d') AS updated_date,
-      i.status,
-      CONCAT('Dr ', LEFT(d.first, 1), ' ', d.last) AS client_name,
-      d.practice_nr AS client_practice_number
-    FROM invoices i
-    LEFT JOIN accounts a ON i.account_id = a.account_id
-    LEFT JOIN clients d ON a.client_id = d.client_id;
-  `;
+ allInvoices: async () => {
 
-  db.query(query, (err, results) => {
-    if (err) {
-      return callback(err, null);
-    }
-
-    // Format results to include full names and other derived fields
-    const formattedResults = results.map((invoice) => ({
+  try {
+    const [results] = await db.query(queries.allInvoices);
+    return results.map((invoice) => ({
       invoice_id: invoice.invoice_id,
       account_id: invoice.account_id,
       patient_full: `${invoice.patient_title} ${invoice.patient_first} ${invoice.patient_last}`,
@@ -47,35 +21,15 @@ allInvoices: (callback) => {
       client_practice_number: invoice.client_practice_number,
       updated_date: invoice.updated_date,
     }));
-
-    callback(null, formattedResults);
-  });
+  } catch (err) {
+    console.error('Error fetching all invoices:', err);
+    throw new Error('Error fetching all invoices');
+  }
 },
 
   clientInvoices: async (clientId) => {
-    const query = `
-      SELECT 
-        i.invoice_id,
-        DATE_FORMAT(i.date_of_service, '%Y-%m-%d') AS date_of_service,
-        JSON_UNQUOTE(JSON_EXTRACT(i.patient_snapshot, '$.patient.title')) AS patient_title,
-        JSON_UNQUOTE(JSON_EXTRACT(i.patient_snapshot, '$.patient.first')) AS patient_first,
-        JSON_UNQUOTE(JSON_EXTRACT(i.patient_snapshot, '$.patient.last')) AS patient_last,
-        JSON_UNQUOTE(JSON_EXTRACT(i.patient_snapshot, '$.patient.id_nr')) AS patient_id_nr,
-        JSON_UNQUOTE(JSON_EXTRACT(i.member_snapshot, '$.member.title')) AS member_title,
-        JSON_UNQUOTE(JSON_EXTRACT(i.member_snapshot, '$.member.first')) AS member_first,
-        JSON_UNQUOTE(JSON_EXTRACT(i.member_snapshot, '$.member.last')) AS member_last,
-        JSON_UNQUOTE(JSON_EXTRACT(i.member_snapshot, '$.member.id_nr')) AS member_id_nr,
-        CONCAT('R ', FORMAT(i.balance, 2)) AS invoice_balance,
-        DATE_FORMAT(i.updated_at, '%Y-%m-%d') AS updated_date,
-        i.status
-      FROM invoices i
-      LEFT JOIN accounts a ON i.account_id = a.account_id
-      LEFT JOIN clients d ON a.client_id = d.client_id
-      WHERE d.client_id = ?;
-    `;
-
     try {
-      const [results] = await db.query(query, [clientId]);  // MySQL2 returns a result array with the data in the first element
+      const [results] = await db.query(queries.clientInvoices, [clientId]);
 
       // Extract actual invoice data, format names etc.
       const formattedResults = results.map((invoice) => ({
@@ -98,66 +52,15 @@ allInvoices: (callback) => {
   },
 
   oneInvoice: async (invoiceId) => {
-    const invoiceDetailsQuery = `
-      SELECT 
-        i.invoice_id,
-        i.account_id,
-        DATE_FORMAT(i.date_of_service, '%Y-%m-%d') AS date_of_service,
-        CONCAT('R ', FORMAT(i.balance, 2)) AS invoice_balance,
-        i.status,
-        DATE_FORMAT(i.updated_at, '%Y-%m-%d') AS updated_date
-      FROM invoices i
-      WHERE i.invoice_id = ?;
-    `;
-    const patientDetailsQuery = `
-      SELECT
-        JSON_UNQUOTE(JSON_EXTRACT(i.patient_snapshot, '$.patient.title')) AS patient_title,
-        JSON_UNQUOTE(JSON_EXTRACT(i.patient_snapshot, '$.patient.first')) AS patient_first,
-        JSON_UNQUOTE(JSON_EXTRACT(i.patient_snapshot, '$.patient.last')) AS patient_last,
-        JSON_UNQUOTE(JSON_EXTRACT(i.patient_snapshot, '$.patient.id_nr')) AS patient_id_nr
-      FROM invoices i
-      WHERE i.invoice_id = ?;
-    `;
-    const memberDetailsQuery = `
-      SELECT
-        JSON_UNQUOTE(JSON_EXTRACT(i.member_snapshot, '$.member.title')) AS member_title,
-        JSON_UNQUOTE(JSON_EXTRACT(i.member_snapshot, '$.member.first')) AS member_first,
-        JSON_UNQUOTE(JSON_EXTRACT(i.member_snapshot, '$.member.last')) AS member_last,
-        JSON_UNQUOTE(JSON_EXTRACT(i.member_snapshot, '$.member.id_nr')) AS member_id_nr
-      FROM invoices i
-      WHERE i.invoice_id = ?;
-    `;
-    const clientDetailsQuery = `
-      SELECT
-        CONCAT('Dr ', LEFT(d.first, 1), ' ', d.last) AS client_name,
-        d.practice_nr AS client_practice_number
-      FROM invoices i
-      LEFT JOIN accounts a ON i.account_id = a.account_id
-      LEFT JOIN clients d ON a.client_id = d.client_id
-      WHERE i.invoice_id = ?;
-    `;
-    const medicalAidDetailsQuery = `
-      SELECT
-        p.medical_aid_nr AS profile_medical_aid_nr,
-        p.authorization_nr AS profile_authorization_nr,
-        ma.name AS medical_aid_name,
-        mp.plan_name AS medical_aid_plan_name
-      FROM invoices i
-      LEFT JOIN accounts a ON i.account_id = a.account_id
-      LEFT JOIN profiles p ON a.profile_id = p.profile_id
-      LEFT JOIN medical_aids ma ON p.medical_aid_id = ma.medical_aid_id
-      LEFT JOIN medical_aid_plans mp ON p.plan_id = mp.plan_id
-      WHERE i.invoice_id = ?;
-    `;
 
     try {
       // Perform all queries concurrently using Promise.all
       const [invoiceDetailsResults, patientDetailsResults, memberDetailsResults, clientDetailsResults, medicalAidDetailsResults] = await Promise.all([
-        db.query(invoiceDetailsQuery, [invoiceId]),
-        db.query(patientDetailsQuery, [invoiceId]),
-        db.query(memberDetailsQuery, [invoiceId]),
-        db.query(clientDetailsQuery, [invoiceId]),
-        db.query(medicalAidDetailsQuery, [invoiceId]),
+        db.query(queries.invoiceDetailsQuery, [invoiceId]),
+        db.query(queries.patientDetailsQuery, [invoiceId]),
+        db.query(queries.memberDetailsQuery, [invoiceId]),
+        db.query(queries.clientDetailsQuery, [invoiceId]),
+        db.query(queries.medicalAidDetailsQuery, [invoiceId]),
       ]);
 
       if (!invoiceDetailsResults.length) return null;

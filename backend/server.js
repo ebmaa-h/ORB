@@ -8,7 +8,7 @@ const userRoutes = require('./routes/user');
 const accRoutes = require('./routes/accounts');
 const profRoutes = require('./routes/profiles');
 const invRoutes = require('./routes/invoices.js');
-const personRoutes = require('./routes/persons.js');
+const recordRoutes = require('./routes/records.js');
 
 // Express app
 const app = express();
@@ -39,7 +39,7 @@ app.use('/users', userRoutes);
 app.use('/accounts', accRoutes);
 app.use('/profiles', profRoutes);
 app.use('/invoices', invRoutes);
-app.use('/records', personRoutes);
+app.use('/records', recordRoutes);
 
 // Error Handling Middleware
 app.use((err, req, res, next) => {

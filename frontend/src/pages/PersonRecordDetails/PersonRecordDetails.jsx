@@ -21,9 +21,9 @@ export default function PersonRecordDetails() {
         const response = await axios.get(ENDPOINTS.recordDetails(recordId), {
           withCredentials: true,
         });
-
-        const { person, addresses, accounts, invoices, contactNumbers, emails } = response.data.record;
-        setRecord(person || {});
+        console.log(response)
+        const { record, addresses, accounts, invoices, contactNumbers, emails } = response.data.record;
+        setRecord(record || {});
         setAddresses(addresses || []);
         setAccounts(accounts || []);
         setInvoices(invoices || []);

@@ -20,7 +20,7 @@ const userController = {
       const { email } = decoded;
 
       // Find the user by email / Log user in
-      const user = await User.loginUser(email);  // Assuming loginUser is now a promise-based function
+      const user = await User.loginUser(email); 
 
       if (!user) {
         console.log(`User data retrieval failed. User with email ${email} not found.`);

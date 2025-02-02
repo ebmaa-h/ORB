@@ -160,7 +160,7 @@ CREATE TABLE profiles (
 
 -- Create person_records table
 CREATE TABLE person_records (
-    person_id INT AUTO_INCREMENT PRIMARY KEY,
+    record_id INT AUTO_INCREMENT PRIMARY KEY,
     first VARCHAR(255),
     last VARCHAR(255),
     title ENUM('Mr', 'Mrs', 'Miss', 'Ms', 'Dr') DEFAULT NULL,
@@ -174,39 +174,39 @@ CREATE TABLE person_records (
 
 CREATE TABLE person_contact_numbers (
     number_id INT AUTO_INCREMENT PRIMARY KEY,
-    person_id INT NOT NULL,
+    record_id INT NOT NULL,
     num_type ENUM('Cell', 'Tell', 'Work', 'Other') DEFAULT 'Other',
     num VARCHAR(255) NOT NULL,
-    FOREIGN KEY (person_id) REFERENCES person_records(person_id) ON DELETE CASCADE
+    FOREIGN KEY (record_id) REFERENCES person_records(record_id) ON DELETE CASCADE
 );
 
 CREATE TABLE person_emails (
     email_id INT AUTO_INCREMENT PRIMARY KEY,
-    person_id INT NOT NULL,
+    record_id INT NOT NULL,
     email VARCHAR(255) NOT NULL,
-    FOREIGN KEY (person_id) REFERENCES person_records(person_id) ON DELETE CASCADE
+    FOREIGN KEY (record_id) REFERENCES person_records(record_id) ON DELETE CASCADE
 );
 
 CREATE TABLE person_addresses (
     address_id INT AUTO_INCREMENT PRIMARY KEY,
-    person_id INT NOT NULL,
+    record_id INT NOT NULL,
     address_type ENUM('Postal', 'Street', 'Other') DEFAULT 'Other',
     is_domicilium BOOLEAN DEFAULT FALSE,
     address VARCHAR(255) NOT NULL,
-    FOREIGN KEY (person_id) REFERENCES person_records(person_id) ON DELETE CASCADE
+    FOREIGN KEY (record_id) REFERENCES person_records(record_id) ON DELETE CASCADE
 );
 
 -- Create profile_person_map table
 CREATE TABLE profile_person_map (
     map_id INT AUTO_INCREMENT PRIMARY KEY,
     profile_id INT,
-    person_id INT,
+    record_id INT,
     is_main_member boolean,
     dependent_nr INT,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     FOREIGN KEY (profile_id) REFERENCES profiles(profile_id) ON DELETE SET NULL,
-    FOREIGN KEY (person_id) REFERENCES person_records(person_id) ON DELETE SET NULL
+    FOREIGN KEY (record_id) REFERENCES person_records(record_id) ON DELETE SET NULL
 );
 
 -- Create accounts table
@@ -218,8 +218,8 @@ CREATE TABLE accounts (
     patient_id INT NULL,
     FOREIGN KEY (client_id) REFERENCES clients(client_id) ON DELETE SET NULL,
     FOREIGN KEY (profile_id) REFERENCES profiles(profile_id) ON DELETE SET NULL,
-    FOREIGN KEY (main_member_id) REFERENCES person_records(person_id) ON DELETE SET NULL,
-    FOREIGN KEY (patient_id) REFERENCES person_records(person_id) ON DELETE SET NULL
+    FOREIGN KEY (main_member_id) REFERENCES person_records(record_id) ON DELETE SET NULL,
+    FOREIGN KEY (patient_id) REFERENCES person_records(record_id) ON DELETE SET NULL
 );
 
 -- Create invoices table
@@ -300,7 +300,7 @@ VALUES
 ('Sanjay', 'Naidoo', 'Mr', '1999-02-10', 'M', '9902100000000');
 
 -- Inserting phone numbers into person_contact_numbers
-INSERT INTO person_contact_numbers (person_id, num_type, num)
+INSERT INTO person_contact_numbers (record_id, num_type, num)
 VALUES 
 (1, 'Cell', '082-111-2222'),
 (1, 'Work', '011-333-4444'),
@@ -332,7 +332,7 @@ VALUES
 (14, 'Work', '011-444-5559');
 
 -- Inserting emails into person_emails
-INSERT INTO person_emails (person_id, email)
+INSERT INTO person_emails (record_id, email)
 VALUES 
 (1, 'thabo@mokoena.co.za'),
 (2, 'naledi@mokoena.co.za'),
@@ -350,7 +350,7 @@ VALUES
 (14, 'sanjay@naidoo.co.za');
 
 -- Inserting sample data for profile_person_map
-INSERT INTO profile_person_map (profile_id, person_id, is_main_member, dependent_nr)
+INSERT INTO profile_person_map (profile_id, record_id, is_main_member, dependent_nr)
 VALUES 
 (1, 1, TRUE, 0), -- Thabo is the main member of profile 1
 (1, 2, FALSE, 1),
@@ -584,92 +584,92 @@ VALUES
 (6, 3, 'Edit');
 
 -- person_addresses
-INSERT INTO person_addresses (person_id, address_type, is_domicilium, address)
+INSERT INTO person_addresses (record_id, address_type, is_domicilium, address)
 VALUES (1, 'Postal', TRUE, 'Apple Avenue, Suite 62, Block 5, Section 4, 5000');
 
-INSERT INTO person_addresses (person_id, address_type, is_domicilium, address)
+INSERT INTO person_addresses (record_id, address_type, is_domicilium, address)
 VALUES (2, 'Postal', TRUE, 'Avocado Road, Suite 18, Block 4, Section 3, 1000');
 
-INSERT INTO person_addresses (person_id, address_type, is_domicilium, address)
+INSERT INTO person_addresses (record_id, address_type, is_domicilium, address)
 VALUES (3, 'Postal', TRUE, 'Pineapple Drive, Suite 5, Block 4, Section 4, 6000');
 
-INSERT INTO person_addresses (person_id, address_type, is_domicilium, address)
+INSERT INTO person_addresses (record_id, address_type, is_domicilium, address)
 VALUES (4, 'Postal', TRUE, 'Apple Drive, Suite 63, Block 1, Section 4, 4000');
 
-INSERT INTO person_addresses (person_id, address_type, is_domicilium, address)
+INSERT INTO person_addresses (record_id, address_type, is_domicilium, address)
 VALUES (5, 'Postal', TRUE, 'Pomegranate Avenue, Suite 47, Block 3, Section 1, 5000');
 
-INSERT INTO person_addresses (person_id, address_type, is_domicilium, address)
+INSERT INTO person_addresses (record_id, address_type, is_domicilium, address)
 VALUES (6, 'Postal', TRUE, 'Grapes Avenue, Suite 73, Block 5, Section 5, 3000');
 
-INSERT INTO person_addresses (person_id, address_type, is_domicilium, address)
+INSERT INTO person_addresses (record_id, address_type, is_domicilium, address)
 VALUES (7, 'Postal', TRUE, 'Banana Road, Suite 30, Block 1, Section 1, 6000');
 
-INSERT INTO person_addresses (person_id, address_type, is_domicilium, address)
+INSERT INTO person_addresses (record_id, address_type, is_domicilium, address)
 VALUES (8, 'Postal', TRUE, 'Plum Street, Suite 28, Block 10, Section 4, 2000');
 
-INSERT INTO person_addresses (person_id, address_type, is_domicilium, address)
+INSERT INTO person_addresses (record_id, address_type, is_domicilium, address)
 VALUES (9, 'Postal', TRUE, 'Orange Drive, Suite 90, Block 1, Section 5, 5000');
 
-INSERT INTO person_addresses (person_id, address_type, is_domicilium, address)
+INSERT INTO person_addresses (record_id, address_type, is_domicilium, address)
 VALUES (10, 'Postal', TRUE, 'Pomegranate Drive, Suite 94, Block 5, Section 4, 5000');
 
-INSERT INTO person_addresses (person_id, address_type, is_domicilium, address)
+INSERT INTO person_addresses (record_id, address_type, is_domicilium, address)
 VALUES (11, 'Postal', TRUE, 'Avocado Drive, Suite 50, Block 5, Section 2, 2000');
 
-INSERT INTO person_addresses (person_id, address_type, is_domicilium, address)
+INSERT INTO person_addresses (record_id, address_type, is_domicilium, address)
 VALUES (12, 'Postal', TRUE, 'Guava Avenue, Suite 49, Block 8, Section 2, 6000');
 
-INSERT INTO person_addresses (person_id, address_type, is_domicilium, address)
+INSERT INTO person_addresses (record_id, address_type, is_domicilium, address)
 VALUES (13, 'Postal', TRUE, 'Lychee Boulevard, Suite 65, Block 2, Section 3, 4000');
 
-INSERT INTO person_addresses (person_id, address_type, is_domicilium, address)
+INSERT INTO person_addresses (record_id, address_type, is_domicilium, address)
 VALUES (14, 'Postal', TRUE, 'Avocado Boulevard, Suite 59, Block 1, Section 1, 4000');
 
-INSERT INTO person_addresses (person_id, address_type, is_domicilium, address)
+INSERT INTO person_addresses (record_id, address_type, is_domicilium, address)
 VALUES (1, 'Street', FALSE, 'Papaya Road, Suite 100, Block 4, Section 1, 3000');
 
-INSERT INTO person_addresses (person_id, address_type, is_domicilium, address)
+INSERT INTO person_addresses (record_id, address_type, is_domicilium, address)
 VALUES (2, 'Street', FALSE, 'Pineapple Avenue, Suite 99, Block 4, Section 1, 1000');
 
-INSERT INTO person_addresses (person_id, address_type, is_domicilium, address)
+INSERT INTO person_addresses (record_id, address_type, is_domicilium, address)
 VALUES (3, 'Street', FALSE, 'Grapes Boulevard, Suite 12, Block 7, Section 2, 1000');
 
-INSERT INTO person_addresses (person_id, address_type, is_domicilium, address)
+INSERT INTO person_addresses (record_id, address_type, is_domicilium, address)
 VALUES (4, 'Street', FALSE, 'Banana Boulevard, Suite 36, Block 3, Section 5, 1000');
 
-INSERT INTO person_addresses (person_id, address_type, is_domicilium, address)
+INSERT INTO person_addresses (record_id, address_type, is_domicilium, address)
 VALUES (5, 'Street', FALSE, 'Banana Street, Suite 62, Block 4, Section 1, 5000');
 
-INSERT INTO person_addresses (person_id, address_type, is_domicilium, address)
+INSERT INTO person_addresses (record_id, address_type, is_domicilium, address)
 VALUES (6, 'Street', FALSE, 'Lychee Avenue, Suite 63, Block 8, Section 3, 6000');
 
-INSERT INTO person_addresses (person_id, address_type, is_domicilium, address)
+INSERT INTO person_addresses (record_id, address_type, is_domicilium, address)
 VALUES (7, 'Street', FALSE, 'Guava Boulevard, Suite 91, Block 3, Section 4, 3000');
 
-INSERT INTO person_addresses (person_id, address_type, is_domicilium, address)
+INSERT INTO person_addresses (record_id, address_type, is_domicilium, address)
 VALUES (8, 'Street', FALSE, 'Grapes Street, Suite 31, Block 7, Section 1, 1000');
 
-INSERT INTO person_addresses (person_id, address_type, is_domicilium, address)
+INSERT INTO person_addresses (record_id, address_type, is_domicilium, address)
 VALUES (9, 'Street', FALSE, 'Grapes Boulevard, Suite 20, Block 7, Section 5, 1000');
 
-INSERT INTO person_addresses (person_id, address_type, is_domicilium, address)
+INSERT INTO person_addresses (record_id, address_type, is_domicilium, address)
 VALUES (10, 'Street', FALSE, 'Orange Road, Suite 83, Block 7, Section 5, 3000');
 
-INSERT INTO person_addresses (person_id, address_type, is_domicilium, address)
+INSERT INTO person_addresses (record_id, address_type, is_domicilium, address)
 VALUES (11, 'Street', FALSE, 'Lychee Street, Suite 84, Block 9, Section 5, 5000');
 
-INSERT INTO person_addresses (person_id, address_type, is_domicilium, address)
+INSERT INTO person_addresses (record_id, address_type, is_domicilium, address)
 VALUES (12, 'Street', FALSE, 'Apple Avenue, Suite 2, Block 10, Section 2, 2000');
 
-INSERT INTO person_addresses (person_id, address_type, is_domicilium, address)
+INSERT INTO person_addresses (record_id, address_type, is_domicilium, address)
 VALUES (13, 'Street', FALSE, 'Plum Avenue, Suite 77, Block 3, Section 5, 4000');
 
-INSERT INTO person_addresses (person_id, address_type, is_domicilium, address)
+INSERT INTO person_addresses (record_id, address_type, is_domicilium, address)
 VALUES (14, 'Street', FALSE, 'Banana Street, Suite 78, Block 4, Section 3, 3000');
 
-INSERT INTO person_addresses (person_id, address_type, is_domicilium, address)
+INSERT INTO person_addresses (record_id, address_type, is_domicilium, address)
 VALUES (1, 'Other', FALSE, 'Orange Avenue, Suite 23, Block 7, Section 3, 4000');
 
-INSERT INTO person_addresses (person_id, address_type, is_domicilium, address)
+INSERT INTO person_addresses (record_id, address_type, is_domicilium, address)
 VALUES (2, 'Other', FALSE, 'Pineapple Drive, Suite 89, Block 5, Section 4, 5000');
