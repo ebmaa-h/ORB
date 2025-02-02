@@ -100,7 +100,7 @@ export default function InvoiceDetails() {
                 <p>ID: {patient.patient_id_nr}</p>
               </div>
 
-              <div className='flex flex-col gap-6'>
+              <div className='flex flex-col gap-4'>
                 <InputField
                   label="Procedure Date"
                   value={invoice.date_of_service}
@@ -117,7 +117,7 @@ export default function InvoiceDetails() {
               </div>
             </div>
 
-            <div className="mx-4 p-4 flex flex-row gap-4 justify-end ">
+            <div className="flex flex-row gap-4 justify-end">
               <label className='flex items-center'>Status:</label>
                 <select
                   className="border rounded border-gray-light px-2 hover:border-ebmaa-purple transition duration-300 cursor-pointer"
@@ -149,7 +149,7 @@ export default function InvoiceDetails() {
                 className="btn-class w-[100px]"
                 onClick={handleSave}
               >
-                Create
+                Save
               </button>
             </div>
           </div>

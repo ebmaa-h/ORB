@@ -51,7 +51,7 @@ export default function AccountDetails() {
     <>
 
       {account.account_id ? (
-        <div className='flex flex-col gap-4'>
+        <>
           <div className='container-row justify-between'>
             <p>
               <button
@@ -61,7 +61,8 @@ export default function AccountDetails() {
                 className='btn-class'
                 aria-label='Log In' // Accessibility
               >
-                {`Profile ID: ${account.profile_id}`}
+                {/* {`Profile ID: ${account.profile_id}`} */}
+                View Profile
               </button>
             </p>
             <p><strong>Account ID:</strong> {account.account_id}</p>
@@ -75,7 +76,7 @@ export default function AccountDetails() {
           <div className='container-row'>
             {/* Member Table */}
             <div className='w-[50%]'>
-              <h3 className=" uppercase font-bold pb-4">GUARANTOR</h3>
+              <h3 className=" uppercase font-bold mb-4">GUARANTOR</h3>
               <Table
                 data={Array.isArray(member) ? member : [member]} 
                 columns={['Record ID', 'Name', 'Date of Birth', 'Gender', 'Depedent Nr']}
@@ -85,7 +86,7 @@ export default function AccountDetails() {
             </div>
             {/* Patient Table */}
             <div className='w-[50%]'>
-              <h3 className=" uppercase font-bold pb-4">Patient</h3>
+              <h3 className=" uppercase font-bold mb-4">Patient</h3>
               <Table
                 data={Array.isArray(patient) ? patient : [patient]} 
                 columns={['Record ID', 'Name', 'Date of Birth', 'Gender', 'Dependent Nr']}
@@ -96,7 +97,7 @@ export default function AccountDetails() {
           </div>
 
           {/* Invoices Table with Search */}
-          <div className="bg-white shadow rounded p-4 flex flex-col gap-4">
+          <div className="container-col">
             <h3 className=" uppercase font-bold">Invoices</h3>
             <SearchBar
               searchTerm={invoiceSearchTerm}
@@ -122,7 +123,7 @@ export default function AccountDetails() {
 
             </div>
           </div>
-        </div>
+        </>
       ) : (
         <div className='container-col'>
           <p>Loading account details...</p>

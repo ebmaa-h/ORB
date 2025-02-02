@@ -3,6 +3,7 @@ import { useParams } from 'react-router-dom'; // For accessing profile_id from t
 import axios from 'axios';
 import { SearchBar, Table } from '../../components';
 import ENDPOINTS from '../../config/apiEndpoints';
+import BackButton from '../../utility/BackButton';
 
 export default function ProfileDetails() {
   const { profileId } = useParams(); 
@@ -52,7 +53,7 @@ export default function ProfileDetails() {
     <>
       {profile ? (
         <>
-          <div className="bg-white shadow rounded m-4 p-4 flex flex-row justify-between items-center text-center  text-gray-dark">
+          <div className="container-row justify-between">
             <p><strong>Profile ID:</strong> {profile.profile_id}</p>
             <p><strong>Medical Aid Nr:</strong> {profile.medical_aid_nr}</p>
             <p><strong>Medical Aid:</strong> {profile.medical_aid_name} - {profile.plan_name}</p>
@@ -62,7 +63,7 @@ export default function ProfileDetails() {
             <p><strong>Balance:</strong> {profile.profile_balance}</p>
           </div>
 
-          <div className="bg-white shadow rounded m-4 p-4 gap-4 flex">
+          <div className="container-row">
             {/* Accounts Table */}
             <div className='w-[50%] flex flex-col gap-4'>
               <h3 className=" uppercase font-bold">Accounts</h3>
@@ -75,8 +76,8 @@ export default function ProfileDetails() {
   
             </div>
             {/* Dependents Table */}
-            <div className='w-[50%]'>
-              <h3 className=" uppercase font-bold pb-4">Dependents</h3>
+            <div className='w-[50%] flex flex-col gap-4'>
+              <h3 className=" uppercase font-bold">Dependents</h3>
               <Table
                 data={dependents}
                 columns={['Record ID','Name', 'Date of Birth', 'ID' ,'Gender' , 'Dependent Nr']}
@@ -87,7 +88,7 @@ export default function ProfileDetails() {
           </div>
 
           {/* Invoices Table with Search */}
-          <div className="bg-white shadow rounded m-4 p-4 flex flex-col gap-4">
+          <div className="container-col">
             <h3 className=" uppercase font-bold">Invoices</h3>
             <SearchBar
               searchTerm={invoiceSearchTerm}
@@ -100,6 +101,9 @@ export default function ProfileDetails() {
               linkPrefix="invoices"
               idField="invoice_id"
             />
+            <div className="flex justify-end">
+              <BackButton />
+            </div>
           </div>
         </>
       ) : (

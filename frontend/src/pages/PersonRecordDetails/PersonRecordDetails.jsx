@@ -79,15 +79,14 @@ export default function PersonRecordDetails() {
     <>
       {record ? (
         // Main container
-        <div className="flex gap-4 flex-col">
-
+        <>
           {/* Details Container */}
           <div className="container-col">
             {/* Heading */}
             <h3 className="uppercase font-bold">Details</h3>
   
             {/* Main Details */}
-            <div className="grid grid-cols-4 gap-6 w-full">
+            <div className="grid grid-cols-4 gap-4 w-full">
 
               {/* Basic Info */}
               <div className="grid grid-cols-2 gap-4 w-full">
@@ -196,7 +195,7 @@ export default function PersonRecordDetails() {
           </div>
 
           {/* Accounts & Invoices */}
-          <div className="container-col justify-between">
+          <div className="container-col">
               <h3 className="uppercase font-bold">Accounts</h3> {/* Should also show a checkmark if patient is guarantor or patient */}
               <Table
                 data={accounts}
@@ -219,7 +218,7 @@ export default function PersonRecordDetails() {
               <button type="submit" className="btn-class w-[100px]">Update</button>
             </div>
           </div>
-        </div>
+        </>
       ) : (
         <div className="container-col items-center">
           <p>Loading record details...</p>
