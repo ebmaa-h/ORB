@@ -10,7 +10,7 @@ export default function Tools() {
 
   return (
     <div className='container-col'>
-      1. manage user accounts (doctor permissions / feature permissions)
+      1. manage users (ebmaa employees) permissions, access.
       <br></br>
       2. time management
       <br></br>

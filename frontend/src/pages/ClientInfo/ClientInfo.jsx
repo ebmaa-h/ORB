@@ -32,17 +32,17 @@ export default function ClientInfo() {
 
   return (
     <>
-      {clientId ? (
-        <>
+      {/* {clientId ? (
+        <> */}
           <div className="container-col">
-            Client Info page
+            Doctor CRQ, personal information etc.
           </div>
-        </>
+        {/* </>
       ) : (
         <div className='container-col items-center'>
           <p>Loading client details...</p>
         </div>
-      )}
+      )} */}
     </>
   );
 }
