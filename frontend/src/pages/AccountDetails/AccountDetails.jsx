@@ -4,6 +4,7 @@ import axios from 'axios';
 import { SearchBar, Table } from '../../components';
 import ENDPOINTS from '../../config/apiEndpoints';
 import { useNavigate } from 'react-router-dom';
+import BackButton from '../../utility/BackButton';
 
 export default function AccountDetails() {
   const { accountId } = useParams(); 
@@ -108,7 +109,8 @@ export default function AccountDetails() {
               linkPrefix="invoices"
               idField="invoice_id"
             />
-            <div className="flex justify-end">
+            <div className="flex justify-end gap-4">
+              <BackButton />
               <button
                 type="submit"
                 className="btn-class w-[100px]"

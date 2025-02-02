@@ -149,7 +149,7 @@ export default function InvoiceDetails() {
                 className="btn-class w-[100px]"
                 onClick={handleSave}
               >
-                Save
+                Create
               </button>
             </div>
           </div>
