@@ -8,4 +8,6 @@ router.get('/:invoiceId', invoiceController.getInvoice);
 
 router.get('/clients/:clientId', invoiceController.getInvoicesByClient);
 
+router.get('/new/:accountId', invoiceController.createNewInvoice);
+
 module.exports = router;

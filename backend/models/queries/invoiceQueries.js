@@ -94,6 +94,14 @@ LEFT JOIN medical_aid_plans mp ON p.plan_id = mp.plan_id
 WHERE i.invoice_id = ?;
 `;
 
+
+const createNewInvoice = `
+INSERT INTO 
+  invoices (account_id, profile_id, date_of_service, status, patient_snapshot, member_snapshot, balance)
+  VALUES (?, ?, ?, 'Processing', ?, ?, ?);
+`;
+
+
 module.exports = {
   allInvoices,
   clientInvoices,
@@ -102,4 +110,5 @@ module.exports = {
   memberDetails,
   clientDetails,
   medicalAidDetails,
+  createNewInvoice,
 };

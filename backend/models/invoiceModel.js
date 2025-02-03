@@ -80,6 +80,16 @@ const Invoice = {
     }
   },
 
+  createNewInvoice: async (accountId) => {
+    try {
+      const [results] = await db.query(queries.createNewInvoice, [accountId]); 
+      return results;
+    } catch (err) {
+      console.error('Error creating new invoice:', err);
+      throw new Error('Error creating new invoice');
+    }
+  },
+
 };
 
 module.exports = Invoice;

@@ -45,21 +45,54 @@ const Account = {
 
   account: async (accountId) => {
     try {
-      const [accountResults] = await db.query(queries.acc, [accountId]);
+      const [accountResults] = await db.query(queries.account, [accountId]);
       if (!accountResults.length) return null;
 
       const account = accountResults[0];
-      const [memberResults, patientResults, invoiceResults] = await Promise.all([
-        db.query(queries.record, [account.main_member_id]),
-        db.query(queries.record, [account.patient_id]),
-        db.query(queries.inv, [accountId]),
+      const [
+        memberResults, 
+        memberAddresses,
+        memberContact,
+        memberEmail,
+        patientResults, 
+        patientAddresses,
+        patientContact,
+        patientEmail,
+        // invoiceResults,
+        clientResults,
+        refClientResults,
+
+      ] = await Promise.all([
+        db.query(queries.recordAll, [account.main_member_id]),
+        db.query(queries.addresses, [account.main_member_id]),
+        db.query(queries.contactNumbers, [account.main_member_id]),
+        db.query(queries.emails, [account.main_member_id]),
+        db.query(queries.recordAll, [account.patient_id]),
+        db.query(queries.addresses, [account.patient_id]),
+        db.query(queries.contactNumbers, [account.patient_id]),
+        db.query(queries.emails, [account.patient_id]),
+        // db.query(queries.inv, [accountId]),
+        db.query(queries.client, [account.client_id]),
+        db.query(queries.refClient, [account.client_id]),
       ]);
 
       return {
-        ...account,
-        member: memberResults[0],
-        patient: patientResults[0],
-        invoices: invoiceResults[0],
+        account,
+        member: {
+          ...memberResults[0],
+          addresses: memberAddresses[0],
+          contactNumbers: memberContact[0],
+          emails: memberEmail[0],
+        },
+        patient: {
+          ...patientResults[0],
+          addresses: patientAddresses[0],
+          contactNumbers: patientContact[0],
+          emails: patientEmail[0],
+        },
+        // invoices: invoiceResults[0],
+        client: clientResults[0],
+        refClient: refClientResults[0],
       };
     } catch (err) {
       throw err;

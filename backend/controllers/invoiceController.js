@@ -71,6 +71,31 @@ const invoiceController = {
       return res.status(500).json({ message: 'Internal server error', error: err });
     }
   },
+
+  createNewInvoice: async (req, res) => {
+    const invoiceId = req.params.accountId;
+
+    // Account id for invoice to be related to
+    if (!accountId) {
+      return res.status(400).json({ message: 'Account ID is required' });
+    }
+
+    try {
+      const invoice = await Invoice.createNewInvoice(accountId);
+
+      if (!invoice) {
+        return res.status(404).json({ message: 'Invoice not created.' });
+      }
+
+      return res.status(201).json({
+        message: 'Invoice created successfully',
+      });
+    } catch (err) {
+      console.error('Error creating invoice:', err);
+      return res.status(500).json({ message: 'Internal server error', error: err });
+    }
+  },
+
 };
 
 module.exports = invoiceController;

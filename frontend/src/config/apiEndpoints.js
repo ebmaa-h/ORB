@@ -14,12 +14,14 @@ const ENDPOINTS = {
   // invoices : `${API_URL}/invoices`,
   clientInvoices: (clientId) => `${API_URL}/invoices/clients/${clientId}`, // Client specific invoices
   invoiceDetails: (invoiceId) => `${API_URL}/invoices/${invoiceId}`, // Invoice Page
-  // newInvoice : (accountId) => `${API_URL}/invoices/new/${accountId}`,
+  newInvoice : (accountId) => `${API_URL}/invoices/new/${accountId}`,
 
   
   // accounts : `${API_URL}/accounts`,
   clientAccounts: (clientId) => `${API_URL}/accounts/clients/${clientId}`, // Client specific accounts
   partialAcc : (accountId) => `${API_URL}/accounts/partial/${accountId}`, // Account Page
+  // fullAcc : (accountId) => `${API_URL}/accounts/${accountId}`,
+  fullAcc : (accountId) => `${API_URL}/accounts/${accountId}`, // Account Page
   // fullAcc : (accountId) => `${API_URL}/accounts/${accountId}`,
 
   profileDetails : (profileId) => `${API_URL}/profiles/${profileId}`, // profile details

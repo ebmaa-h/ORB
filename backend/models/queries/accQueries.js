@@ -58,6 +58,71 @@ const partialAccount = `
   WHERE a.account_id = ?;
 `;
 
+const account = `
+SELECT
+  a.profile_id,
+  a.client_id,
+  a.main_member_id,
+  a.patient_id
+FROM accounts a
+WHERE a.account_id = ?;
+`;
+
+const client = `
+SELECT
+  c.client_id,
+  c.email,
+  CONCAT('Dr ', LEFT(c.first, 1), ' ', c.last) AS client_name,
+  c.registration_nr,
+  c.practice_nr,
+  c.tell_nr,
+  c.client_type
+FROM clients c
+WHERE c.client_id = ?;
+`;
+
+const refClient = `
+SELECT 
+* 
+FROM ref_clients rc
+LEFT JOIN ref_clients_list rcl ON rc.ref_client_list_id = rcl.ref_client_list_id
+WHERE rc.client_id = 1;
+`;
+
+const recordAll = `
+SELECT
+* 
+FROM person_records pr
+WHERE pr.record_id = ?;
+
+`;
+
+const addresses = `
+SELECT
+  pa.address_id,
+  pa.is_domicilium,
+  pa.address
+FROM person_addresses pa
+WHERE pa.record_id = ?;
+`;
+
+const contactNumbers = `
+SELECT
+  pc.number_id,
+  pc.num_type,
+  pc.num
+FROM person_contact_numbers pc
+WHERE pc.record_id = ?;
+`;
+
+const emails = `
+SELECT
+  pe.email_id,
+  pe.email
+FROM person_emails pe
+WHERE pe.record_id = ?;
+`;
+
 const record = `
   SELECT 
     pr.record_id, CONCAT(pr.title, ' ', pr.first, ' ', pr.last) AS name,
@@ -85,8 +150,6 @@ const inv = `
   WHERE i.account_id = ?;
 `;
 
-const account = partialAccount; 
-
 module.exports = {
   allAccounts,
   clientAccounts,
@@ -94,4 +157,10 @@ module.exports = {
   account,
   record,
   inv,
+  addresses,
+  contactNumbers,
+  emails,
+  recordAll,
+  client,
+  refClient,
 };

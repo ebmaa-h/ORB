@@ -67,15 +67,15 @@ export default function InvoiceDetails() {
 
   return (
     <>
-      {invoice.invoice_id ? (
+      {invoiceId ? (
         <>
           <div className="container-col">
-          <h1><strong>Invoice Nr: {invoice.invoice_id}</strong></h1>
+          <h1><strong>Invoice Nr: {invoiceId}</strong></h1>
           {/* <p>Account ID: {invoice.account_id}</p>
           <p>Account ID: {invoice.account_id}</p> */}
           </div>
           <div className="container-col">
-
+          { console.log(invoice)}
             <div className='flex flex-row gap-4'>
               <div className="flex-1 ">
                 <p>{medical.medical_aid_name} - {medical.medical_aid_plan_name}</p>
@@ -132,14 +132,14 @@ export default function InvoiceDetails() {
                   <option className='' value="" disabled>
                     Select Status
                   </option>
-                  <option className='' value="processing">
+                  <option className='' value="Processing">
                     Processing
                   </option>
-                  <option className='' value="archived">
-                    Archived
-                  </option>
-                  <option className='' value="billed">
+                  <option className='' value="Billed">
                     Billed
+                  </option>
+                  <option className='' value="Archived">
+                    Archived
                   </option>
                 </select>
               {/* <BackButton /> */}
