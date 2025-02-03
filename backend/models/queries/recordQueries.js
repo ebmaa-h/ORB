@@ -8,7 +8,7 @@ SELECT
 FROM person_records;
 `;
 
-const recordDetailsQuery = `
+const recordDetails = `
 SELECT 
 pr.title,
 pr.first,
@@ -20,7 +20,7 @@ FROM person_records pr
 WHERE pr.record_id = ?;
 `;
 
-const addressesQuery = `
+const addresses = `
 SELECT
   pa.address_id,
   pa.is_domicilium,
@@ -29,7 +29,7 @@ FROM person_addresses pa
 WHERE pa.record_id = ?;
 `;
 
-const contactNumbersQuery = `
+const contactNumbers = `
 SELECT
   pc.number_id,
   pc.num_type,
@@ -38,7 +38,7 @@ FROM person_contact_numbers pc
 WHERE pc.record_id = ?;
 `;
 
-const emailsQuery = `
+const emails = `
 SELECT
   pe.email_id,
   pe.email
@@ -46,7 +46,7 @@ FROM person_emails pe
 WHERE pe.record_id = ?;
 `;
 
-const accountsQuery = `
+const accounts = `
 SELECT
   a.account_id,
   CONCAT('R ', FORMAT(SUM(i.balance), 2)) AS acc_balance,
@@ -59,7 +59,7 @@ WHERE a.patient_id = ?
 GROUP BY a.account_id, client;
 `;
 
-const invoicesQuery = `
+const invoices = `
 SELECT
   i.invoice_id,
   DATE_FORMAT(i.date_of_service, '%Y-%m-%d') AS date_of_service,
@@ -74,10 +74,10 @@ WHERE a.patient_id = ?;
 
 module.exports = {
   allRecords,
-  recordDetailsQuery,
-  addressesQuery,
-  contactNumbersQuery,
-  emailsQuery,
-  accountsQuery,
-  invoicesQuery,
+  recordDetails,
+  addresses,
+  contactNumbers,
+  emails,
+  accounts,
+  invoices,
 }

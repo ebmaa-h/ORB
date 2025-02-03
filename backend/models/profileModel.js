@@ -20,10 +20,10 @@ const Profile = {
   // Refactor `oneProfile` to use promises and async/await
   oneProfile: async (profileId) => {
     try {
-      const [dependentsResults] = await db.query(queries.dependentsQuery, [profileId]);
-      const [accountsResults] = await db.query(queries.accQuery, [profileId]);
-      const [invoicesResults] = await db.query(queries.invQuery, [profileId]);
-      const [profileResults] = await db.query(queries.profQuery, [profileId]);
+      const [dependentsResults] = await db.query(queries.dependents, [profileId]);
+      const [accountsResults] = await db.query(queries.acc, [profileId]);
+      const [invoicesResults] = await db.query(queries.inv, [profileId]);
+      const [profileResults] = await db.query(queries.prof, [profileId]);
 
       return {
         dependents: dependentsResults.length > 0 ? dependentsResults : [],

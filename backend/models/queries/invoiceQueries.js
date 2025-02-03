@@ -42,7 +42,7 @@ LEFT JOIN clients d ON a.client_id = d.client_id
 WHERE d.client_id = ?;
 `;
 
-const invoiceDetailsQuery = `
+const invoiceDetails = `
 SELECT 
   i.invoice_id,
   i.account_id,
@@ -53,7 +53,7 @@ SELECT
 FROM invoices i
 WHERE i.invoice_id = ?;
 `;
-const patientDetailsQuery = `
+const patientDetails = `
 SELECT
   JSON_UNQUOTE(JSON_EXTRACT(i.patient_snapshot, '$.patient.title')) AS patient_title,
   JSON_UNQUOTE(JSON_EXTRACT(i.patient_snapshot, '$.patient.first')) AS patient_first,
@@ -62,7 +62,7 @@ SELECT
 FROM invoices i
 WHERE i.invoice_id = ?;
 `;
-const memberDetailsQuery = `
+const memberDetails = `
 SELECT
   JSON_UNQUOTE(JSON_EXTRACT(i.member_snapshot, '$.member.title')) AS member_title,
   JSON_UNQUOTE(JSON_EXTRACT(i.member_snapshot, '$.member.first')) AS member_first,
@@ -71,7 +71,7 @@ SELECT
 FROM invoices i
 WHERE i.invoice_id = ?;
 `;
-const clientDetailsQuery = `
+const clientDetails = `
 SELECT
   CONCAT('Dr ', LEFT(d.first, 1), ' ', d.last) AS client_name,
   d.practice_nr AS client_practice_number
@@ -80,7 +80,7 @@ LEFT JOIN accounts a ON i.account_id = a.account_id
 LEFT JOIN clients d ON a.client_id = d.client_id
 WHERE i.invoice_id = ?;
 `;
-const medicalAidDetailsQuery = `
+const medicalAidDetails = `
 SELECT
   p.medical_aid_nr AS profile_medical_aid_nr,
   p.authorization_nr AS profile_authorization_nr,
@@ -97,9 +97,9 @@ WHERE i.invoice_id = ?;
 module.exports = {
   allInvoices,
   clientInvoices,
-  invoiceDetailsQuery,
-  patientDetailsQuery,
-  memberDetailsQuery,
-  clientDetailsQuery,
-  medicalAidDetailsQuery,
+  invoiceDetails,
+  patientDetails,
+  memberDetails,
+  clientDetails,
+  medicalAidDetails,
 };

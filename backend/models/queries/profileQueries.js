@@ -21,7 +21,7 @@ GROUP BY
   p.profile_id, ma.name, map.plan_name, mm.title, mm.first, mm.last;
 `;
 
-const dependentsQuery = `
+const dependents = `
 SELECT 
   ppm.record_id AS record_id,
   CONCAT(pr.title, ' ', pr.first, ' ', pr.last) AS name,
@@ -35,7 +35,7 @@ WHERE ppm.profile_id = ?
 GROUP BY ppm.map_id, pr.title, pr.first, pr.last, pr.date_of_birth, pr.id_nr, ppm.dependent_nr;
 `;
 
-const accQuery = `
+const acc = `
 SELECT 
   a.account_id,
   CONCAT('Dr ', LEFT(d.first, 1), ' ', d.last) AS client_name,
@@ -51,7 +51,7 @@ WHERE a.profile_id = ?
 GROUP BY a.account_id, a.client_id, a.profile_id, d.first, d.last, pr.title, pr.first, pr.last, pr.id_nr;
 `;
 
-const invQuery = `
+const inv = `
 SELECT
   i.invoice_id,
   CONCAT(JSON_UNQUOTE(JSON_EXTRACT(i.patient_snapshot, '$.patient.first')), ' ', JSON_UNQUOTE(JSON_EXTRACT(i.patient_snapshot, '$.patient.last'))) AS 'Patient Name',
@@ -68,7 +68,7 @@ JOIN clients d ON a.client_id = d.client_id
 WHERE i.profile_id = ?
 `;
 
-const profQuery = `
+const prof = `
 SELECT 
   ppm.map_id,
   p.profile_id,
@@ -89,8 +89,8 @@ WHERE p.profile_id = ?;
 
 module.exports = {
   allProfiles,
-  dependentsQuery,
-  accQuery,
-  invQuery,
-  profQuery,
+  dependents,
+  acc,
+  inv,
+  prof,
 }

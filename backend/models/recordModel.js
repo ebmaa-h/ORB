@@ -17,14 +17,14 @@ const Record = {
   getRecordDetails: async (recordId) => {
 
     try {
-      const [recordDetails] = await db.query(queries.recordDetailsQuery, [recordId]);
+      const [recordDetails] = await db.query(queries.recordDetails, [recordId]);
       if (!recordDetails.length) return null;
 
-      const [addresses] = await db.query(queries.addressesQuery, [recordId]);
-      const [contactNumbers] = await db.query(queries.contactNumbersQuery, [recordId]);
-      const [emails] = await db.query(queries.emailsQuery, [recordId]);
-      const [accounts] = await db.query(queries.accountsQuery, [recordId]);
-      const [invoices] = await db.query(queries.invoicesQuery, [recordId]);
+      const [addresses] = await db.query(queries.addresses, [recordId]);
+      const [contactNumbers] = await db.query(queries.contactNumbers, [recordId]);
+      const [emails] = await db.query(queries.emails, [recordId]);
+      const [accounts] = await db.query(queries.accounts, [recordId]);
+      const [invoices] = await db.query(queries.invoices, [recordId]);
 
       return {
         record: recordDetails[0],

@@ -56,11 +56,11 @@ const Invoice = {
     try {
       // Perform all queries concurrently using Promise.all
       const [invoiceDetailsResults, patientDetailsResults, memberDetailsResults, clientDetailsResults, medicalAidDetailsResults] = await Promise.all([
-        db.query(queries.invoiceDetailsQuery, [invoiceId]),
-        db.query(queries.patientDetailsQuery, [invoiceId]),
-        db.query(queries.memberDetailsQuery, [invoiceId]),
-        db.query(queries.clientDetailsQuery, [invoiceId]),
-        db.query(queries.medicalAidDetailsQuery, [invoiceId]),
+        db.query(queries.invoiceDetails, [invoiceId]),
+        db.query(queries.patientDetails, [invoiceId]),
+        db.query(queries.memberDetails, [invoiceId]),
+        db.query(queries.clientDetails, [invoiceId]),
+        db.query(queries.medicalAidDetails, [invoiceId]),
       ]);
 
       if (!invoiceDetailsResults.length) return null;

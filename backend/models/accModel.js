@@ -27,9 +27,9 @@ const Account = {
 
       const account = accountResults[0];
       const [memberResults, patientResults, invoiceResults] = await Promise.all([
-        db.query(queries.recordQuery, [account.main_member_id, accountId]),
-        db.query(queries.recordQuery, [account.patient_id, accountId]),
-        db.query(queries.invQuery, [accountId]),
+        db.query(queries.record, [account.main_member_id, accountId]),
+        db.query(queries.record, [account.patient_id, accountId]),
+        db.query(queries.inv, [accountId]),
       ]);
 
       return {
@@ -45,14 +45,14 @@ const Account = {
 
   account: async (accountId) => {
     try {
-      const [accountResults] = await db.query(queries.accQuery, [accountId]);
+      const [accountResults] = await db.query(queries.acc, [accountId]);
       if (!accountResults.length) return null;
 
       const account = accountResults[0];
       const [memberResults, patientResults, invoiceResults] = await Promise.all([
-        db.query(queries.recordQuery, [account.main_member_id]),
-        db.query(queries.recordQuery, [account.patient_id]),
-        db.query(queries.invQuery, [accountId]),
+        db.query(queries.record, [account.main_member_id]),
+        db.query(queries.record, [account.patient_id]),
+        db.query(queries.inv, [accountId]),
       ]);
 
       return {

@@ -58,7 +58,7 @@ const partialAccount = `
   WHERE a.account_id = ?;
 `;
 
-const recordQuery = `
+const record = `
   SELECT 
     pr.record_id, CONCAT(pr.title, ' ', pr.first, ' ', pr.last) AS name,
     DATE_FORMAT(pr.date_of_birth, '%Y-%m-%d') AS date_of_birth, pr.gender,
@@ -69,7 +69,7 @@ const recordQuery = `
   WHERE pr.record_id = ? AND a.account_id = ?;
 `;
 
-const invQuery = `
+const inv = `
   SELECT
     i.invoice_id,
     CONCAT(JSON_UNQUOTE(JSON_EXTRACT(i.patient_snapshot, '$.patient.first')), ' ', 
@@ -92,6 +92,6 @@ module.exports = {
   clientAccounts,
   partialAccount,
   account,
-  recordQuery,
-  invQuery,
+  record,
+  inv,
 };
