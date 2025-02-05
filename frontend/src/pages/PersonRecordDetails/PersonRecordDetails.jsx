@@ -3,7 +3,7 @@ import { useParams } from 'react-router-dom';
 import ENDPOINTS from '../../config/apiEndpoints';
 import axios from 'axios';
 import { InputField } from '../../components';
-import BackButton from '../../utility/BackButton';
+import { BackButton } from '../../components/index';
 import { Table } from '../../components';
 
 export default function PersonRecordDetails() {
@@ -112,7 +112,7 @@ export default function PersonRecordDetails() {
                 {contactNumbers.map((contact) => (
                   <div key={contact.number_id} className="flex gap-4 items-start">
                     <select
-                      className="max-h-[20px] border rounded border-gray-light px-2 hover:border-ebmaa-purple transition duration-30 cursor-pointer"
+                      className="max-h-[20px] border rounded border-gray-300 px-2 hover:border-ebmaa-purple transition duration-30 cursor-pointer"
                       value={contact.num_type}
                       onChange={(e) => handleContactChange(contact.number_id, 'num_type', e.target.value)}
                     >

@@ -3,7 +3,7 @@ import { useContext } from 'react';
 import { BrowserRouter as Router, Route, Routes, Navigate, useLocation } from 'react-router-dom';
 import { Logout } from './components/index'
 import { UserContext } from './context/UserContext';
-import { Login, Dashboard, ProtectedLayout, Tools, TimeSheet, Profiles, ProfileDetails, AccountDetails, InvoiceDetails, Accounts, Invoices, PersonRecords, PersonRecordDetails, ClientInfo, NewInvoice } from './pages/index';
+import { Login, Dashboard, ProtectedLayout, Tools, TimeSheet, Profiles, ProfileDetails, AccountDetails, Invoice, Accounts, Invoices, PersonRecords, PersonRecordDetails, ClientInfo, NewInvoice } from './pages/index';
 
 function App() {
   const { user } = useContext(UserContext);
@@ -18,7 +18,7 @@ function App() {
           element={user ? <Navigate to="/dashboard" /> : <Login />} 
         />
         
-        {/* Secure routes, not really,  */}
+        {/* Secure routes, not really, as jwt check only runs if 'user'contact is set, */}
         <Route element={user ? <ProtectedLayout /> : <Navigate to="/" />}>
           <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/tools" element={<Tools />} />
@@ -32,7 +32,7 @@ function App() {
           <Route path="/accounts/:accountId" element={<AccountDetails />} />
 
           <Route path="/invoices" element={<Invoices />} />
-          <Route path="/invoices/:invoiceId" element={<InvoiceDetails />} />
+          <Route path="/invoices/:invoiceId" element={<Invoice />} />
 
           <Route path="/invoices/new/:accountId" element={<NewInvoice />} />
 

@@ -54,29 +54,60 @@ const Invoice = {
   oneInvoice: async (invoiceId) => {
 
     try {
-      // Perform all queries concurrently using Promise.all
-      const [invoiceDetailsResults, patientDetailsResults, memberDetailsResults, clientDetailsResults, medicalAidDetailsResults] = await Promise.all([
-        db.query(queries.invoiceDetails, [invoiceId]),
-        db.query(queries.patientDetails, [invoiceId]),
-        db.query(queries.memberDetails, [invoiceId]),
-        db.query(queries.clientDetails, [invoiceId]),
-        db.query(queries.medicalAidDetails, [invoiceId]),
+      const [invoiceResults] = await db.query(queries.account, [invoiceId]);
+      
+      if (!invoiceResults.length) return null;
+      const invoice = invoiceResults[0];
+      const [
+        memberResults, 
+        memberAddresses,
+        memberContact,
+        memberEmail,
+        patientResults, 
+        patientAddresses,
+        patientContact,
+        patientEmail,
+        clientResults,
+        refClientResults,
+        medicalResults,
+
+      ] = await Promise.all([
+        
+        db.query(queries.record, [invoice.main_member_id, invoice.account_id]),
+        db.query(queries.addresses, [invoice.main_member_id]),
+        db.query(queries.contactNumbers, [invoice.main_member_id]),
+        db.query(queries.emails, [invoice.main_member_id]),
+
+        db.query(queries.record, [invoice.patient_id, invoice.account_id]),
+        db.query(queries.addresses, [invoice.patient_id]),
+        db.query(queries.contactNumbers, [invoice.patient_id]),
+        db.query(queries.emails, [invoice.patient_id]),
+
+        db.query(queries.client, [invoice.client_id]),
+        db.query(queries.refClient, [invoice.client_id]),
+        db.query(queries.medical, [invoice.account_id]),
       ]);
-
-      if (!invoiceDetailsResults.length) return null;
-
-      const result = {
-        invoice: invoiceDetailsResults[0],
-        client: clientDetailsResults[0],
-        medical: medicalAidDetailsResults[0],
-        member: memberDetailsResults[0],
-        patient: patientDetailsResults[0],
+      return {
+        invoice,
+        member: {
+          ...memberResults[0],
+          addresses: memberAddresses[0],
+          contactNumbers: memberContact[0],
+          emails: memberEmail[0],
+        },
+        patient: {
+          ...patientResults[0],
+          addresses: patientAddresses[0],
+          contactNumbers: patientContact[0],
+          emails: patientEmail[0],
+        },
+        // invoices: invoiceResults[0],
+        client: clientResults[0][0],
+        refClient: refClientResults[0],
+        medical: medicalResults[0][0],
       };
-
-      return result;
     } catch (err) {
-      console.error('Error fetching invoice details:', err);
-      throw new Error('Error fetching invoice details');
+      throw err;
     }
   },
 

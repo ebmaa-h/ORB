@@ -229,13 +229,15 @@ CREATE TABLE invoices (
     profile_id INT,
     date_of_service DATE,
     status ENUM('Processing', 'Billed', 'Archived') DEFAULT 'Processing',
-    patient_snapshot JSON,
-    member_snapshot JSON,
+    main_member_id INT NULL,
+    patient_id INT NULL,
     balance DECIMAL(10, 2) DEFAULT 0.00,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     FOREIGN KEY (account_id) REFERENCES accounts(account_id) ON DELETE SET NULL,
-    FOREIGN KEY (profile_id) REFERENCES profiles(profile_id) ON DELETE SET NULL
+    FOREIGN KEY (profile_id) REFERENCES profiles(profile_id) ON DELETE SET NULL,
+    FOREIGN KEY (main_member_id) REFERENCES person_records(record_id) ON DELETE SET NULL,
+    FOREIGN KEY (patient_id) REFERENCES person_records(record_id) ON DELETE SET NULL
 );
 
 
@@ -402,83 +404,34 @@ VALUES
 (5, 3, 2, 3);
 
 -- Inserting sample data for invoices
-INSERT INTO invoices (account_id, profile_id, date_of_service, status, member_snapshot, patient_snapshot)
+INSERT INTO invoices (account_id, profile_id, date_of_service, status, main_member_id, patient_id)
 VALUES
 -- Profile 1: Thabo, Naledi, Lerato
-(1, 1, '2024-12-01', 'Processing',
- '{"member": {"first": "Thabo", "last": "Mokoena", "title": "Mr", "dob": "1990-05-15", "id_nr": "9005150093000"}}',
- '{"patient": {"first": "Thabo", "last": "Mokoena", "title": "Mr", "dob": "1990-05-15", "id_nr": "9005150094000"}}'),
-
-(2, 1, '2024-12-02', 'Processing',
- '{"member": {"first": "Thabo", "last": "Mokoena", "title": "Mr", "dob": "1990-05-15", "id_nr": "9005150008900"}}',
- '{"patient": {"first": "Naledi", "last": "Mokoena", "title": "Mrs", "dob": "1992-04-12", "id_nr": "9204120990000"}}'),
-
-(3, 1, '2024-12-03', 'Processing',
- '{"member": {"first": "Thabo", "last": "Mokoena", "title": "Mr", "dob": "1990-05-15", "id_nr": "9005150008800"}}',
- '{"patient": {"first": "Lerato", "last": "Mokoena", "title": "Miss", "dob": "2010-02-01", "id_nr": "1002017700000"}}'),
-
-(4, 1, '2024-12-04', 'Processing',
- '{"member": {"first": "Thabo", "last": "Mokoena", "title": "Mr", "dob": "1990-05-15", "id_nr": "9005150006600"}}',
- '{"patient": {"first": "Lerato", "last": "Mokoena", "title": "Miss", "dob": "2010-02-01", "id_nr": "1002010000550"}}'),
+(1, 1, '2024-12-01', 'Processing', 1, 1),
+(2, 1, '2024-12-02', 'Processing', 1, 2),
+(3, 1, '2024-12-03', 'Processing', 1, 3),
+(4, 1, '2024-12-04', 'Processing', 1, 3),
 
 -- Profile 2: Pieter, Annelize, Jaco, Saki
-(5, 2, '2024-12-01', 'Processing',
- '{"member": {"first": "Pieter", "last": "van der Merwe", "title": "Mr", "dob": "1990-08-05", "id_nr": "9008050044000"}}',
- '{"patient": {"first": "Pieter", "last": "van der Merwe", "title": "Mr", "dob": "1990-08-05", "id_nr": "9008050330000"}}'),
-
-(6, 2, '2024-12-02', 'Processing',
- '{"member": {"first": "Pieter", "last": "van der Merwe", "title": "Mr", "dob": "1990-08-05", "id_nr": "9008050022000"}}',
- '{"patient": {"first": "Annelize", "last": "van der Merwe", "title": "Mrs", "dob": "1980-11-22", "id_nr": "8011220011000"}}'),
-
-(7, 2, '2024-12-03', 'Processing',
- '{"member": {"first": "Pieter", "last": "van der Merwe", "title": "Mr", "dob": "1990-08-05", "id_nr": "9008059000000"}}',
- '{"patient": {"first": "Jaco", "last": "van der Merwe", "title": "Mr", "dob": "2017-03-30", "id_nr": "1703380000000"}}'),
-
-(8, 2, '2024-12-04', 'Processing',
- '{"member": {"first": "Pieter", "last": "van der Merwe", "title": "Mr", "dob": "1990-08-05", "id_nr": "9008050700000"}}',
- '{"patient": {"first": "Saki", "last": "van der Merwe", "title": "Mr", "dob": "2011-06-10", "id_nr": "1106160000000"}}'),
+(5, 2, '2024-12-01', 'Processing', 4, 4),
+(6, 2, '2024-12-02', 'Processing', 4, 5),
+(7, 2, '2024-12-03', 'Processing', 4, 6),
+(8, 2, '2024-12-04', 'Processing', 4, 7),
 
 -- Profile 3: Jo-Anne, John, Emily
-(9, 3, '2024-12-01', 'Processing',
- '{"member": {"first": "Jo-Anne", "last": "Smith", "title": "Mrs", "dob": "1972-07-20", "id_nr": "7207205000000"}}',
- '{"patient": {"first": "Jo-Anne", "last": "Smith", "title": "Mrs", "dob": "1972-07-20", "id_nr": "7207240000000"}}'),
-
-(10, 3, '2024-12-02', 'Processing',
- '{"member": {"first": "Jo-Anne", "last": "Smith", "title": "Mrs", "dob": "1972-07-20", "id_nr": "7207203000000"}}',
- '{"patient": {"first": "John", "last": "Smith", "title": "Mr", "dob": "1973-04-14", "id_nr": "7304142000000"}}'),
-
-(11, 3, '2024-12-03', 'Processing',
- '{"member": {"first": "Jo-Anne", "last": "Smith", "title": "Mrs", "dob": "1972-07-20", "id_nr": "720721000000"}}',
- '{"patient": {"first": "Emily", "last": "Smith", "title": "Miss", "dob": "2001-06-22", "id_nr": "0106220000900"}}'),
+(9, 3, '2024-12-01', 'Processing', 8, 8),
+(10, 3, '2024-12-02', 'Processing', 8, 9),
+(11, 3, '2024-12-03', 'Processing', 8, 10),
 
 -- Profile 4: Rajesh, Priya, Kavita, Sanjay
-(12, 4, '2024-12-01', 'Processing',
- '{"member": {"first": "Rajesh", "last": "Naidoo", "title": "Mr", "dob": "1982-09-17", "id_nr": "8209170000080"}}',
- '{"patient": {"first": "Rajesh", "last": "Naidoo", "title": "Mr", "dob": "1982-09-17", "id_nr": "8209170000700"}}'),
+(12, 4, '2024-12-01', 'Processing', 11, 11),
+(13, 4, '2024-12-02', 'Processing', 11, 12),
+(14, 4, '2024-12-03', 'Processing', 11, 13),
+(15, 4, '2024-12-04', 'Processing', 11, 14),
 
-(13, 4, '2024-12-02', 'Processing',
- '{"member": {"first": "Rajesh", "last": "Naidoo", "title": "Mr", "dob": "1982-09-17", "id_nr": "8209170000060"}}',
- '{"patient": {"first": "Priya", "last": "Naidoo", "title": "Mrs", "dob": "1983-02-10", "id_nr": "8302100000050"}}'),
-
-(14, 4, '2024-12-03', 'Processing',
- '{"member": {"first": "Rajesh", "last": "Naidoo", "title": "Mr", "dob": "1982-09-17", "id_nr": "8209170000400"}}',
- '{"patient": {"first": "Kavita", "last": "Naidoo", "title": "Miss", "dob": "2000-02-10", "id_nr": "0002103000000"}}'),
-
-(15, 4, '2024-12-04', 'Processing',
- '{"member": {"first": "Rajesh", "last": "Naidoo", "title": "Mr", "dob": "1982-09-17", "id_nr": "8209170000200"}}',
- '{"patient": {"first": "Sanjay", "last": "Naidoo", "title": "Mr", "dob": "1999-02-10", "id_nr": "9902100000100"}}'),
-
- (16, 5, '2024-12-02', 'Processing',
- '{"member": {"first": "Naledi", "last": "Mokoena", "title": "Mrs", "dob": "1992-04-12", "id_nr": "9204120990000"}}',
- '{"patient": {"first": "Naledi", "last": "Mokoena", "title": "Mrs", "dob": "1992-04-12", "id_nr": "9204120990000"}}'),
-
-(17, 5, '2024-12-03', 'Processing',
- '{"member": {"first": "Naledi", "last": "Mokoena", "title": "Mrs", "dob": "1990-04-12", "id_nr": "9204120990000"}}',
- '{"patient": {"first": "Lerato", "last": "Mokoena", "title": "Miss", "dob": "2010-02-01", "id_nr": "1002017700000"}}'),
-
-(17, 5, '2024-12-04', 'Processing',
- '{"member": {"first": "Naledi", "last": "Mokoena", "title": "Mrs", "dob": "1990-04-12", "id_nr": "9204120990000"}}',
- '{"patient": {"first": "Lerato", "last": "Mokoena", "title": "Miss", "dob": "2010-02-01", "id_nr": "1002017700000"}}');
+-- Additional cases
+(16, 5, '2024-12-02', 'Processing', 2, 2),
+(17, 5, '2024-12-03', 'Processing', 2, 3);
 
 
 -- Inserting sample data for features

@@ -58,22 +58,24 @@ const Account = {
         patientAddresses,
         patientContact,
         patientEmail,
-        // invoiceResults,
         clientResults,
         refClientResults,
+        medicalResults,
 
       ] = await Promise.all([
-        db.query(queries.recordAll, [account.main_member_id]),
+        db.query(queries.record, [account.main_member_id, accountId]),
         db.query(queries.addresses, [account.main_member_id]),
         db.query(queries.contactNumbers, [account.main_member_id]),
         db.query(queries.emails, [account.main_member_id]),
-        db.query(queries.recordAll, [account.patient_id]),
+
+        db.query(queries.record, [account.patient_id, accountId]),
         db.query(queries.addresses, [account.patient_id]),
         db.query(queries.contactNumbers, [account.patient_id]),
         db.query(queries.emails, [account.patient_id]),
-        // db.query(queries.inv, [accountId]),
+
         db.query(queries.client, [account.client_id]),
         db.query(queries.refClient, [account.client_id]),
+        db.query(queries.medical, [accountId]),
       ]);
 
       return {
@@ -91,8 +93,9 @@ const Account = {
           emails: patientEmail[0],
         },
         // invoices: invoiceResults[0],
-        client: clientResults[0],
+        client: clientResults[0][0],
         refClient: refClientResults[0],
+        medical: medicalResults[0][0],
       };
     } catch (err) {
       throw err;

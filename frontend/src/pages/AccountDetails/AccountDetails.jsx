@@ -4,7 +4,7 @@ import axios from 'axios';
 import { SearchBar, Table } from '../../components';
 import ENDPOINTS from '../../config/apiEndpoints';
 import { useNavigate } from 'react-router-dom';
-import BackButton from '../../utility/BackButton';
+import { BackButton } from '../../components/index';
 
 export default function AccountDetails() {
   const { accountId } = useParams(); 
@@ -52,19 +52,16 @@ export default function AccountDetails() {
 
       {account.account_id ? (
         <>
-          <div className='container-row justify-between'>
-            <p>
-              <button
-                value={`Profile ID: ${account.profile_id}`}
-                onClick={() => navigate(`/profiles/${account.profile_id}`)} 
-                type='submit'
-                className='btn-class'
-                aria-label='Log In' // Accessibility
+          <div className='container-row justify-between items-center'>
+
+            {/* <p
+                onClick={() => navigate(`/profiles/${account.profile_id}`)}
+                className="cursor-pointer underline text-blue-600 hover:text-blue-800"
               >
-                {/* {`Profile ID: ${account.profile_id}`} */}
                 View Profile
-              </button>
-            </p>
+              </p> */}
+
+
             <p><strong>Account ID:</strong> {account.account_id}</p>
             <p><strong>Medical Aid Nr:</strong> {account.medical_aid_nr}</p>
             <p><strong>Medical Aid:</strong> {account.medical_aid_name} - {account.plan_name}</p>
@@ -80,7 +77,6 @@ export default function AccountDetails() {
               <Table
                 data={Array.isArray(member) ? member : [member]} 
                 columns={['Record ID', 'Name', 'Date of Birth', 'Gender', 'Depedent Nr']}
-                idField="record_id" 
                 linkPrefix="records" 
               />
             </div>
@@ -90,7 +86,6 @@ export default function AccountDetails() {
               <Table
                 data={Array.isArray(patient) ? patient : [patient]} 
                 columns={['Record ID', 'Name', 'Date of Birth', 'Gender', 'Dependent Nr']}
-                idField="record_id" 
                 linkPrefix="records" 
               />
             </div>

@@ -1,4 +1,4 @@
-import { Link, useLocation } from 'react-router-dom';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useContext } from 'react';
 
 import { UserContext } from '../../context/UserContext';
@@ -9,10 +9,7 @@ export default function Nav() {
   const { user } = useContext(UserContext);
   const { clientId, setClientId } = useContext(ClientContext);
   const location = useLocation(); // Get the current path
-  
-  const disabled = 'opacity-40 cursor-not-allowed';
-  const disabledPaths = ['/accounts', '/invoices', '/client/info'];
-
+  const navigate = useNavigate();
 
   const accLinkClass = clientId
     ? `link-class`
@@ -22,13 +19,18 @@ export default function Nav() {
     <div className="bg-white shadow flex justify-between items-center flex-row h-[60px]">
       <div className='flex flex-row gap-4 ml-4'>
         <select
-          className={`cursor-pointer border rounded border-gray-light  px-2 hover:border-ebmaa-purple transition duration-300 ${!!clientId && !disabledPaths.includes(location.pathname) ? disabled : ''}`}
-          disabled={!!clientId && !disabledPaths.includes(location.pathname)}
+          className={`cursor-pointer border rounded border-gray-300 px-2 hover:border-ebmaa-purple transition duration-300`}
+          disabled={!!clientId}
           onChange={(e) => {
-            setClientId(e.target.value);
+            const selectedClientId = e.target.value;
+            setClientId(selectedClientId);
+            if (selectedClientId) {
+              navigate("/client/info");
+            
+            }
           }}
         >
-          <option disabled={!!clientId} value=""> {/* Disabled didnt work */}
+          <option disabled={!!clientId}> {/* Disabled didnt work */}
             Select Client
           </option>
           {user.client_access.map((client, i) => (
@@ -84,7 +86,7 @@ export default function Nav() {
           Profiles
         </Link>
 
-        <p className="text-gray-light">|</p>
+        <p className="text-gray-300">|</p>
         <Link
           to="/dashboard"
           className={`link-class ${location.pathname === '/dashboard' ? 'active-link' : ''}`}
@@ -98,7 +100,7 @@ export default function Nav() {
         >
           Tools
         </Link>
-        <p className="text-gray-light">|</p>
+        <p className="text-gray-300">|</p>
         <Logout />
       </div>
     </div>

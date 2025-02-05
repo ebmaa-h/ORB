@@ -44,13 +44,13 @@ export default function LoginBox() {
   };
 
   return (
-    <div className="flex justify-center items-center min-h-screen bg-gray-light ">
+    <div className="flex justify-center items-center min-h-screen bg-gray-300 ">
       <div className="min-w-[300px] min-h-[425px] bg-white shadow flex flex-col justify-evenly items-center rounded-lg">
         <img className='max-w-[190px] h-auto translate-x-[-15px]' src="/ebmaa-orb-logo.svg" alt="" />
         <form className="flex flex-col justify-center items-center gap-4" onSubmit={handleLogin}>
           <input 
             style={{ borderColor: loginError ? 'red' : 'silver' }}
-            className={'border-b border-gray-light focus:outline-none text-center'}
+            className={'border-b border-gray-300 focus:outline-none text-center'}
             type="text" 
             name="email" 
             id="email" 
@@ -60,7 +60,7 @@ export default function LoginBox() {
           />
           <input 
             style={{ borderColor: loginError ? 'red' : 'silver' }}
-            className={'border-b border-gray-light focus:outline-none text-center'}
+            className={'border-b border-gray-300 focus:outline-none text-center'}
             type="password" 
             name="password" 
             id="password" 

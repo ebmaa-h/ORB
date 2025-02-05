@@ -1,47 +1,66 @@
 import { useEffect, useState } from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
 import ENDPOINTS from '../../config/apiEndpoints';
 import axios from 'axios';
-import { BackButton, InputField } from '../../components/index';
+import { InputField, InvoiceDetails } from '../../components';
+import { BackButton } from '../../components/index';
 
-export default function NewInvoice() {
-  const { accountId } = useParams();
+export default function Invoice() {
+  const { invoiceId } = useParams();
+  const navigate = useNavigate();
 
-  const [account, setAccount] = useState({});
+  const [invoice, setInvoice] = useState({});
   const [patient, setPatient] = useState({});
   const [member, setMember] = useState({});
   const [client, setClient] = useState([]);
   const [refClient, setRefClient] = useState([]);
   const [medical, setMedical] = useState([]);
-  // const [account, setAccount] = useState([]);
-  // const [account, setAccount] = useState([]);
 
   useEffect(() => {
-    const getAccountDetails = async () => {
+    const getInvoiceDetails = async () => {
       try {
-        const response = await axios.get(ENDPOINTS.fullAcc(accountId), {
+        const response = await axios.get(ENDPOINTS.invoiceDetails(invoiceId), {
           withCredentials: true,
         });
-        console.log('response',response)
-        const { member, patient, client, refClient, medical, account } = response.data.account;
-        
+
+        console.log('response', response);
+        const { member, patient, client, refClient, medical, invoice } = response.data.invoice;
+
         setClient(client || []);
         setRefClient(refClient || []);
         setMember(member || {});
         setPatient(patient || {});
+        setInvoice(invoice || {});
         setMedical(medical || []);
-        setAccount(account || {});
       } catch (error) {
-        console.error('Error fetching record details:', error);
+        console.error('Error fetching invoice details:', error);
       }
     };
 
-    if (accountId) {
-      getAccountDetails();
+    if (invoiceId) {
+      getInvoiceDetails();
     }
-  }, [accountId]);
+  }, [invoiceId]);
 
-  
+  const handleChange = (e) => {
+    const { id, value } = e.target;
+    setInvoice((prev) => ({
+      ...prev,
+      [id]: value,
+    }));
+  };
+
+  const handleSave = async () => {
+    try {
+      await axios.put(`${ENDPOINTS.invoices}/${invoiceId}`, invoice, {
+        withCredentials: true,
+      });
+      navigate(-1);
+    } catch (error) {
+      console.error('Error saving invoice details:', error);
+    }
+  };
+
   const renderPersonDetails = (title, person) => (
     <div className='flex-1'>
       <table className="table-auto w-full border-collapse border-gray-blue-100 text-gray-dark">
@@ -51,7 +70,7 @@ export default function NewInvoice() {
           </tr>
         </thead>
         <tbody> 
-          <tr><td className="border border-gray-blue-100 p-2">Name</td><td className="border border-gray-blue-100 p-2">{person[0]?.name}</td></tr>
+          <tr><td className="border border-gray-blue-100 p-2">Name</td><td className="border border-gray-blue-100 p-2">{person[0]?.title} {person[0]?.first} {person[0]?.last}</td></tr>
           <tr><td className="border border-gray-blue-100 p-2">Gender</td><td className="border border-gray-blue-100 p-2">{person[0]?.gender === 'M' ? 'Male' : 'Female'}</td></tr>
           <tr><td className="border border-gray-blue-100 p-2">ID</td><td className="border border-gray-blue-100 p-2">{person[0]?.id_nr}</td></tr>
           <tr><td className="border border-gray-blue-100 p-2">Date of Birth</td><td className="border border-gray-blue-100 p-2">{person[0]?.date_of_birth}</td></tr>
@@ -66,12 +85,12 @@ export default function NewInvoice() {
 
   return (
     <>
-      {accountId ? (
+      {invoiceId ? (
         <>
           <div className="container-col gap-4">
-            <h2 className='font-bold'>*New Invoice</h2>
+            <h2 className='font-bold'>Invoice #{invoiceId}</h2>
             <div className='flex flex-row gap-4'>
-              <div className='flex-1 flex flex-col gap-4'>
+              <div className='flex-1'>
                 <table className="table-auto w-full border-collapse border-gray-blue-100 text-gray-dark">
                   <thead>
                     <tr><th colSpan="2" className="border border-gray-blue-100 p-2">Client</th></tr>
@@ -85,6 +104,8 @@ export default function NewInvoice() {
                     <tr><td className="border border-gray-blue-100 p-2">Practice Nr</td><td className="border border-gray-blue-100 p-2">{client.practice_nr}</td></tr>
                   </tbody>
                 </table>
+              </div>
+              <div className='flex-1'>
                 <table className="table-auto w-full border-collapse border-gray-blue-100 text-gray-dark">
                   <thead>
                     <tr><th colSpan="2" className="border border-gray-blue-100 p-2 ">Medical Aid</th></tr>
@@ -96,19 +117,19 @@ export default function NewInvoice() {
                     <tr><td className="border border-gray-blue-100 p-2">Plan Code</td><td className="border border-gray-blue-100 p-2">{medical.plan_code}</td></tr>
                   </tbody>
                 </table>
-              </div>
+                </div>
               {renderPersonDetails('Guarantor', member)}
               {renderPersonDetails('Patient', patient)}
             </div>
           </div>
           <div className="container-row justify-between items-center">
             <div className='flex flex-row gap-4'>
-              <InputField label="Procedure Date" value={account.date_of_service} id="procedure_date" type='date' />
-              <p >Invoice Balance: {account.invoice_balance}</p>
+              <InputField label="Procedure Date" value={invoice.date_of_service} id="procedure_date" onChange={handleChange} type='date' />
+              <p >Invoice Balance: {invoice.invoice_balance}</p>
             </div>
             <div className='flex flex-row gap-4'>
               <select className="border rounded border-gray-blue-100 px-2 hover:border-ebmaa-purple transition duration-300 cursor-pointer"
-                >
+                value={invoice.refClientId || ""} onChange={(e) => setInvoice(prev => ({ ...prev, refClientId: e.target.value }))}>
                 <option value="" disabled>Select Ref Doctor</option>
                 {refClient?.map((client, index) => (
                   <option value={client.ref_client_id} key={index}>Dr {client.first} {client.last}</option>
@@ -116,14 +137,14 @@ export default function NewInvoice() {
               </select>
               <label className='flex items-center'>Status:</label>
               <select className="border rounded border-gray-blue-100 px-2 hover:border-ebmaa-purple transition duration-300 cursor-pointer"
-                value={account.status || ""}>
+                value={invoice.status || ""} onChange={(e) => setInvoice(prev => ({ ...prev, status: e.target.value }))}>
                 <option value="" disabled>Select Status</option>
                 <option value="Processing">Processing</option>
                 <option value="Billed">Billed</option>
                 <option value="Archived">Archived</option>
               </select>
               <BackButton />
-              <button type="button" className="btn-class w-[100px]">Save</button>
+              <button type="button" className="btn-class w-[100px]" onClick={handleSave}>Save</button>
             </div>
           </div>
         </>

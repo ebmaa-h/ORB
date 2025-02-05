@@ -1,8 +1,8 @@
 import { useNavigate } from 'react-router-dom';
 import { useContext } from 'react';
-import { NavigationContext } from '../context/NavigationContext';
+import { NavigationContext } from '../../../context/NavigationContext';
 
-export default function BackButton() {
+export default function BackButton({text}) {
   const { previousPath } = useContext(NavigationContext);
   const navigate = useNavigate();
 
@@ -12,7 +12,7 @@ export default function BackButton() {
       type='submit'
       className='btn-class min-w-[100px] max-h-[35px]'
     >
-      Back
+      {text || "Back"}
     </button>
   );
 }

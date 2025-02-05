@@ -63,8 +63,13 @@ SELECT
   a.profile_id,
   a.client_id,
   a.main_member_id,
-  a.patient_id
+  a.patient_id,
+  DATE_FORMAT(i.date_of_service, '%Y-%m-%d') AS date_of_service,
+  i.status,
+  CONCAT('R ', FORMAT(i.balance, 2)) AS invoice_balance,
+  i.updated_at
 FROM accounts a
+LEFT JOIN invoices i on  i.account_id = a.account_id
 WHERE a.account_id = ?;
 `;
 
@@ -134,20 +139,36 @@ const record = `
   WHERE pr.record_id = ? AND a.account_id = ?;
 `;
 
+
+const medical = `
+SELECT 
+    p.profile_id,
+    p.medical_aid_nr,
+    m.name AS medical_aid_name,
+    mp.plan_name,
+    mp.plan_code
+FROM accounts a
+LEFT JOIN profiles p ON a.profile_id = p.profile_id
+LEFT JOIN medical_aids m ON p.medical_aid_id = m.medical_aid_id
+LEFT JOIN medical_aid_plans mp ON p.plan_id = mp.plan_id
+WHERE a.account_id = ?;
+`;
+
 const inv = `
-  SELECT
-    i.invoice_id,
-    CONCAT(JSON_UNQUOTE(JSON_EXTRACT(i.patient_snapshot, '$.patient.first')), ' ', 
-           JSON_UNQUOTE(JSON_EXTRACT(i.patient_snapshot, '$.patient.last'))) AS patient_name,
-    JSON_UNQUOTE(JSON_EXTRACT(i.patient_snapshot, '$.patient.id_nr')) AS patient_id,
-    CONCAT(JSON_UNQUOTE(JSON_EXTRACT(i.member_snapshot, '$.member.first')), ' ', 
-           JSON_UNQUOTE(JSON_EXTRACT(i.member_snapshot, '$.member.last'))) AS member_name,
-    JSON_UNQUOTE(JSON_EXTRACT(i.member_snapshot, '$.member.id_nr')) AS member_id,
-    CONCAT('R ', FORMAT(i.balance, 2)) AS invoice_balance,
-    DATE_FORMAT(i.date_of_service , '%Y-%m-%d') AS date_of_service,
-    i.status AS status
-  FROM invoices i
-  WHERE i.account_id = ?;
+SELECT
+  i.invoice_id,
+  CONCAT(p.first, ' ', p.last) AS patient_name,
+  p.id_nr AS patient_id,
+  CONCAT(m.first, ' ', m.last) AS member_name,
+  m.id_nr AS member_id,
+  CONCAT('R ', FORMAT(i.balance, 2)) AS invoice_balance,
+  DATE_FORMAT(i.date_of_service, '%Y-%m-%d') AS date_of_service,
+  i.status AS status
+FROM invoices i
+LEFT JOIN person_records p ON i.patient_id = p.record_id
+LEFT JOIN person_records m ON i.main_member_id = m.record_id
+WHERE i.account_id = ?;
+
 `;
 
 module.exports = {
@@ -163,4 +184,5 @@ module.exports = {
   recordAll,
   client,
   refClient,
+  medical,
 };

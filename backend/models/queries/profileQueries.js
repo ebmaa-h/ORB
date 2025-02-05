@@ -54,10 +54,10 @@ GROUP BY a.account_id, a.client_id, a.profile_id, d.first, d.last, pr.title, pr.
 const inv = `
 SELECT
   i.invoice_id,
-  CONCAT(JSON_UNQUOTE(JSON_EXTRACT(i.patient_snapshot, '$.patient.first')), ' ', JSON_UNQUOTE(JSON_EXTRACT(i.patient_snapshot, '$.patient.last'))) AS 'Patient Name',
-  JSON_UNQUOTE(JSON_EXTRACT(i.patient_snapshot, '$.patient.id_nr')) AS 'Patient ID',
-  CONCAT(JSON_UNQUOTE(JSON_EXTRACT(i.member_snapshot, '$.member.first')), ' ', JSON_UNQUOTE(JSON_EXTRACT(i.member_snapshot, '$.member.last'))) AS 'Member Name',
-  JSON_UNQUOTE(JSON_EXTRACT(i.member_snapshot, '$.member.id_nr')) AS 'Member ID',
+  CONCAT(p.first, ' ', p.last) AS 'Patient Name',
+  p.id_nr AS 'Patient ID',
+  CONCAT(m.first, ' ', m.last) AS 'Member Name',
+  m.id_nr AS 'Member ID',
   CONCAT('R ', FORMAT(i.balance, 2)) AS invoice_balance,
   DATE_FORMAT(i.date_of_service, '%Y-%m-%d') AS date_of_service,
   i.status AS 'Status',
@@ -65,7 +65,10 @@ SELECT
 FROM invoices i
 JOIN accounts a ON i.account_id = a.account_id
 JOIN clients d ON a.client_id = d.client_id
-WHERE i.profile_id = ?
+LEFT JOIN person_records p ON i.patient_id = p.record_id
+LEFT JOIN person_records m ON i.main_member_id = m.record_id
+WHERE i.profile_id = ?;
+
 `;
 
 const prof = `

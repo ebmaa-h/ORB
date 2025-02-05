@@ -3,7 +3,7 @@ import { useParams } from 'react-router-dom'; // For accessing profile_id from t
 import axios from 'axios';
 import { SearchBar, Table } from '../../components';
 import ENDPOINTS from '../../config/apiEndpoints';
-import BackButton from '../../utility/BackButton';
+import { BackButton } from '../../components/index';
 
 export default function ProfileDetails() {
   const { profileId } = useParams(); 
