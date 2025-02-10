@@ -131,10 +131,9 @@ WHERE i.invoice_id = ?;
 
 const createNewInvoice = `
 INSERT INTO 
-  invoices (account_id, profile_id, date_of_service, status, patient_snapshot, member_snapshot, balance)
-  VALUES (?, ?, ?, 'Processing', ?, ?, ?);
+  invoices (account_id, date_of_service, status, main_member_id, patient_id, ref_client_id, file_nr)
+  VALUES (?, ?, ?, ?, ?, ?, ?);
 `;
-
 
 // Same as accQueries
 const client = `

@@ -73,22 +73,22 @@ const invoiceController = {
   },
 
   createNewInvoice: async (req, res) => {
-    const invoiceId = req.params.accountId;
-
+    const newInvoice = req.body;
+    console.log("invoice", newInvoice)
     // Account id for invoice to be related to
-    if (!accountId) {
+    if (!newInvoice.account_id) {
       return res.status(400).json({ message: 'Account ID is required' });
     }
 
     try {
-      const invoice = await Invoice.createNewInvoice(accountId);
+      const createdInvoice = await Invoice.createNewInvoice(newInvoice);
 
-      if (!invoice) {
+      if (!createdInvoice) {
         return res.status(404).json({ message: 'Invoice not created.' });
       }
 
       return res.status(201).json({
-        message: 'Invoice created successfully',
+        message: createdInvoice,
       });
     } catch (err) {
       console.error('Error creating invoice:', err);

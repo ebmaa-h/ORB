@@ -20,7 +20,7 @@ export default function Nav() {
       <div className='flex flex-row gap-4 ml-4'>
         <select
           className={`cursor-pointer border rounded border-gray-300 px-2 hover:border-ebmaa-purple transition duration-300`}
-          disabled={!!clientId}
+          // disabled={!!clientId}
           onChange={(e) => {
             const selectedClientId = e.target.value;
             setClientId(selectedClientId);

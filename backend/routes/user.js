@@ -5,6 +5,4 @@ const router = express.Router();
 // Get user data route
 router.get('/data', userController.getUserData);
 
-
-
 module.exports = router;

@@ -14,8 +14,8 @@ const ENDPOINTS = {
   // invoices : `${API_URL}/invoices`,
   clientInvoices: (clientId) => `${API_URL}/invoices/clients/${clientId}`, // Client specific invoices
   invoiceDetails: (invoiceId) => `${API_URL}/invoices/${invoiceId}`, // Invoice Page
-  newInvoice : (accountId) => `${API_URL}/invoices/new/${accountId}`,
-
+  
+  newInvoice  : `${API_URL}/invoices/new`,
   
   // accounts : `${API_URL}/accounts`,
   clientAccounts: (clientId) => `${API_URL}/accounts/clients/${clientId}`, // Client specific accounts

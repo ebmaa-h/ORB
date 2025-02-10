@@ -63,13 +63,8 @@ SELECT
   a.profile_id,
   a.client_id,
   a.main_member_id,
-  a.patient_id,
-  DATE_FORMAT(i.date_of_service, '%Y-%m-%d') AS date_of_service,
-  i.status,
-  CONCAT('R ', FORMAT(i.balance, 2)) AS invoice_balance,
-  i.updated_at
+  a.patient_id
 FROM accounts a
-LEFT JOIN invoices i on  i.account_id = a.account_id
 WHERE a.account_id = ?;
 `;
 
@@ -130,8 +125,13 @@ WHERE pe.record_id = ?;
 
 const record = `
   SELECT 
-    pr.record_id, CONCAT(pr.title, ' ', pr.first, ' ', pr.last) AS name,
-    DATE_FORMAT(pr.date_of_birth, '%Y-%m-%d') AS date_of_birth, pr.gender,
+    pr.record_id,
+    pr.title,
+    pr.first,
+    pr.last,
+    pr.id_nr,
+    DATE_FORMAT(pr.date_of_birth, '%Y-%m-%d') AS date_of_birth,
+    pr.gender,
     ppm.dependent_nr
   FROM person_records pr
   LEFT JOIN profile_person_map ppm ON pr.record_id = ppm.record_id

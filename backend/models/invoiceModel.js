@@ -111,13 +111,24 @@ const Invoice = {
     }
   },
 
-  createNewInvoice: async (accountId) => {
+  createNewInvoice: async (newInvoice) => {
     try {
-      const [results] = await db.query(queries.createNewInvoice, [accountId]); 
+      const [results] = await db.query(
+        queries.createNewInvoice, 
+        [
+          newInvoice.account_id, 
+          newInvoice.dos, 
+          newInvoice.invoice_status, 
+          newInvoice.main_member_id,
+          newInvoice.patient_id,
+          newInvoice.ref_client_id,
+          newInvoice.file_nr
+        ]
+      );
       return results;
     } catch (err) {
-      console.error('Error creating new invoice:', err);
-      throw new Error('Error creating new invoice');
+      console.error("Error creating new invoice:", err);
+      throw new Error("Error creating new invoice");
     }
   },
 

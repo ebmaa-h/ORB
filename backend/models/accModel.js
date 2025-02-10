@@ -79,7 +79,7 @@ const Account = {
       ]);
 
       return {
-        account,
+        // account,
         member: {
           ...memberResults[0],
           addresses: memberAddresses[0],

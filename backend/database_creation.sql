@@ -231,13 +231,16 @@ CREATE TABLE invoices (
     status ENUM('Processing', 'Billed', 'Archived') DEFAULT 'Processing',
     main_member_id INT NULL,
     patient_id INT NULL,
+    ref_client_id INT NULL,
+    file_nr VARCHAR(255) NULL,
     balance DECIMAL(10, 2) DEFAULT 0.00,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     FOREIGN KEY (account_id) REFERENCES accounts(account_id) ON DELETE SET NULL,
     FOREIGN KEY (profile_id) REFERENCES profiles(profile_id) ON DELETE SET NULL,
     FOREIGN KEY (main_member_id) REFERENCES person_records(record_id) ON DELETE SET NULL,
-    FOREIGN KEY (patient_id) REFERENCES person_records(record_id) ON DELETE SET NULL
+    FOREIGN KEY (patient_id) REFERENCES person_records(record_id) ON DELETE SET NULL,
+    FOREIGN KEY (ref_client_id) REFERENCES ref_clients(ref_client_id) ON DELETE SET NULL
 );
 
 
