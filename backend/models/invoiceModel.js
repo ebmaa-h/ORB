@@ -34,6 +34,7 @@ const Invoice = {
       // Extract actual invoice data, format names etc.
       const formattedResults = results.map((invoice) => ({
         invoice_id: invoice.invoice_id,
+        file_nr: invoice.file_nr,
         patient_full: `${invoice.patient_title} ${invoice.patient_first} ${invoice.patient_last}`,
         patient_id: invoice.patient_id_nr,
         member_full: `${invoice.member_title} ${invoice.member_first} ${invoice.member_last}`,
@@ -123,6 +124,26 @@ const Invoice = {
           newInvoice.patient_id,
           newInvoice.ref_client_id,
           newInvoice.file_nr
+        ]
+      );
+      return results;
+    } catch (err) {
+      console.error("Error creating new invoice:", err);
+      throw new Error("Error creating new invoice");
+    }
+  },
+  updateInvoice: async (updatedInvoice) => {
+    console.log('updating....')
+    console.log('updatedInvoice', updatedInvoice)
+    try {
+      const [results] = await db.query(
+        queries.updateInvoice, 
+        [
+          updatedInvoice.date_of_service,
+          updatedInvoice.status,
+          updatedInvoice.ref_client_id,
+          updatedInvoice.file_nr,
+          updatedInvoice.invoice_id
         ]
       );
       return results;

@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
 import ENDPOINTS from '../../config/apiEndpoints';
 import axios from 'axios';
 import { BackButton, InputField } from '../../components/index';
@@ -7,6 +7,7 @@ import { BackButton, InputField } from '../../components/index';
 export default function NewInvoice() {
   const { accountId } = useParams();
   const [invoice, setInvoice] = useState({});
+  const navigate = useNavigate();
 
   const [patient, setPatient] = useState({});
   const [member, setMember] = useState({});
@@ -22,7 +23,7 @@ export default function NewInvoice() {
           withCredentials: true,
         });
         console.log('response',response)
-        const { member, patient, client, refClient, medical, account } = response.data.account;
+        const { member, patient, client, refClient, medical } = response.data.account;
         
         setClient(client || []);
         setRefClient(refClient || []);
@@ -84,6 +85,7 @@ export default function NewInvoice() {
       });
 
       alert("Invoice Created Successfully!");
+      navigate(-1);
       console.log("New Invoice:", response.message);
     } catch (error) {
       console.error("Error creating invoice:", error);

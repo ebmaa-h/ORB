@@ -42,19 +42,21 @@ export default function Invoice() {
     }
   }, [invoiceId]);
 
-  const handleChange = (e) => {
-    const { id, value } = e.target;
-    setInvoice((prev) => ({
-      ...prev,
-      [id]: value,
-    }));
-  };
-
   const handleSave = async () => {
+
+    const updatedInvoice = {
+      invoice_id: invoiceId,
+      file_nr: invoice.file_nr,
+      date_of_service: invoice.date_of_service,
+      status: invoice.status,
+      ref_client_id: invoice.ref_client_id,
+    };
+
     try {
-      await axios.put(`${ENDPOINTS.invoices}/${invoiceId}`, invoice, {
+      await axios.post(ENDPOINTS.updateInvoice, updatedInvoice, {
         withCredentials: true,
       });
+      alert("Invoice Updated Successfully!");
       navigate(-1);
     } catch (error) {
       console.error('Error saving invoice details:', error);
@@ -124,12 +126,39 @@ export default function Invoice() {
           </div>
           <div className="container-row justify-between items-center">
             <div className='flex flex-row gap-4'>
-              <InputField label="Procedure Date" value={invoice.date_of_service} id="procedure_date" onChange={handleChange} type='date' />
-              <p >Invoice Balance: {invoice.invoice_balance}</p>
+              <InputField label="Procedure Date" 
+                value={invoice.date_of_service} 
+                id="procedure_date" 
+                onChange={(e) =>
+                  setInvoice((prev) => ({
+                    ...prev,
+                    date_of_service: e.target.value,
+                  }))
+                }
+                type='date' 
+              />
+              <InputField 
+                label="File Nr"
+                value={invoice.file_nr} 
+                id="file_nr" 
+                onChange={(e) =>
+                  setInvoice((prev) => ({
+                    ...prev,
+                    file_nr: e.target.value,
+                  }))
+                }
+              />
             </div>
             <div className='flex flex-row gap-4'>
               <select className="border rounded border-gray-blue-100 px-2 hover:border-ebmaa-purple transition duration-300 cursor-pointer"
-                value={invoice.refClientId || ""} onChange={(e) => setInvoice(prev => ({ ...prev, refClientId: e.target.value }))}>
+                value={invoice.ref_client_id || ""} 
+                onChange={(e) =>
+                  setInvoice((prev) => ({
+                    ...prev,
+                    ref_client_id: e.target.value,
+                  }))
+                }
+              >
                 <option value="" disabled>Select Ref Doctor</option>
                 {refClient?.map((client, index) => (
                   <option value={client.ref_client_id} key={index}>Dr {client.first} {client.last}</option>
@@ -137,7 +166,14 @@ export default function Invoice() {
               </select>
               <label className='flex items-center'>Status:</label>
               <select className="border rounded border-gray-blue-100 px-2 hover:border-ebmaa-purple transition duration-300 cursor-pointer"
-                value={invoice.status || ""} onChange={(e) => setInvoice(prev => ({ ...prev, status: e.target.value }))}>
+                value={invoice.status || ""} 
+                onChange={(e) =>
+                  setInvoice((prev) => ({
+                    ...prev,
+                    status: e.target.value,
+                  }))
+                }
+              >
                 <option value="" disabled>Select Status</option>
                 <option value="Processing">Processing</option>
                 <option value="Billed">Billed</option>

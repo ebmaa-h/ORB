@@ -76,7 +76,7 @@ export default function AccountDetails() {
               <h3 className=" uppercase font-bold mb-4">GUARANTOR</h3>
               <Table
                 data={Array.isArray(member) ? member : [member]} 
-                columns={['Record ID', 'Name', 'Date of Birth', 'Gender', 'Depedent Nr']}
+                columns={['Record ID', 'Name', 'ID', 'Dependent Nr']}
                 linkPrefix="records" 
               />
             </div>
@@ -85,7 +85,7 @@ export default function AccountDetails() {
               <h3 className=" uppercase font-bold mb-4">Patient</h3>
               <Table
                 data={Array.isArray(patient) ? patient : [patient]} 
-                columns={['Record ID', 'Name', 'Date of Birth', 'Gender', 'Dependent Nr']}
+                columns={['Record ID', 'Name', 'ID', 'Dependent Nr']}
                 linkPrefix="records" 
               />
             </div>
@@ -101,7 +101,7 @@ export default function AccountDetails() {
             {/* {console.log("DATA FOR TABLE ", filteredInvoices)} */}
             <Table
               data={filteredInvoices}
-              columns={['Invoice ID','Patient', 'Patient ID', 'Main Member', 'Guarantor ID', 'Balance', 'Date of Service', 'Status']}
+              columns={['Invoice ID','File Nr','Patient', 'Patient ID', 'Main Member', 'Guarantor ID', 'Balance', 'Date of Service', 'Status']}
               linkPrefix="invoices"
               idField="invoice_id"
             />

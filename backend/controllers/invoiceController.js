@@ -21,6 +21,7 @@ const invoiceController = {
     }
   },
 
+
   getInvoicesByClient: async (req, res) => {
     const clientId = req.params.clientId;
 
@@ -74,7 +75,7 @@ const invoiceController = {
 
   createNewInvoice: async (req, res) => {
     const newInvoice = req.body;
-    console.log("invoice", newInvoice)
+    console.log("newInvoice", newInvoice)
     // Account id for invoice to be related to
     if (!newInvoice.account_id) {
       return res.status(400).json({ message: 'Account ID is required' });
@@ -96,6 +97,28 @@ const invoiceController = {
     }
   },
 
+  updateInvoice: async (req, res) => {
+    const updatedInvoice = req.body;
+
+    // Account id for invoice to be related to
+    if (!updatedInvoice.invoice_id) {
+      return res.status(400).json({ message: 'Invoice ID is required' });
+    }
+    try {
+      const response = await Invoice.updateInvoice(updatedInvoice);
+
+      if (!response) {
+        return res.status(404).json({ message: 'Invoice not updated.' });
+      }
+
+      return res.status(201).json({
+        message: response,
+      });
+    } catch (err) {
+      console.error('Error updating invoice:', err);
+      return res.status(500).json({ message: 'Internal server error', error: err });
+    }
+  },
 };
 
 module.exports = invoiceController;

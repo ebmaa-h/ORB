@@ -123,6 +123,18 @@ FROM person_emails pe
 WHERE pe.record_id = ?;
 `;
 
+const partialRecord = `
+  SELECT 
+    pr.record_id,
+    CONCAT(pr.title, ' ', pr.first, ' ', pr.last) AS name,
+    pr.id_nr,
+    ppm.dependent_nr
+  FROM person_records pr
+  LEFT JOIN profile_person_map ppm ON pr.record_id = ppm.record_id
+  LEFT JOIN accounts a ON ppm.profile_id = a.profile_id
+  WHERE pr.record_id = ? AND a.account_id = ?;
+`;
+
 const record = `
   SELECT 
     pr.record_id,
@@ -157,6 +169,7 @@ WHERE a.account_id = ?;
 const inv = `
 SELECT
   i.invoice_id,
+  i.file_nr,
   CONCAT(p.first, ' ', p.last) AS patient_name,
   p.id_nr AS patient_id,
   CONCAT(m.first, ' ', m.last) AS member_name,
@@ -185,4 +198,5 @@ module.exports = {
   client,
   refClient,
   medical,
+  partialRecord
 };

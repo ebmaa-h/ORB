@@ -1,6 +1,7 @@
 const allInvoices = `
 SELECT 
   i.invoice_id,
+  i.file_nr,
   i.account_id,
   DATE_FORMAT(i.date_of_service, '%Y-%m-%d') AS date_of_service,
   JSON_UNQUOTE(JSON_EXTRACT(i.patient_snapshot, '$.patient.title')) AS patient_title,
@@ -30,11 +31,28 @@ SELECT
   a.patient_id,
   DATE_FORMAT(i.date_of_service, '%Y-%m-%d') AS date_of_service,
   i.status,
-  CONCAT('R ', FORMAT(i.balance, 2)) AS invoice_balance,
+  i.file_nr,
+  i.ref_client_id,
   i.updated_at
 FROM accounts a
 LEFT JOIN invoices i on a.account_id = i.account_id
 WHERE i.invoice_id = ?;
+`;
+
+// Full Invoice
+// const invoice = `
+// select * from invoices where invoice_id = ?;
+// `;
+
+const updateInvoice = `
+UPDATE invoices
+SET
+    date_of_service = ?, 
+    status = ?, 
+    ref_client_id = ?, 
+    file_nr = ?,
+    updated_at = NOW()
+WHERE invoice_id = ?;
 `;
 
 const getAccountId = `
@@ -51,6 +69,7 @@ WHERE i.invoice_id = ?;
 const clientInvoices = `
 SELECT 
   i.invoice_id,
+  i.file_nr,
   i.account_id,
   DATE_FORMAT(i.date_of_service, '%Y-%m-%d') AS date_of_service,
 
@@ -235,5 +254,6 @@ module.exports = {
   contactNumbers,
   emails,
   record,
-  medical
+  medical,
+  updateInvoice,
 };

@@ -27,8 +27,8 @@ const Account = {
 
       const account = accountResults[0];
       const [memberResults, patientResults, invoiceResults] = await Promise.all([
-        db.query(queries.record, [account.main_member_id, accountId]),
-        db.query(queries.record, [account.patient_id, accountId]),
+        db.query(queries.partialRecord, [account.main_member_id, accountId]),
+        db.query(queries.partialRecord, [account.patient_id, accountId]),
         db.query(queries.inv, [accountId]),
       ]);
 
