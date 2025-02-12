@@ -53,7 +53,7 @@ export default function Invoice() {
     };
 
     try {
-      await axios.post(ENDPOINTS.updateInvoice, updatedInvoice, {
+      await axios.patch(ENDPOINTS.updateInvoice, updatedInvoice, {
         withCredentials: true,
       });
       alert("Invoice Updated Successfully!");

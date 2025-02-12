@@ -61,7 +61,6 @@ export default function AccountDetails() {
                 View Profile
               </p> */}
 
-
             <p><strong>Account ID:</strong> {account.account_id}</p>
             <p><strong>Medical Aid Nr:</strong> {account.medical_aid_nr}</p>
             <p><strong>Medical Aid:</strong> {account.medical_aid_name} - {account.plan_name}</p>
@@ -78,6 +77,7 @@ export default function AccountDetails() {
                 data={Array.isArray(member) ? member : [member]} 
                 columns={['Record ID', 'Name', 'ID', 'Dependent Nr']}
                 linkPrefix="records" 
+                idField="record_id"
               />
             </div>
             {/* Patient Table */}
@@ -87,6 +87,7 @@ export default function AccountDetails() {
                 data={Array.isArray(patient) ? patient : [patient]} 
                 columns={['Record ID', 'Name', 'ID', 'Dependent Nr']}
                 linkPrefix="records" 
+                idField="record_id"
               />
             </div>
           </div>

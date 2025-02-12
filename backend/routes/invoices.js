@@ -10,6 +10,6 @@ router.get('/clients/:clientId', invoiceController.getInvoicesByClient);
 
 router.post('/new/:accountId', invoiceController.createNewInvoice);
 router.post('/new', invoiceController.createNewInvoice);
-router.post('/update', invoiceController.updateInvoice);
+router.patch('/update', invoiceController.updateInvoice);
 
 module.exports = router;

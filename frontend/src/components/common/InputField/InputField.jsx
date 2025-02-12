@@ -2,7 +2,8 @@
 
 export default function InputField({ classes, type, value, label, id, onChange, readOnly = false }) {
   return (
-    <div className="flex items-end gap-4">
+    <>
+    {/*     <div className="flex items-end gap-4"> */}
       {label && (
         <label htmlFor={id || label.toLowerCase()} className=" whitespace-nowrap">
           {label}:
@@ -17,6 +18,6 @@ export default function InputField({ classes, type, value, label, id, onChange, 
         className={`${classes || ''} border-gray-300 border-b focus:outline-none focus:ring-0 focus:border-b-1 w-full`}
 
       />
-    </div>
+    </>
   );
 }
