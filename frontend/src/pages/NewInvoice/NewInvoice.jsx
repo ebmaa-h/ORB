@@ -160,7 +160,7 @@ export default function NewInvoice() {
                 }
               />
               <InputField 
-                label="File Nr"
+                label="Auth Nr"
                 value={invoice.auth_nr} 
                 id="auth_nr" 
                 onChange={(e) =>
