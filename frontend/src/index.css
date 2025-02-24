@@ -20,8 +20,6 @@
   .container-row {
     @apply flex flex-row gap-6 p-4 my-4 bg-white shadow rounded w-full;
   }
-  
-
 }
  /* text-sm text-center min-w-[100px] rounded hover:border hover:border-ebmaa-purple */
 
