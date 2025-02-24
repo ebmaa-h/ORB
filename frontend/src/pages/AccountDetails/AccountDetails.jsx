@@ -65,7 +65,6 @@ export default function AccountDetails() {
             <p><strong>Medical Aid Nr:</strong> {account.medical_aid_nr}</p>
             <p><strong>Medical Aid:</strong> {account.medical_aid_name} - {account.plan_name}</p>
             <p><strong>Client:</strong> {account.client_name}</p>
-            <p><strong>Auth:</strong> {account.authorization_nr}</p>
             <p><strong>Balance:</strong> 0.00</p>
           </div>
 

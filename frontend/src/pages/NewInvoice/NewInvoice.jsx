@@ -74,6 +74,7 @@ export default function NewInvoice() {
       main_member_id: member[0]?.record_id,
       patient_id: patient[0]?.record_id,
       file_nr: invoice.file_nr,
+      auth_nr: invoice.auth_nr,
       dos: invoice.dos,
       invoice_status: invoice.invoice_status,
       ref_client_id: invoice.ref_client_id,
@@ -155,6 +156,17 @@ export default function NewInvoice() {
                   setInvoice((prev) => ({
                     ...prev,
                     file_nr: e.target.value,
+                  }))
+                }
+              />
+              <InputField 
+                label="File Nr"
+                value={invoice.auth_nr} 
+                id="auth_nr" 
+                onChange={(e) =>
+                  setInvoice((prev) => ({
+                    ...prev,
+                    auth_nr: e.target.value,
                   }))
                 }
               />

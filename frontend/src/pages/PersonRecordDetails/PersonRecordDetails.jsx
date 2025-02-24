@@ -24,14 +24,15 @@ export default function PersonRecordDetails() {
           withCredentials: true,
         });
         const { record, addresses, accounts, invoices, contactNumbers, emails } = response.data.record;
-        console.log('addresses', addresses)
+        // console.log('addresses', addresses)
+        
         setRecord(record || {});
         setAddresses(addresses || []);
         setContactNumbers(contactNumbers || []);
         setEmails(emails || []);
         setAccounts(accounts || []);
         setInvoices(invoices || []);
-        setOriginalRecord(response.data.record); // Save original data for comparison
+        setOriginalRecord(response.data.record);
 
       } catch (error) {
         console.error('Error fetching record details:', error);
@@ -73,8 +74,7 @@ export default function PersonRecordDetails() {
   };
 
   const addNewContact = () => {
-    setContactNumbers((prev) => [
-      ...prev,
+    setContactNumbers((prev) => [...prev,
       { num_type: 'Other', num: '' },
     ]);
   };
@@ -146,6 +146,7 @@ export default function PersonRecordDetails() {
   
   const handleUpdateRecord = async () => {
 
+    // Limit to only updated fields
     const updatedData = getUpdatedFields();
     if (Object.keys(updatedData).length === 0) {
       alert('No changes detected.');

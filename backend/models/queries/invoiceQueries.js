@@ -15,6 +15,7 @@ SELECT
   CONCAT('R ', FORMAT(i.balance, 2)) AS invoice_balance,
   DATE_FORMAT(i.updated_at, '%Y-%m-%d') AS updated_date,
   i.status,
+  i.auth_nr,
   CONCAT('Dr ', LEFT(d.first, 1), ' ', d.last) AS client_name,
   d.practice_nr AS client_practice_number
 FROM invoices i
@@ -32,6 +33,7 @@ SELECT
   DATE_FORMAT(i.date_of_service, '%Y-%m-%d') AS date_of_service,
   i.status,
   i.file_nr,
+  i.auth_nr,
   i.ref_client_id,
   i.updated_at
 FROM accounts a
@@ -51,6 +53,7 @@ SET
     status = ?, 
     ref_client_id = ?, 
     file_nr = ?,
+    auth_nr = ?,
     updated_at = NOW()
 WHERE invoice_id = ?;
 `;
@@ -70,6 +73,7 @@ const clientInvoices = `
 SELECT 
   i.invoice_id,
   i.file_nr,
+  i.auth_nr,
   i.account_id,
   DATE_FORMAT(i.date_of_service, '%Y-%m-%d') AS date_of_service,
 
@@ -104,6 +108,7 @@ SELECT
   DATE_FORMAT(i.date_of_service, '%Y-%m-%d') AS date_of_service,
   CONCAT('R ', FORMAT(i.balance, 2)) AS invoice_balance,
   i.status,
+  i.auth_nr,
   DATE_FORMAT(i.updated_at, '%Y-%m-%d') AS updated_date
 FROM invoices i
 WHERE i.invoice_id = ?;
@@ -149,9 +154,9 @@ WHERE i.invoice_id = ?;
 
 
 const createNewInvoice = `
-INSERT INTO 
-  invoices (account_id, date_of_service, status, main_member_id, patient_id, ref_client_id, file_nr)
-  VALUES (?, ?, ?, ?, ?, ?, ?);
+INSERT INTO invoices 
+  (account_id, date_of_service, status, main_member_id, patient_id, ref_client_id, file_nr, auth_nr)
+VALUES (?, ?, ?, ?, ?, ?, ?, ?);
 `;
 
 // Same as accQueries

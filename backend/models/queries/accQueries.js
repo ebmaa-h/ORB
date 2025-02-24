@@ -48,7 +48,7 @@ const partialAccount = `
   SELECT
     a.account_id, a.profile_id, a.client_id, a.main_member_id, a.patient_id,
     CONCAT('Dr ', LEFT(d.first, 1), ' ', d.last) AS client_name,
-    p.authorization_nr, p.medical_aid_nr, mp.plan_name, mp.plan_code,
+    p.medical_aid_nr, mp.plan_name, mp.plan_code,
     ma.name AS medical_aid_name
   FROM accounts a
   LEFT JOIN clients d ON a.client_id = d.client_id

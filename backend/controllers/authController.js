@@ -15,11 +15,12 @@ const authController = {
         return res.status(404).json({ message: 'User not found' });
       }
   
-      const isMatch = await bcrypt.compare(password, user.password); // Await password check
-      if (!isMatch) {
-        console.log("Wrong password...");
-        return res.status(401).json({ message: 'Invalid credentials' });
-      }
+      // Remove decryption during dev process, add later, add later
+      // const isMatch = await bcrypt.compare(password, user.password);
+      // if (!isMatch) {
+      //   console.log("Wrong password...");
+      //   return res.status(401).json({ message: 'Invalid credentials' });
+      // }
   
       // Generate JWT & remove password
       const { password: _, ...userWithoutPassword } = user;
@@ -42,7 +43,9 @@ const authController = {
     const { email, password, first, last, address, tell_nr } = req.body;
   
     try {
-      const hashedPassword = await bcrypt.hash(password, 10); // Await bcrypt hash
+      // Hash the password, removed during dev, replace later
+      // const hashedPassword = await bcrypt.hash(password, 10); 
+      const hashedPassword = password;
       const userDetails = { email, password: hashedPassword, first, last, tell_nr, address };
   
       const result = await User.createUser(userDetails); // Await user creation

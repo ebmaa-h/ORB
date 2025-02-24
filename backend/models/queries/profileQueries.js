@@ -5,7 +5,6 @@ SELECT
   ma.name AS medical_aid_name,
   map.plan_name AS plan_name,
   p.medical_aid_nr,
-  p.authorization_nr,
   CONCAT('R ', FORMAT(p.balance, 2)) AS profile_balance
 FROM 
   profiles p
@@ -76,7 +75,6 @@ SELECT
   ppm.map_id,
   p.profile_id,
   p.medical_aid_nr,
-  p.authorization_nr,
   CONCAT('R ', FORMAT(p.balance, 2)) AS profile_balance,
   ma.name AS medical_aid_name,
   map.plan_name AS plan_name,

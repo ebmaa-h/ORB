@@ -11,13 +11,14 @@ export default function Nav() {
   const location = useLocation(); // Get the current path
   const navigate = useNavigate();
 
-  const accLinkClass = clientId
-    ? `link-class`
-    : `link-class hidden`;
+  // const accLinkClass = clientId
+  //   ? `link-class`
+  //   : `link-class hidden`;
 
   return (
     <div className="bg-white shadow flex justify-between items-center flex-row h-[60px]">
       <div className='flex flex-row gap-4 ml-4'>
+        <span className=''></span>
         <select
           className={`cursor-pointer border rounded border-gray-300 px-2 hover:border-ebmaa-purple transition duration-300`}
           // disabled={!!clientId}
@@ -30,7 +31,7 @@ export default function Nav() {
             }
           }}
         >
-          <option disabled={!!clientId}> {/* Disabled didnt work */}
+          <option disabled={!!clientId}>
             Select Client
           </option>
           {user.client_access.map((client, i) => (
@@ -42,30 +43,24 @@ export default function Nav() {
 
         <Link
           to={clientId ? "/accounts" : "#"}
-          className={`${accLinkClass} ${location.pathname === '/accounts' ? 'active-link' : ''}`}
-          onClick={(e) => {
-            if (!clientId) e.preventDefault();
-          }}
+          className='link-class'
+
         >
           Accounts
         </Link>
 
         <Link
           to={clientId ? "/invoices" : "#"}
-          className={`${accLinkClass} ${location.pathname === '/invoices' ? 'active-link' : ''}`}
-          onClick={(e) => {
-            if (!clientId) e.preventDefault();
-          }}
+          className='link-class'
+
         >
           Invoices
         </Link>
 
         <Link
           to={clientId ? "/client/info" : "#"}
-          className={`${accLinkClass} ${location.pathname === '/client/info' ? 'active-link' : ''}`}
-          onClick={(e) => {
-            if (!clientId) e.preventDefault();
-          }}
+          className='link-class'
+
         >
           Client Info
         </Link>
@@ -74,14 +69,14 @@ export default function Nav() {
 
         <Link
           to="/records"
-          className={`link-class ${location.pathname === '/records' ? 'active-link' : ''}`}
+          className='link-class'
         >
           Records
         </Link>
 
         <Link
           to="/profiles"
-          className={`link-class ${location.pathname === '/profiles' ? 'active-link' : ''}`}
+          className='link-class'
         >
           Profiles
         </Link>
@@ -89,14 +84,14 @@ export default function Nav() {
         <p className="text-gray-300">|</p>
         <Link
           to="/dashboard"
-          className={`link-class ${location.pathname === '/dashboard' ? 'active-link' : ''}`}
+          className='link-class'
         >
           Dashboard
         </Link>
 
         <Link
           to="/tools"
-          className={`link-class ${location.pathname === '/tools' ? 'active-link' : ''}`}
+          className='link-class'
         >
           Tools
         </Link>

@@ -149,7 +149,6 @@ CREATE TABLE profiles (
     medical_aid_id INT,
     plan_id INT,
     medical_aid_nr VARCHAR(255) UNIQUE,
-    authorization_nr VARCHAR(255),
     is_active BOOLEAN DEFAULT TRUE,
     balance DECIMAL(10, 2) DEFAULT 0.00,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
@@ -234,6 +233,7 @@ CREATE TABLE invoices (
     ref_client_id INT NULL,
     file_nr VARCHAR(255) NULL,
     balance DECIMAL(10, 2) DEFAULT 0.00,
+    auth_nr VARCHAR(255),
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     FOREIGN KEY (account_id) REFERENCES accounts(account_id) ON DELETE SET NULL,
@@ -246,18 +246,22 @@ CREATE TABLE invoices (
 
 
 -- Inserting sample data for users
--- INSERT INTO users (email, password, first, last, address, tell_nr)
--- VALUES 
--- ('user1@example.com', 'password_hash_1', 'John', 'Doe', '123 Main St', '123-456-7890'),
--- ('user2@example.com', 'password_hash_2', 'Jane', 'Smith', '456 Elm St', '987-654-3210');
+INSERT INTO users (email, password, first, last, address, tell_nr)
+VALUES 
+('Henri', 'test', 'Henri', 'Doe', '123 Main St', '123-456-7890'),
+('Andrea', 'test', 'Andrea', 'Smith', '456 Elm St', '987-654-3210'),
+('Nicolene', 'test', 'Nicolene', 'Doe', '123 Main St', '123-456-7890'),
+('Francois', 'test', 'Francois', 'Smith', '456 Elm St', '987-654-3210'),
+('Alet', 'test', 'Alet', 'Smith', '456 Elm St', '987-654-3210'),
+('Ilze', 'test', 'test', 'Smith', '456 Elm St', '987-654-3210');
 
 
 -- Inserting sample data for clients
 INSERT INTO clients (email, password, first, last, registration_nr, practice_nr, tell_nr, client_type)
 VALUES 
-('client1@email.com', 'test', 'van der Wolt', 'James', 'REG1234', '21515151', '012-222-3333', 'Surgeon'),
-('client2@email.com', 'test', 'Lievenberg', 'Alicia', 'REG5678', '21235151', '012-555-6666', 'Specialist'),
-('client3@email.com', 'test', 'Bellings', 'Sando', 'REG1234', '21775151', '012-222-3333', 'Anaesthetist');
+('client1@email.co.za', 'test', 'van der Wolt', 'James', 'REG1234', '21515151', '012-222-3333', 'Surgeon'),
+('client2@email.co.za', 'test', 'Lievenberg', 'Alicia', 'REG5678', '21235151', '012-555-6666', 'Specialist'),
+('client3@email.co.za', 'test', 'Bellings', 'Sando', 'REG1234', '21775151', '012-222-3333', 'Anaesthetist');
 
 -- Inserting sample data for medical aids
 INSERT INTO medical_aids (name)
@@ -278,13 +282,13 @@ VALUES
 (5, 'BonClassic', 'BONCLA0054');
 
 -- Inserting sample data for profiles
-INSERT INTO profiles (medical_aid_id, plan_id, medical_aid_nr, authorization_nr, is_active)
+INSERT INTO profiles (medical_aid_id, plan_id, medical_aid_nr, is_active)
 VALUES 
-(1, 1, '91672345', '701666', TRUE),
-(2, 2, '42125516', '801666', TRUE),
-(3, 3, '74577457', '901666', TRUE),
-(4, 4, 'FW515212', '1001666', TRUE),
-(3, 3, '74566457', '4684681', TRUE);
+(1, 1, '91672345', TRUE),
+(2, 2, '42125516', TRUE),
+(3, 3, '74577457', TRUE),
+(4, 4, 'FW515212', TRUE),
+(3, 3, '74566457', TRUE);
 
 -- Inserting sample data for person_records
 INSERT INTO person_records (first, last, title, date_of_birth, gender, id_nr)
@@ -407,34 +411,34 @@ VALUES
 (5, 3, 2, 3);
 
 -- Inserting sample data for invoices
-INSERT INTO invoices (account_id, profile_id, date_of_service, status, main_member_id, patient_id)
+INSERT INTO invoices (account_id, profile_id, date_of_service, status, main_member_id, patient_id, auth_nr)
 VALUES
 -- Profile 1: Thabo, Naledi, Lerato
-(1, 1, '2024-12-01', 'Processing', 1, 1),
-(2, 1, '2024-12-02', 'Processing', 1, 2),
-(3, 1, '2024-12-03', 'Processing', 1, 3),
-(4, 1, '2024-12-04', 'Processing', 1, 3),
+(1, 1, '2024-12-01', 'Processing', 1, 1, '861614'),
+(2, 1, '2024-12-02', 'Processing', 1, 2, '761614'),
+(3, 1, '2024-12-03', 'Processing', 1, 3, '661614'),
+(4, 1, '2024-12-04', 'Processing', 1, 3, '561614'),
 
 -- Profile 2: Pieter, Annelize, Jaco, Saki
-(5, 2, '2024-12-01', 'Processing', 4, 4),
-(6, 2, '2024-12-02', 'Processing', 4, 5),
-(7, 2, '2024-12-03', 'Processing', 4, 6),
-(8, 2, '2024-12-04', 'Processing', 4, 7),
+(5, 2, '2024-12-01', 'Processing', 4, 4, '461614'),
+(6, 2, '2024-12-02', 'Processing', 4, 5, '361614'),
+(7, 2, '2024-12-03', 'Processing', 4, 6, '261614'),
+(8, 2, '2024-12-04', 'Processing', 4, 7, '161614'),
 
 -- Profile 3: Jo-Anne, John, Emily
-(9, 3, '2024-12-01', 'Processing', 8, 8),
-(10, 3, '2024-12-02', 'Processing', 8, 9),
-(11, 3, '2024-12-03', 'Processing', 8, 10),
+(9, 3, '2024-12-01', 'Processing', 8, 8, '161614'),
+(10, 3, '2024-12-02', 'Processing', 8, 9, '261614'),
+(11, 3, '2024-12-03', 'Processing', 8, 10, '361614'),
 
 -- Profile 4: Rajesh, Priya, Kavita, Sanjay
-(12, 4, '2024-12-01', 'Processing', 11, 11),
-(13, 4, '2024-12-02', 'Processing', 11, 12),
-(14, 4, '2024-12-03', 'Processing', 11, 13),
-(15, 4, '2024-12-04', 'Processing', 11, 14),
+(12, 4, '2024-12-01', 'Processing', 11, 11, '461614'),
+(13, 4, '2024-12-02', 'Processing', 11, 12, '561614'),
+(14, 4, '2024-12-03', 'Processing', 11, 13, '661614'),
+(15, 4, '2024-12-04', 'Processing', 11, 14, '761614'),
 
 -- Additional cases
-(16, 5, '2024-12-02', 'Processing', 2, 2),
-(17, 5, '2024-12-03', 'Processing', 2, 3);
+(16, 5, '2024-12-02', 'Processing', 2, 2, '568486673'),
+(17, 5, '2024-12-03', 'Processing', 2, 3, '568486673');
 
 
 -- Inserting sample data for features

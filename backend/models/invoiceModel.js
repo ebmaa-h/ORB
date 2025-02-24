@@ -35,6 +35,7 @@ const Invoice = {
       const formattedResults = results.map((invoice) => ({
         invoice_id: invoice.invoice_id,
         file_nr: invoice.file_nr,
+        auth_nr: invoice.auth_nr,
         patient_full: `${invoice.patient_title} ${invoice.patient_first} ${invoice.patient_last}`,
         patient_id: invoice.patient_id_nr,
         member_full: `${invoice.member_title} ${invoice.member_first} ${invoice.member_last}`,
@@ -117,13 +118,14 @@ const Invoice = {
       const [results] = await db.query(
         queries.createNewInvoice, 
         [
-          newInvoice.account_id, 
-          newInvoice.dos, 
-          newInvoice.invoice_status, 
+          newInvoice.account_id,
+          newInvoice.dos,
+          newInvoice.invoice_status,
           newInvoice.main_member_id,
           newInvoice.patient_id,
           newInvoice.ref_client_id,
-          newInvoice.file_nr
+          newInvoice.file_nr,
+          newInvoice.auth_nr    
         ]
       );
       return results;
@@ -143,6 +145,7 @@ const Invoice = {
           updatedInvoice.status,
           updatedInvoice.ref_client_id,
           updatedInvoice.file_nr,
+          updatedInvoice.auth_nr,
           updatedInvoice.invoice_id
         ]
       );

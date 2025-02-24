@@ -57,7 +57,6 @@ export default function ProfileDetails() {
             <p><strong>Profile ID:</strong> {profile.profile_id}</p>
             <p><strong>Medical Aid Nr:</strong> {profile.medical_aid_nr}</p>
             <p><strong>Medical Aid:</strong> {profile.medical_aid_name} - {profile.plan_name}</p>
-            <p><strong>Auth:</strong> {profile.authorization_nr}</p>
             <p><strong>Main Member:</strong> {profile.main_member_name}</p>
             <p><strong>Dependent Nr:</strong> {profile.main_member_dependent_nr}</p>
             <p><strong>Balance:</strong> {profile.profile_balance}</p>

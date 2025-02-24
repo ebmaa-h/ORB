@@ -47,6 +47,7 @@ export default function Invoice() {
     const updatedInvoice = {
       invoice_id: invoiceId,
       file_nr: invoice.file_nr,
+      auth_nr: invoice.auth_nr,
       date_of_service: invoice.date_of_service,
       status: invoice.status,
       ref_client_id: invoice.ref_client_id,
@@ -145,6 +146,17 @@ export default function Invoice() {
                   setInvoice((prev) => ({
                     ...prev,
                     file_nr: e.target.value,
+                  }))
+                }
+              />
+              <InputField 
+                label="Auth Nr"
+                value={invoice.auth_nr} 
+                id="auth_nr" 
+                onChange={(e) =>
+                  setInvoice((prev) => ({
+                    ...prev,
+                    auth_nr: e.target.value,
                   }))
                 }
               />
