@@ -152,12 +152,13 @@ export default function PersonRecordDetails() {
       alert('No changes detected.');
       return;
     }
+
     console.log('Submitting updated data:', updatedData);
 
 // Next to do.
 
     // try {
-    //   const response = await axios.patch(ENDPOINTS.newInvoice, newInvoice, {
+    //   const response = await axios.patch(ENDPOINTS.updatePerson, updatedData, {
     //     withCredentials: true,
     //   });
 
@@ -232,7 +233,6 @@ export default function PersonRecordDetails() {
                 </button>
               </div>
 
-
               {/* Emails */}
               <div className="grid grid-cols-1 gap-4">
                 {emails.map((email) => (
@@ -251,7 +251,6 @@ export default function PersonRecordDetails() {
                   ➕ Add Email
                 </button>
               </div>
-
 
               {/* Addresses */}
               <div className="flex flex-col gap-4">
@@ -283,8 +282,8 @@ export default function PersonRecordDetails() {
               <BackButton />
               <button type="submit" onClick={handleUpdateRecord} className="btn-class w-[100px]">Update</button>
             </div>
-          </div>
 
+          </div>
           {/* Accounts & Invoices */}
           <div className="container-col">
               <h3 className="uppercase font-bold">Accounts</h3>

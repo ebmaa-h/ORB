@@ -19,7 +19,7 @@ const cookieParser = require('cookie-parser');
 app.use(cookieParser());
 
 app.use(cors({
-  origin: ['http://localhost:5173', 'http://167.99.196.172'], // Local and dev server
+  origin: ['http://localhost:5173', 'http://167.99.196.172', 'http://orb.ebmaa.co.za'], // Local dev and production
   methods: ['GET', 'POST', 'OPTIONS', 'PATCH', 'PUT'],
   credentials: true,
 }));
