@@ -2,12 +2,14 @@ import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import ENDPOINTS from '../../config/apiEndpoints';
 import axios from 'axios';
-import { InputField, InvoiceDetails } from '../../components';
+import { InputField } from '../../components';
 import { BackButton } from '../../components/index';
+import { useOutletContext } from "react-router-dom";
 
 export default function Invoice() {
   const { invoiceId } = useParams();
   const navigate = useNavigate();
+  const { triggerToast } = useOutletContext(); // Access the global toast trigger
 
   const [invoice, setInvoice] = useState({});
   const [patient, setPatient] = useState({});
@@ -57,10 +59,11 @@ export default function Invoice() {
       await axios.patch(ENDPOINTS.updateInvoice, updatedInvoice, {
         withCredentials: true,
       });
-      alert("Invoice Updated Successfully!");
+      triggerToast(true, "Invoice Updated Successfully!");
       navigate(-1);
     } catch (error) {
       console.error('Error saving invoice details:', error);
+      triggerToast(false, "Failed to update invoice."); // Error toast
     }
   };
 

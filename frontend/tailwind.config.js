@@ -30,7 +30,8 @@ export default {
       "gray-200": "#f2f2f2",
       "gray-100": "#f7f7f7",
       "gray-blue-100": "#e9edf0",
-      
+      "green-500": "#4BB543",
+      "red-500": "#FC100D",
       "gray-dark": "#273444",
       'ebmaa-blue': '#59C4CE',
       'ebmaa-green': '#BDD331',

@@ -12,7 +12,7 @@ createRoot(document.getElementById('root')).render(
     <UserProvider>
       <ClientProvider>
         <NavigationProvider>
-        <App />
+          <App />
         </NavigationProvider>
       </ClientProvider>
     </UserProvider>
