@@ -3,7 +3,7 @@ import { useContext } from 'react';
 import { BrowserRouter as Router, Route, Routes, Navigate, useLocation } from 'react-router-dom';
 import { Logout } from './components/index'
 import { UserContext } from './context/UserContext';
-import { Login, Dashboard, ProtectedLayout, Tools, TimeSheet, Profiles, ProfileDetails, AccountDetails, Invoice, Accounts, Invoices, PersonRecords, PersonRecordDetails, ClientInfo, NewInvoice } from './pages/index';
+import { Login, Dashboard, ProtectedLayout, Tools, TimeSheet, Profiles, ProfileDetails, AccountDetails, InvoiceDetails, ClientAccounts, ClientInvoices, PersonRecords, PersonRecordDetails, ClientInfo, NewInvoice } from './pages/index';
 
 function App() {
   const { user } = useContext(UserContext);
@@ -28,11 +28,11 @@ function App() {
 
           <Route path="/client/info" element={<ClientInfo />} />
 
-          <Route path="/accounts" element={<Accounts />} />
+          <Route path="/accounts" element={<ClientAccounts />} />
           <Route path="/accounts/:accountId" element={<AccountDetails />} />
 
-          <Route path="/invoices" element={<Invoices />} />
-          <Route path="/invoices/:invoiceId" element={<Invoice />} />
+          <Route path="/invoices" element={<ClientInvoices />} />
+          <Route path="/invoices/:invoiceId" element={<InvoiceDetails />} />
 
           <Route path="/invoices/new/:accountId" element={<NewInvoice />} />
 

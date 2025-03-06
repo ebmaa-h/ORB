@@ -5,7 +5,7 @@ import { useContext } from 'react';
 import { ClientContext } from '../../context/ClientContext'; 
 import { SearchBar, Table } from '../../components';
 
-export default function Accounts() {
+export default function ClientAccounts() {
   const [accounts, setAccounts] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
   const { clientId } = useContext(ClientContext); 

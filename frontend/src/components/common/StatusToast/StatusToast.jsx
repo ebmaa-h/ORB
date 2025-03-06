@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import { useEffect } from 'react';
 
 const StatusToast = ({ isSuccess, message, show, onClose }) => {
   useEffect(() => {

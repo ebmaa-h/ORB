@@ -6,7 +6,7 @@ import { InputField } from '../../components';
 import { BackButton } from '../../components/index';
 import { useOutletContext } from "react-router-dom";
 
-export default function Invoice() {
+export default function InvoiceDetails() {
   const { invoiceId } = useParams();
   const navigate = useNavigate();
   const { triggerToast } = useOutletContext(); // Access the global toast trigger
