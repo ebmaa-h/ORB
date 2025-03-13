@@ -4,7 +4,6 @@ import ENDPOINTS from '../config/apiEndpoints';
 
 export const UserContext = createContext();
 
-// eslint-disable-next-line react/prop-types
 export const UserProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);

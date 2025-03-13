@@ -2,7 +2,6 @@ import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import Logout from '../Logout/Logout';
 
-// eslint-disable-next-line react/prop-types
 function SideNav({ setNavWidth }) {
   const [isExpanded, setIsExpanded] = useState(false);
 

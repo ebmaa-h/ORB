@@ -1,10 +1,9 @@
 import { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import axios from 'axios';
-import { SearchBar, Table } from '../../components';
+import { SearchBar, Table, BackButton, Notes } from '../../components';
 import ENDPOINTS from '../../config/apiEndpoints';
 import { useNavigate } from 'react-router-dom';
-import { BackButton } from '../../components/index';
 
 export default function AccountDetails() {
   const { accountId } = useParams(); 
@@ -93,7 +92,7 @@ export default function AccountDetails() {
 
           {/* Invoices Table with Search */}
           <div className="container-col">
-            <h3 className=" uppercase font-bold">Invoices</h3>
+            <h3 className="uppercase font-bold">Invoices</h3>
             <SearchBar
               searchTerm={invoiceSearchTerm}
               setSearchTerm={setInvoiceSearchTerm}
@@ -118,6 +117,13 @@ export default function AccountDetails() {
 
             </div>
           </div>
+
+          {/* Call should include parameters  */}
+          <Notes 
+            tableName='accounts'
+            tableId={account.account_id}
+            
+          />
         </>
       ) : (
         <div className='container-col'>

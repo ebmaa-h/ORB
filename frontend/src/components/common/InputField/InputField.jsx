@@ -1,4 +1,3 @@
-/* eslint-disable react/prop-types */
 
 export default function InputField({ classes, type, value, label, id, onChange, readOnly = false }) {
   return (

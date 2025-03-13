@@ -3,7 +3,6 @@ import { useLocation } from 'react-router-dom';
 
 export const NavigationContext = createContext();
 
-// eslint-disable-next-line react/prop-types
 export const NavigationProvider = ({ children }) => {
   const [previousPath, setPreviousPath] = useState(null);
   const [currentPath, setCurrentPath] = useState(null);

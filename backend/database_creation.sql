@@ -58,12 +58,10 @@ CREATE TABLE user_feature_access (
 
 -- client_features inc or client_feature_access
 
-
--- Create logs table
 CREATE TABLE logs (
     log_id INT AUTO_INCREMENT PRIMARY KEY,
     user_id INT,
-    action VARCHAR(255),
+    action ENUM('create', 'update', 'delete') NOT NULL,
     old_value JSON,
     new_value JSON,
     target_table VARCHAR(255),
@@ -72,7 +70,17 @@ CREATE TABLE logs (
     FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE SET NULL
 );
 
--- Create clients_logs table
+
+CREATE TABLE notes (
+    note_id INT AUTO_INCREMENT PRIMARY KEY,
+    user_id INT,
+    note TEXT,
+    target_table VARCHAR(255),
+    target_id INT,
+    timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE SET NULL
+);
+
 CREATE TABLE clients_logs (
     log_id INT AUTO_INCREMENT PRIMARY KEY,
     client_id INT,
@@ -85,7 +93,6 @@ CREATE TABLE clients_logs (
     FOREIGN KEY (client_id) REFERENCES clients(client_id) ON DELETE SET NULL
 );
 
--- Create ref_clients_list table
 CREATE TABLE ref_clients_list (
     ref_client_list_id INT AUTO_INCREMENT PRIMARY KEY,
     first VARCHAR(255),
@@ -93,7 +100,6 @@ CREATE TABLE ref_clients_list (
     practice_nr VARCHAR(255) UNIQUE
 );
 
--- Create ref_clients table
 CREATE TABLE ref_clients (
     ref_client_id INT AUTO_INCREMENT PRIMARY KEY,
     ref_client_list_id INT,
@@ -102,14 +108,12 @@ CREATE TABLE ref_clients (
     FOREIGN KEY (ref_client_list_id) REFERENCES ref_clients_list(ref_client_list_id) ON DELETE SET NULL
 );
 
--- Create service_centers_list table
 CREATE TABLE service_centers_list (
     service_center_list_id INT AUTO_INCREMENT PRIMARY KEY,
     service_center_name VARCHAR(255),
     service_center_type ENUM('Hospital', 'Rooms') DEFAULT 'Hospital'
 );
 
--- Create service_centers table
 CREATE TABLE service_centers (
     service_center_id INT AUTO_INCREMENT PRIMARY KEY,
     service_center_list_id INT,
@@ -118,7 +122,6 @@ CREATE TABLE service_centers (
     FOREIGN KEY (service_center_list_id) REFERENCES service_centers_list(service_center_list_id) ON DELETE SET NULL
 );
 
--- Create employers table
 CREATE TABLE employers (
     employer_id INT AUTO_INCREMENT PRIMARY KEY,
     employer_name VARCHAR(255),
@@ -128,13 +131,11 @@ CREATE TABLE employers (
     emp_reg_nr VARCHAR(255) UNIQUE
 );
 
--- Create medical_aids table
 CREATE TABLE medical_aids (
     medical_aid_id INT AUTO_INCREMENT PRIMARY KEY,
     name VARCHAR(255) UNIQUE
 );
 
--- Create medical_aid_plans table
 CREATE TABLE medical_aid_plans (
     plan_id INT AUTO_INCREMENT PRIMARY KEY,
     medical_aid_id INT,
@@ -143,7 +144,6 @@ CREATE TABLE medical_aid_plans (
     FOREIGN KEY (medical_aid_id) REFERENCES medical_aids(medical_aid_id) ON DELETE SET NULL
 );
 
--- Create profiles table
 CREATE TABLE profiles (
     profile_id INT AUTO_INCREMENT PRIMARY KEY,
     medical_aid_id INT,
@@ -157,7 +157,6 @@ CREATE TABLE profiles (
     FOREIGN KEY (plan_id) REFERENCES medical_aid_plans(plan_id) ON DELETE SET NULL
 );
 
--- Create person_records table
 CREATE TABLE person_records (
     record_id INT AUTO_INCREMENT PRIMARY KEY,
     first VARCHAR(255),

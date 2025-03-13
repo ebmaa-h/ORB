@@ -1,4 +1,3 @@
-/* eslint-disable react/prop-types */
 import { BackButton, InputField } from '../index';
 
 export default function InvoiceDetails({ invoice, patient, member, client, refClient, medical, setInvoice, patientAddress, patientContact, patientEmail, memberAddress, memberContact, memberEmail }) {
