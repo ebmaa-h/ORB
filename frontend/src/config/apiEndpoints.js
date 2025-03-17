@@ -31,6 +31,8 @@ const ENDPOINTS = {
   
   records : `${API_URL}/records`, // All records
 
+  fetchNotes: (tableName, id) => `${API_URL}/notes/${tableName}/${id}`,
+
   recordDetails :  (recordId) => `${API_URL}/records/${recordId}`, // profile details
   // clientInfo : `${API_URL}/client/info`,
 };

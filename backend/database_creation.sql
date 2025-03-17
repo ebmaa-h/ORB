@@ -77,7 +77,7 @@ CREATE TABLE notes (
     note TEXT,
     target_table VARCHAR(255),
     target_id INT,
-    timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE SET NULL
 );
 

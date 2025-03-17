@@ -121,7 +121,7 @@ export default function AccountDetails() {
           {/* Call should include parameters  */}
           <Notes 
             tableName='accounts'
-            tableId={account.account_id}
+            id={account.account_id}
             
           />
         </>

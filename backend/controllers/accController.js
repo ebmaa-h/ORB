@@ -11,7 +11,7 @@ const accController = {
         return res.status(404).json({ message: 'No accounts found' });
       }
 
-      console.log("Accounts Found: ", accounts);
+      // console.log("Accounts Found: ", accounts);
       return res.status(200).json({
         message: 'Accounts retrieval successful',
         accounts: accounts,
@@ -38,7 +38,7 @@ const accController = {
         return res.status(404).json({ message: 'No accounts found' });
       }
 
-      console.log("Accounts Found: ", accounts);
+      // console.log("Accounts Found: ", accounts);
       return res.status(200).json({
         message: 'Accounts retrieval successful',
         accounts: accounts,
@@ -64,7 +64,7 @@ const accController = {
         return res.status(404).json({ message: 'Account not found' });
       }
 
-      console.log("Account Found: ", account);
+      // console.log("Account Found: ", account);
       return res.status(200).json({
         message: 'Account retrieval successful',
         account: account,
@@ -90,7 +90,7 @@ const accController = {
         return res.status(404).json({ message: 'Account not found' });
       }
 
-      console.log("Account Found: ", account);
+      // console.log("Account Found: ", account);
       return res.status(200).json({
         message: 'Account retrieval successful',
         account: account,
