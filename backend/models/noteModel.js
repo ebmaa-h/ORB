@@ -11,6 +11,15 @@ const Note = {
       throw err;
     }
   },
+  fetchInvoiceNotes: async (invoiceId) => {
+    try {
+      const [results] = await db.query(queries.fetchInvoiceNotes, [invoiceId]);
+      if (!results.length) return null;
+      return results;
+    } catch (err) {
+      throw err;
+    }
+  },
 
 };
 

@@ -2,8 +2,7 @@ import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import ENDPOINTS from '../../config/apiEndpoints';
 import axios from 'axios';
-import { InputField } from '../../components';
-import { BackButton } from '../../components/index';
+import { InputField, BackButton, Notes } from '../../components';
 import { useOutletContext } from "react-router-dom";
 
 export default function InvoiceDetails() {
@@ -198,6 +197,10 @@ export default function InvoiceDetails() {
               <button type="button" className="btn-class w-[100px]" onClick={handleSave}>Save</button>
             </div>
           </div>
+          <Notes 
+            tableName='invoices'
+            id={invoiceId}
+          />
         </>
       ) : (
         <div className='container-col items-center'>
