@@ -1,4 +1,4 @@
-const fetchAccNotes = `
+const fetchNotes = `
   SELECT 
     n.note_id, 
     n.user_id, 
@@ -7,18 +7,13 @@ const fetchAccNotes = `
     n.created_at
   FROM notes n
   LEFT JOIN users u ON n.user_id = u.user_id
-  WHERE n.target_table = 'accounts' AND n.target_id = ?;
-`;
-const fetchInvoiceNotes = `
-  SELECT 
-    n.note_id, 
-    n.user_id, 
-    u.first AS user_name, 
-    n.note, 
-    n.created_at
-  FROM notes n
-  LEFT JOIN users u ON n.user_id = u.user_id
-  WHERE n.target_table = 'invoices' AND n.target_id = ?;
+  WHERE n.target_table = ? AND n.target_id = ?;
 `;
 
-module.exports = { fetchAccNotes, fetchInvoiceNotes };
+const insertNote = `
+  INSERT INTO notes (target_table, target_id, user_id, note, created_at)
+  VALUES (?, ?, ?, ?, NOW());
+`;
+
+
+module.exports = { fetchNotes, insertNote };

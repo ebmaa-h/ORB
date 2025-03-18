@@ -2,25 +2,23 @@ const db = require('../config/db');
 const queries = require('./queries/noteQueries');
 
 const Note = {
-  fetchAccNotes: async (accountId) => {
+  fetchNotes: async (targetTable, targetId) => {
     try {
-      const [results] = await db.query(queries.fetchAccNotes, [accountId]);
-      if (!results.length) return null;
-      return results;
-    } catch (err) {
-      throw err;
-    }
-  },
-  fetchInvoiceNotes: async (invoiceId) => {
-    try {
-      const [results] = await db.query(queries.fetchInvoiceNotes, [invoiceId]);
-      if (!results.length) return null;
-      return results;
+      const [results] = await db.query(queries.fetchNotes, [targetTable, targetId]);
+      return results.length ? results : null;
     } catch (err) {
       throw err;
     }
   },
 
+  createNote: async ({ target_table, target_id, user_id, note }) => {
+    try {
+      const [result] = await db.query(queries.insertNote, [target_table, target_id, user_id, note]);
+      return { note_id: result.insertId, target_table, target_id, user_id, note, created_at: new Date() };
+    } catch (err) {
+      throw err;
+    }
+  },
 };
 
 module.exports = Note;
