@@ -84,8 +84,9 @@ export default function Notes({ tableName, id }) {
           disabled={loading}
         />
         <button
+          type="button" 
           onClick={handleAddNote}
-          className="btn-class w-[100px] disabled:opacity-50"
+          className="btn-class w-[100px] cursor-pointer"
           disabled={!newNote.trim() || loading}
         >
           {loading ? "Adding..." : "Add Note"}

@@ -16,6 +16,7 @@ export default function InvoiceDetails() {
   const [client, setClient] = useState([]);
   const [refClient, setRefClient] = useState([]);
   const [medical, setMedical] = useState([]);
+  const [isNotesOpen, setIsNotesOpen] = useState(false);
 
   useEffect(() => {
     const getInvoiceDetails = async () => {

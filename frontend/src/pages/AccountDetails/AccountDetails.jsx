@@ -65,6 +65,7 @@ export default function AccountDetails() {
             <p><strong>Medical Aid:</strong> {account.medical_aid_name} - {account.plan_name}</p>
             <p><strong>Client:</strong> {account.client_name}</p>
             <p><strong>Balance:</strong> 0.00</p>
+            <span className="material-symbols-outlined">two_pager</span>
           </div>
 
           <div className='container-row'>
@@ -118,7 +119,6 @@ export default function AccountDetails() {
             </div>
           </div>
 
-          {/* Call should include parameters  */}
           <Notes 
             tableName='accounts'
             id={account.account_id}
