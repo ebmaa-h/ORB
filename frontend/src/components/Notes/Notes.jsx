@@ -1,8 +1,11 @@
 import { useEffect, useState } from 'react';
 import axios from 'axios';
 import ENDPOINTS from '../../config/apiEndpoints';
+import { useContext } from 'react';
+import { UserContext } from '../../context/UserContext'; 
 
 export default function Notes({ tableName, id }) {
+  const { user } = useContext(UserContext); 
   const [notes, setNotes] = useState([]);
   const [newNote, setNewNote] = useState("");
   const [loading, setLoading] = useState(false);
@@ -23,36 +26,27 @@ export default function Notes({ tableName, id }) {
     }
   }, [id]);
 
-    // Handle new note submission
-    const handleAddNote = async () => {
-      if (!newNote.trim()) return; // Prevent empty submissions
-      setLoading(true);
-  
-      try {
-        const response = await axios.post(ENDPOINTS.addNote, {
-          tableName,
-          id,
-          note: newNote,
-        });
-  
-        // Optimistic UI update
-        setNotes((prevNotes) => [
-          ...prevNotes,
-          {
-            note_id: response.data.note_id, // Assuming backend returns new note ID
-            user_name: "You", // Change this if user info is available
-            note: newNote,
-            created_at: new Date().toISOString(),
-          },
-        ]);
-  
-        setNewNote(""); // Clear input after submission
-      } catch (error) {
-        console.error("Error adding note:", error);
-      } finally {
-        setLoading(false);
-      }
-    };
+  // Handle adding a new note
+  const handleAddNote = async () => {
+    if (!newNote.trim()) return; // Prevent empty note submission
+
+    setLoading(true);
+    try {
+      const response = await axios.post(
+        ENDPOINTS.addNote(tableName, id),
+        { userId: user.user_id, note: newNote },
+        { withCredentials: true }
+      );
+      console.log(response);
+
+      // Append new note to state (so we don’t need another fetch)
+      setNotes((prevNotes) => [...prevNotes, response.data.note]);
+      setNewNote(""); // Clear input after submission
+    } catch (error) {
+      console.error('Error adding note:', error);
+    }
+    setLoading(false);
+  };
 
   return (
     <div className="container-col">
@@ -73,7 +67,7 @@ export default function Notes({ tableName, id }) {
         )}
       </div>
 
-      <div className="flex gap-4">
+      <div className="flex gap-4 mt-4">
         <input
           type="text"
           placeholder="New Note"
@@ -84,7 +78,7 @@ export default function Notes({ tableName, id }) {
           disabled={loading}
         />
         <button
-          type="button" 
+          type="button"
           onClick={handleAddNote}
           className="btn-class w-[100px] cursor-pointer"
           disabled={!newNote.trim() || loading}

@@ -7,7 +7,8 @@ const fetchNotes = `
     n.created_at
   FROM notes n
   LEFT JOIN users u ON n.user_id = u.user_id
-  WHERE n.target_table = ? AND n.target_id = ?;
+  WHERE n.target_table = ? AND n.target_id = ?
+  ORDER BY n.created_at ASC;
 `;
 
 const insertNote = `
@@ -15,5 +16,16 @@ const insertNote = `
   VALUES (?, ?, ?, ?, NOW());
 `;
 
+const fetchSingleNote = `
+  SELECT 
+    n.note_id, 
+    n.user_id, 
+    u.first AS user_name, 
+    n.note, 
+    n.created_at
+  FROM notes n
+  LEFT JOIN users u ON n.user_id = u.user_id
+  WHERE n.note_id = ?;
+`;
 
-module.exports = { fetchNotes, insertNote };
+module.exports = { fetchNotes, insertNote, fetchSingleNote };

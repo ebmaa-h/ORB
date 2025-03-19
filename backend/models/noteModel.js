@@ -13,8 +13,13 @@ const Note = {
 
   createNote: async ({ target_table, target_id, user_id, note }) => {
     try {
-      const [result] = await db.query(queries.insertNote, [target_table, target_id, user_id, note]);
-      return { note_id: result.insertId, target_table, target_id, user_id, note, created_at: new Date() };
+      // Insert the note
+      const [insertResult] = await db.query(queries.insertNote, [target_table, target_id, user_id, note]);
+
+      // Retrieve the newly inserted note
+      const [newNote] = await db.query(queries.fetchSingleNote, [insertResult.insertId]);
+
+      return newNote[0]; // Return the first result (object)
     } catch (err) {
       throw err;
     }
