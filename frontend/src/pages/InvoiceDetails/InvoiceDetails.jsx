@@ -6,9 +6,17 @@ import { InputField, BackButton, Notes } from '../../components';
 import { useOutletContext } from "react-router-dom";
 
 export default function InvoiceDetails() {
+  const { accountId } = useParams();
   const { invoiceId } = useParams();
   const navigate = useNavigate();
   const { triggerToast } = useOutletContext(); // Access the global toast trigger
+  
+
+
+// MMMMmmmmmmmm accountId and invoiceId is immutable so cant change t he invoice id when we retrieve it from creatiung a new invoice. in progress.
+
+
+
 
   const [invoice, setInvoice] = useState({});
   const [patient, setPatient] = useState({});
@@ -21,13 +29,22 @@ export default function InvoiceDetails() {
   useEffect(() => {
     const getInvoiceDetails = async () => {
       try {
-        const response = await axios.get(ENDPOINTS.invoiceDetails(invoiceId), {
-          withCredentials: true,
-        });
-
-        console.log('response', response);
+        let response;
+  
+        if (accountId) {
+          // Fetch invoice data using accountId
+          response = await axios.get(ENDPOINTS.newInvoice(accountId), {
+            withCredentials: true,
+          });
+          setInvoiceId(response.data.invoiceId);
+        } else if (invoiceId) {
+          // Fetch invoice details using invoiceId
+          response = await axios.get(ENDPOINTS.invoiceDetails(invoiceId), {
+            withCredentials: true,
+          });
+        }
+  
         const { member, patient, client, refClient, medical, invoice } = response.data.invoice;
-
         setClient(client || []);
         setRefClient(refClient || []);
         setMember(member || {});
@@ -38,11 +55,14 @@ export default function InvoiceDetails() {
         console.error('Error fetching invoice details:', error);
       }
     };
-
-    if (invoiceId) {
+  
+    // Trigger the effect when either accountId or invoiceId changes
+    if (accountId || invoiceId) {
       getInvoiceDetails();
     }
-  }, [invoiceId]);
+  
+  }, [accountId, invoiceId]);
+  
 
   const handleSave = async () => {
 
@@ -60,7 +80,7 @@ export default function InvoiceDetails() {
         withCredentials: true,
       });
       triggerToast(true, "Invoice Updated Successfully!");
-      navigate(-1);
+      // navigate(-1);
     } catch (error) {
       console.error('Error saving invoice details:', error);
       triggerToast(false, "Failed to update invoice."); // Error toast

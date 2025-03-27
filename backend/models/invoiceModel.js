@@ -53,10 +53,91 @@ const Invoice = {
     }
   },
 
-  oneInvoice: async (invoiceId) => {
+  oneInvoice: async (invoiceId, accountId) => {
 
     try {
-      const [invoiceResults] = await db.query(queries.account, [invoiceId]);
+      let invoiceResults;
+      let newInvoiceId;
+      if (accountId) {
+        const [accountResults] = await db.query(queries.accountByAccountId, [accountId]);
+        console.log(accountResults);
+
+         await db.query(queries.createNewInvoice, [accountId]);
+         console.log('invoice created apparently')
+
+         const newInvoiceResults = await db.query(queries.getNewInvoiceId);
+
+         console.log('got invoice as', newInvoiceResults[0][0].invoice_id);
+        newInvoiceId = newInvoiceResults[0][0].invoice_id;
+         console.log('invoice as', newInvoiceId);
+
+        [invoiceResults] = await db.query(queries.accountByInvoiceId, [newInvoiceId]);
+
+      } else {
+        [invoiceResults] = await db.query(queries.accountByInvoiceId, [invoiceId]);
+
+      }
+      
+      if (!invoiceResults.length) return null;
+      const invoice = invoiceResults[0];
+      const [
+        memberResults, 
+        memberAddresses,
+        memberContact,
+        memberEmail,
+        patientResults, 
+        patientAddresses,
+        patientContact,
+        patientEmail,
+        clientResults,
+        refClientResults,
+        medicalResults,
+
+      ] = await Promise.all([
+        
+        db.query(queries.record, [invoice.main_member_id, invoice.account_id]),
+        db.query(queries.addresses, [invoice.main_member_id]),
+        db.query(queries.contactNumbers, [invoice.main_member_id]),
+        db.query(queries.emails, [invoice.main_member_id]),
+
+        db.query(queries.record, [invoice.patient_id, invoice.account_id]),
+        db.query(queries.addresses, [invoice.patient_id]),
+        db.query(queries.contactNumbers, [invoice.patient_id]),
+        db.query(queries.emails, [invoice.patient_id]),
+
+        db.query(queries.client, [invoice.client_id]),
+        db.query(queries.refClient, [invoice.client_id]),
+        db.query(queries.medical, [invoice.account_id]),
+      ]);
+      return {
+        invoiceId: accountId ? newInvoiceId : null, 
+        invoice,
+        member: {
+          ...memberResults[0],
+          addresses: memberAddresses[0],
+          contactNumbers: memberContact[0],
+          emails: memberEmail[0],
+        },
+        patient: {
+          ...patientResults[0],
+          addresses: patientAddresses[0],
+          contactNumbers: patientContact[0],
+          emails: patientEmail[0],
+        },
+        // invoices: invoiceResults[0],
+        client: clientResults[0][0],
+        refClient: refClientResults[0],
+        medical: medicalResults[0][0],
+      };
+    } catch (err) {
+      throw err;
+    }
+  },
+
+  createNewInvoice: async (accountId) => {
+
+    try {
+      const [invoiceResults] = await db.query(queries.accountByAccountId, [accountId]);
       
       if (!invoiceResults.length) return null;
       const invoice = invoiceResults[0];
@@ -113,27 +194,10 @@ const Invoice = {
     }
   },
 
-  createNewInvoice: async (newInvoice) => {
-    try {
-      const [results] = await db.query(
-        queries.createNewInvoice, 
-        [
-          newInvoice.account_id,
-          newInvoice.dos,
-          newInvoice.invoice_status,
-          newInvoice.main_member_id,
-          newInvoice.patient_id,
-          newInvoice.ref_client_id,
-          newInvoice.file_nr,
-          newInvoice.auth_nr    
-        ]
-      );
-      return results;
-    } catch (err) {
-      console.error("Error creating new invoice:", err);
-      throw new Error("Error creating new invoice");
-    }
-  },
+
+
+
+
   updateInvoice: async (updatedInvoice) => {
     console.log('updating....')
     console.log('updatedInvoice', updatedInvoice)

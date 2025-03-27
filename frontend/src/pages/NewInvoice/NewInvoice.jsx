@@ -86,7 +86,7 @@ export default function NewInvoice() {
       });
 
       alert("Invoice Created Successfully!");
-      navigate(-1);
+      // navigate(-1);
       console.log("New Invoice:", response.message);
     } catch (error) {
       console.error("Error creating invoice:", error);
@@ -211,7 +211,7 @@ export default function NewInvoice() {
         </>
       ) : (
         <div className='container-col items-center'>
-          <p>Loading invoice details...</p>
+          <p>Loading invoice details..dssdasdasdff.</p>
         </div>
       )}
     </>

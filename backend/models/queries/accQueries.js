@@ -178,8 +178,9 @@ SELECT
   DATE_FORMAT(i.date_of_service, '%Y-%m-%d') AS date_of_service,
   i.status AS status
 FROM invoices i
-LEFT JOIN person_records p ON i.patient_id = p.record_id
-LEFT JOIN person_records m ON i.main_member_id = m.record_id
+LEFT JOIN accounts a ON a.account_id = i.account_id
+LEFT JOIN person_records p ON a.patient_id = p.record_id
+LEFT JOIN person_records m ON a.main_member_id = m.record_id
 WHERE i.account_id = ?;
 
 `;

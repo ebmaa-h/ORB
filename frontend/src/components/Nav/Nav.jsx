@@ -9,22 +9,10 @@ export default function Nav() {
   const { user } = useContext(UserContext);
   const { clientId, setClientId } = useContext(ClientContext);
   const navigate = useNavigate();
-  const location = useLocation(); // Access the current route
-  const [expanded, setExpanded] = useState(false);
+  const location = useLocation();
 
-  const toggleNav = () => {
-    setExpanded(!expanded);
-    navigate('/dashboard');
-  };
-
-  const handleBackToDashboard = () => {
-    setExpanded(false);
-    navigate('/dashboard');
-  };
-
-  // Helper function to determine if the link is active
+  // Determine if user has access to link for use later
   const isActive = (path) => {
-    // Check if the current path starts with the given base path
     return location.pathname.startsWith(path) ? 'active-link' : '';
   };
   
@@ -32,13 +20,10 @@ export default function Nav() {
   return (
     <div className="bg-white shadow flex justify-between items-center flex-row h-[60px]">
       <div className='flex flex-row gap-4 ml-4'>
-        <span className="material-symbols-outlined cursor-pointer" onClick={toggleNav}>
-          apps
-        </span>
-        {expanded && (
           <>
             <select
               className="cursor-pointer border rounded border-gray-300 px-2 hover:border-ebmaa-purple transition duration-300"
+              value={clientId || ""}
               onChange={(e) => {
                 const selectedClientId = e.target.value;
                 setClientId(selectedClientId);
@@ -54,35 +39,45 @@ export default function Nav() {
                 </option>
               ))}
             </select>
+          
+            {clientId && (
+              <>
+                <Link 
+                  to="/accounts" 
+                  className={`link-class ${isActive('/accounts')}`}
+                >
+                  Accounts
+                </Link>
+                <Link 
+                  to="/invoices" 
+                  className={`link-class ${isActive('/invoices')}`}
+                >
+                  Invoices
+                </Link>
+                <Link 
+                  to="/client/info" 
+                  className={`link-class ${isActive('/client/info')}`}
+                >
+                  Client Info
+                </Link>
+              </>
+            )}
 
-            <Link to={clientId ? "/accounts" : "#"} className={`link-class ${isActive('/accounts')}`}>
-              Accounts
-            </Link>
-            <Link to={clientId ? "/invoices" : "#"} className={`link-class ${isActive('/invoices')}`}>
-              Invoices
-            </Link>
-            <Link to={clientId ? "/client/info" : "#"} className={`link-class ${isActive('/client/info')}`}>
-              Client Info
-            </Link>
           </>
-        )}
       </div>
       <div className='flex flex-row gap-4 mr-4'>
-        {!expanded ? (
           <>
-            <Link to="/dashboard" className={`link-class ${isActive('/dashboard')}`}>Dashboard</Link>
-            <Link to="/records" className={`link-class ${isActive('/records')}`}>Records</Link>
-            <Link to="/profiles" className={`link-class ${isActive('/profiles')}`}>Profiles</Link>
-            <p className="text-gray-300">|</p>
-            <Link to="/tools" className={`link-class ${isActive('/tools')}`}>Tools</Link>
+          {/* should reset the  'select' */}
+          <Link 
+            to="/dashboard" 
+            onClick={() => setClientId("")} 
+            className={`link-class ${isActive('/dashboard')}`}
+          >
+            Dashboard
+          </Link>
             <p className="text-gray-300">|</p>
             <Logout />
           </>
-        ) : (
-          <button onClick={handleBackToDashboard} className='link-class'>
-            Back to Dashboard
-          </button>
-        )}
       </div>
     </div>
   );

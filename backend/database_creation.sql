@@ -1,5 +1,5 @@
 
-DROP TABLE IF EXISTS profile_person_map, person_contact_numbers,person_emails, person_numbers, invoices, accounts, profiles, medical_aid_plans, medical_aids, employers, service_centers, service_centers_list, ref_clients, ref_clients_list, clients_logs, logs, user_feature, user_feature_access, user_client_access, addresses, features, clients, users, person_addresses, person_records;
+DROP TABLE IF EXISTS person_contact_numbers,person_emails, person_numbers, invoices, accounts, profiles, medical_aid_plans, medical_aids, employers, service_centers, service_centers_list, ref_clients, ref_clients_list, clients_logs, logs, user_feature, user_feature_access, user_client_access, addresses, features, clients, users, person_addresses, person_records, notes, profile_person_map;
 
 -- Create users table
 CREATE TABLE users (
@@ -224,11 +224,8 @@ CREATE TABLE accounts (
 CREATE TABLE invoices (
     invoice_id INT AUTO_INCREMENT PRIMARY KEY,
     account_id INT,
-    profile_id INT,
     date_of_service DATE,
     status ENUM('Processing', 'Billed', 'Archived') DEFAULT 'Processing',
-    main_member_id INT NULL,
-    patient_id INT NULL,
     ref_client_id INT NULL,
     file_nr VARCHAR(255) NULL,
     balance DECIMAL(10, 2) DEFAULT 0.00,
@@ -236,9 +233,6 @@ CREATE TABLE invoices (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     FOREIGN KEY (account_id) REFERENCES accounts(account_id) ON DELETE SET NULL,
-    FOREIGN KEY (profile_id) REFERENCES profiles(profile_id) ON DELETE SET NULL,
-    FOREIGN KEY (main_member_id) REFERENCES person_records(record_id) ON DELETE SET NULL,
-    FOREIGN KEY (patient_id) REFERENCES person_records(record_id) ON DELETE SET NULL,
     FOREIGN KEY (ref_client_id) REFERENCES ref_clients(ref_client_id) ON DELETE SET NULL
 );
 
@@ -410,34 +404,34 @@ VALUES
 (5, 3, 2, 3);
 
 -- Inserting sample data for invoices
-INSERT INTO invoices (account_id, profile_id, date_of_service, status, main_member_id, patient_id, auth_nr)
+INSERT INTO invoices (account_id, date_of_service, status, auth_nr)
 VALUES
 -- Profile 1: Thabo, Naledi, Lerato
-(1, 1, '2024-12-01', 'Processing', 1, 1, '861614'),
-(2, 1, '2024-12-02', 'Processing', 1, 2, '761614'),
-(3, 1, '2024-12-03', 'Processing', 1, 3, '661614'),
-(4, 1, '2024-12-04', 'Processing', 1, 3, '561614'),
+(1, '2024-12-01', 'Processing', '861614'),
+(2, '2024-12-02', 'Processing', '761614'),
+(3, '2024-12-03', 'Processing', '661614'),
+(4, '2024-12-04', 'Processing', '561614'),
 
 -- Profile 2: Pieter, Annelize, Jaco, Saki
-(5, 2, '2024-12-01', 'Processing', 4, 4, '461614'),
-(6, 2, '2024-12-02', 'Processing', 4, 5, '361614'),
-(7, 2, '2024-12-03', 'Processing', 4, 6, '261614'),
-(8, 2, '2024-12-04', 'Processing', 4, 7, '161614'),
+(5, '2024-12-01', 'Processing', '461614'),
+(6, '2024-12-02', 'Processing', '361614'),
+(7, '2024-12-03', 'Processing', '261614'),
+(8, '2024-12-04', 'Processing', '161614'),
 
 -- Profile 3: Jo-Anne, John, Emily
-(9, 3, '2024-12-01', 'Processing', 8, 8, '161614'),
-(10, 3, '2024-12-02', 'Processing', 8, 9, '261614'),
-(11, 3, '2024-12-03', 'Processing', 8, 10, '361614'),
+(9, '2024-12-01', 'Processing', '161614'),
+(10, '2024-12-02', 'Processing', '261614'),
+(11, '2024-12-03', 'Processing', '361614'),
 
 -- Profile 4: Rajesh, Priya, Kavita, Sanjay
-(12, 4, '2024-12-01', 'Processing', 11, 11, '461614'),
-(13, 4, '2024-12-02', 'Processing', 11, 12, '561614'),
-(14, 4, '2024-12-03', 'Processing', 11, 13, '661614'),
-(15, 4, '2024-12-04', 'Processing', 11, 14, '761614'),
+(12, '2024-12-01', 'Processing', '461614'),
+(13, '2024-12-02', 'Processing', '561614'),
+(14, '2024-12-03', 'Processing', '661614'),
+(15, '2024-12-04', 'Processing', '761614'),
 
 -- Additional cases
-(16, 5, '2024-12-02', 'Processing', 2, 2, '568486673'),
-(17, 5, '2024-12-03', 'Processing', 2, 3, '568486673');
+(16, '2024-12-02', 'Processing', '568486673'),
+(17, '2024-12-03', 'Processing', '568486673');
 
 
 -- Inserting sample data for features

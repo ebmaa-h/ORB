@@ -23,7 +23,7 @@ LEFT JOIN accounts a ON i.account_id = a.account_id
 LEFT JOIN clients d ON a.client_id = d.client_id;
 `;
 
-const account = `
+const accountByInvoiceId = `
 SELECT
   a.account_id,
   a.profile_id,
@@ -39,6 +39,28 @@ SELECT
 FROM accounts a
 LEFT JOIN invoices i on a.account_id = i.account_id
 WHERE i.invoice_id = ?;
+`;
+
+// get basic info needed to create new invoice
+const accountByAccountId = `
+SELECT
+  a.account_id,
+  a.profile_id,
+  a.client_id,
+  a.main_member_id,
+  a.patient_id
+FROM accounts a
+WHERE a.account_id = ?;
+`;
+
+// create new invoice from top data and should retrieve invoice_id
+const createNewInvoice = `
+  INSERT INTO invoices (account_id)
+  VALUES (?);
+`;
+
+const getNewInvoiceId = `
+  SELECT LAST_INSERT_ID() AS invoice_id;
 `;
 
 // Full Invoice
@@ -96,8 +118,8 @@ SELECT
 FROM invoices i
 LEFT JOIN accounts a ON i.account_id = a.account_id
 LEFT JOIN clients d ON a.client_id = d.client_id
-LEFT JOIN person_records p ON i.patient_id = p.record_id
-LEFT JOIN person_records m ON i.main_member_id = m.record_id
+LEFT JOIN person_records p ON a.patient_id = p.record_id
+LEFT JOIN person_records m ON a.main_member_id = m.record_id
 WHERE d.client_id = ?;
 `;
 
@@ -117,17 +139,17 @@ const patientDetails = `
 SELECT
   CONCAT(p.title, ' ', p.first, ' ', p.last) AS patient_name,
   p.id_nr AS patient_id_nr
-FROM invoices i
-LEFT JOIN person_records p ON i.patient_id = p.record_id
-WHERE i.invoice_id = ?;
+FROM accounts a
+LEFT JOIN person_records p ON a.patient_id = p.record_id
+WHERE a.account_id = ?;
 `;
 const memberDetails = `
 SELECT
   CONCAT(m.title, ' ', m.first, ' ', m.last) AS memberName,
   m.id_nr AS member_id_nr
-FROM invoices i
-LEFT JOIN person_records m ON i.main_member_id = m.record_id
-WHERE i.invoice_id = ?;
+FROM accounts a
+LEFT JOIN person_records p ON a.patient_id = p.record_id
+WHERE a.account_id = ?;
 `;
 const clientDetails = `
 SELECT
@@ -153,11 +175,7 @@ WHERE i.invoice_id = ?;
 `;
 
 
-const createNewInvoice = `
-INSERT INTO invoices 
-  (account_id, date_of_service, status, main_member_id, patient_id, ref_client_id, file_nr, auth_nr)
-VALUES (?, ?, ?, ?, ?, ?, ?, ?);
-`;
+
 
 // Same as accQueries
 const client = `
@@ -252,7 +270,6 @@ module.exports = {
   createNewInvoice,
 
   getAccountId,
-  account,
   client,
   refClient,
   addresses,
@@ -261,4 +278,8 @@ module.exports = {
   record,
   medical,
   updateInvoice,
+  getNewInvoiceId,
+
+  accountByAccountId,
+  accountByInvoiceId,
 };

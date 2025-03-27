@@ -33,9 +33,9 @@ function App() {
 
           <Route path="/invoices" element={<ClientInvoices />} />
           <Route path="/invoices/:invoiceId" element={<InvoiceDetails />} />
-
-          <Route path="/invoices/new/:accountId" element={<NewInvoice />} />
-
+          <Route path="/invoices/new/:accountId" element={<InvoiceDetails />} />
+          
+          {/* <Route path="/invoices/new/:accountId" element={<NewInvoice />} /> */}
 
           <Route path="/records" element={<PersonRecords />} />
           <Route path="/records/:recordId" element={<PersonRecordDetails />} />

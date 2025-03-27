@@ -49,13 +49,14 @@ const invoiceController = {
   },
   getInvoice: async (req, res) => {
     const invoiceId = req.params.invoiceId;
+    const accountId = req.params.accountId;
   
-    if (!invoiceId) {
-      return res.status(400).json({ message: 'Invoice ID is required' });
+    if (!invoiceId && !accountId) {
+      return res.status(400).json({ message: 'ID is required' });
     }
   
     try {
-      const invoice = await Invoice.oneInvoice(invoiceId);
+      const invoice = await Invoice.oneInvoice(invoiceId ? invoiceId : null, invoiceId ? null : accountId);
   
       if (!invoice) {
         console.log('Invoice not found.');
@@ -74,17 +75,17 @@ const invoiceController = {
   },
 
   createNewInvoice: async (req, res) => {
-    const newInvoice = req.body;
-    console.log("newInvoice", newInvoice)
+    const accountId = req.params.accountId;
+    console.log("accountId", accountId)
     // Account id for invoice to be related to
-    if (!newInvoice.account_id) {
+    if (!accountId) {
       return res.status(400).json({ message: 'Account ID is required' });
     }
 
     try {
-      const createdInvoice = await Invoice.createNewInvoice(newInvoice);
+      const newInvoice = await Invoice.oneInvoice(accountId);
 
-      if (!createdInvoice) {
+      if (!newInvoice) {
         return res.status(404).json({ message: 'Invoice not created.' });
       }
 
@@ -93,7 +94,10 @@ const invoiceController = {
       });
     } catch (err) {
       console.error('Error creating invoice:', err);
-      return res.status(500).json({ message: 'Internal server error', error: err });
+      return res.status(500).json({ 
+        message: 'Invoice creation successful',
+        invoice: newInvoice,
+       });
     }
   },
 
