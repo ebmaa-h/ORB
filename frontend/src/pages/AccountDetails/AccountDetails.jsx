@@ -107,6 +107,7 @@ export default function AccountDetails() {
             />
             <div className="flex justify-end gap-4">
               <BackButton />
+              {/* Nav to invoice page */}
               <button
                 type="submit"
                 className="btn-class w-[100px]"

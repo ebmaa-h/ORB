@@ -4,27 +4,23 @@ import ENDPOINTS from '../../config/apiEndpoints';
 import axios from 'axios';
 import { InputField, BackButton, Notes } from '../../components';
 import { useOutletContext } from "react-router-dom";
+import { useContext } from 'react';
+import { NavigationContext } from '../../context/NavigationContext';
 
 export default function InvoiceDetails() {
-  const { accountId } = useParams();
-  const { invoiceId } = useParams();
-  const navigate = useNavigate();
-  const { triggerToast } = useOutletContext(); // Access the global toast trigger
-  
-
-
-// MMMMmmmmmmmm accountId and invoiceId is immutable so cant change t he invoice id when we retrieve it from creatiung a new invoice. in progress.
-
-
-
-
+  const { accountId, invoiceId } = useParams();
+  const { triggerToast } = useOutletContext(); 
+  const { previousPath } = useContext(NavigationContext);
   const [invoice, setInvoice] = useState({});
   const [patient, setPatient] = useState({});
   const [member, setMember] = useState({});
   const [client, setClient] = useState([]);
   const [refClient, setRefClient] = useState([]);
   const [medical, setMedical] = useState([]);
-  const [isNotesOpen, setIsNotesOpen] = useState(false);
+  const [newInvoiceId, setNewInvoiceId  ] = useState([]);
+
+  const [ ogData, setOgData ] = useState({});
+
 
   useEffect(() => {
     const getInvoiceDetails = async () => {
@@ -36,7 +32,8 @@ export default function InvoiceDetails() {
           response = await axios.get(ENDPOINTS.newInvoice(accountId), {
             withCredentials: true,
           });
-          setInvoiceId(response.data.invoiceId);
+          console.log(response)
+          setNewInvoiceId(response.data.invoice.invoiceId);
         } else if (invoiceId) {
           // Fetch invoice details using invoiceId
           response = await axios.get(ENDPOINTS.invoiceDetails(invoiceId), {
@@ -51,6 +48,7 @@ export default function InvoiceDetails() {
         setPatient(patient || {});
         setInvoice(invoice || {});
         setMedical(medical || []);
+        setOgData(response.data.invoice);
       } catch (error) {
         console.error('Error fetching invoice details:', error);
       }
@@ -62,18 +60,63 @@ export default function InvoiceDetails() {
     }
   
   }, [accountId, invoiceId]);
+
+
+  const checkChange = (fields, updateFields) => {
+    let hasChanges = false;
+
+    for (let i = 0; i < updateFields.length; i++) {
+      let newValue = fields[updateFields[i]];
+      let oldValue = ogData.invoice[updateFields[i]];
+
+      if (newValue !== oldValue ) {
+        // console.log('test')
+        console.log('Change Detected');
+        console.log(updateFields[i],": ",newValue)
+        console.log(updateFields[i],": ",oldValue)
+        hasChanges = true;
+        
+        setOgData((prev) => ({
+          ...prev,
+          invoice: {
+            ...prev.invoice,
+            [updateFields[i]]: newValue,
+          }
+        })
+      ); 
+      return hasChanges;
+    }
+  }
+}
   
 
   const handleSave = async () => {
 
     const updatedInvoice = {
-      invoice_id: invoiceId,
+      invoice_id: invoiceId || newInvoiceId,
       file_nr: invoice.file_nr,
       auth_nr: invoice.auth_nr,
       date_of_service: invoice.date_of_service,
       status: invoice.status,
       ref_client_id: invoice.ref_client_id,
     };
+
+    let updateFields = [
+      "file_nr",
+      "auth_nr",
+      "date_of_service",
+      "status",
+      "ref_client_id",
+    ]
+
+    const hasChanges = checkChange(updatedInvoice, updateFields);
+
+    if (!hasChanges) {
+      console.log("No changes detected, skipping save.");
+      triggerToast(false, "No changes made.");
+      return; // Stop execution if nothing changed
+    }
+
 
     try {
       await axios.patch(ENDPOINTS.updateInvoice, updatedInvoice, {
@@ -111,10 +154,10 @@ export default function InvoiceDetails() {
 
   return (
     <>
-      {invoiceId ? (
+      {invoiceId || newInvoiceId ? (
         <>
           <div className="container-col gap-4">
-            <h2 className='font-bold'>Invoice #{invoiceId}</h2>
+            <h2 className='font-bold'>Invoice #{invoiceId || newInvoiceId}</h2>
             <div className='flex flex-row gap-4'>
               <div className='flex-1'>
                 <table className="table-auto w-full border-collapse border-gray-blue-100 text-gray-dark">
@@ -220,7 +263,7 @@ export default function InvoiceDetails() {
           </div>
           <Notes 
             tableName='invoices'
-            id={invoiceId}
+            id={invoiceId || newInvoiceId}
           />
         </>
       ) : (
