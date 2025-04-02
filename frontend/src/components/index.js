@@ -6,6 +6,7 @@ export { default as SideNav } from './SideNav/SideNav'
 // Common
 export { default as FeatureBlock } from './common/FeatureBlock/FeatureBlock'
 export { default as Table } from './common/Table/Table'
+export { default as VTable } from './common/VTable/VTable'
 export { default as SearchBar } from './common/SearchBar/SearchBar'
 export { default as InputField } from './common/InputField/InputField'
 export { default as BackButton } from './common/BackButton/BackButton'

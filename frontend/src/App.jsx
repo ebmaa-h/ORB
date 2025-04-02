@@ -32,8 +32,10 @@ function App() {
           <Route path="/accounts/:accountId" element={<AccountDetails />} />
 
           <Route path="/invoices" element={<ClientInvoices />} />
+          {/* <Route path="/invoices/:invoiceId" element={<InvoiceDetails />} /> */}
           <Route path="/invoices/:invoiceId" element={<InvoiceDetails />} />
           <Route path="/invoices/new/:accountId" element={<InvoiceDetails />} />
+          {/* <Route path="/invoices/new-invoice/:accountId" component={<InvoiceDetails />} /> */}
           
           {/* <Route path="/invoices/new/:accountId" element={<NewInvoice />} /> */}
 

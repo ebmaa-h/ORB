@@ -1,23 +1,20 @@
 import { useEffect, useState } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams } from 'react-router-dom';
 import ENDPOINTS from '../../config/apiEndpoints';
 import axios from 'axios';
-import { InputField, BackButton, Notes } from '../../components';
+import { InputField, BackButton, Notes, Table, VTable } from '../../components';
 import { useOutletContext } from "react-router-dom";
-import { useContext } from 'react';
-import { NavigationContext } from '../../context/NavigationContext';
 
 export default function InvoiceDetails() {
   const { accountId, invoiceId } = useParams();
   const { triggerToast } = useOutletContext(); 
-  const { previousPath } = useContext(NavigationContext);
   const [invoice, setInvoice] = useState({});
   const [patient, setPatient] = useState({});
   const [member, setMember] = useState({});
   const [client, setClient] = useState([]);
   const [refClient, setRefClient] = useState([]);
   const [medical, setMedical] = useState([]);
-  const [newInvoiceId, setNewInvoiceId  ] = useState([]);
+  const [newInvoiceId, setNewInvoiceId  ] = useState();
 
   const [ ogData, setOgData ] = useState({});
 
@@ -32,23 +29,24 @@ export default function InvoiceDetails() {
           response = await axios.get(ENDPOINTS.newInvoice(accountId), {
             withCredentials: true,
           });
-          console.log(response)
           setNewInvoiceId(response.data.invoice.invoiceId);
         } else if (invoiceId) {
           // Fetch invoice details using invoiceId
           response = await axios.get(ENDPOINTS.invoiceDetails(invoiceId), {
             withCredentials: true,
           });
+          
         }
-  
-        const { member, patient, client, refClient, medical, invoice } = response.data.invoice;
+        
+        console.log('response.data.invoice',response.data.invoice)
+        const { member, patient, client, refClient, medical, details } = response.data.invoice;
         setClient(client || []);
         setRefClient(refClient || []);
         setMember(member || {});
         setPatient(patient || {});
-        setInvoice(invoice || {});
+        setInvoice(details || {});
         setMedical(medical || []);
-        setOgData(response.data.invoice);
+        setOgData(response.data.invoice.details);
       } catch (error) {
         console.error('Error fetching invoice details:', error);
       }
@@ -67,10 +65,10 @@ export default function InvoiceDetails() {
 
     for (let i = 0; i < updateFields.length; i++) {
       let newValue = fields[updateFields[i]];
-      let oldValue = ogData.invoice[updateFields[i]];
+      let oldValue = ogData[updateFields[i]];
 
-      if (newValue !== oldValue ) {
-        // console.log('test')
+      if (newValue !== oldValue) {
+
         console.log('Change Detected');
         console.log(updateFields[i],": ",newValue)
         console.log(updateFields[i],": ",oldValue)
@@ -82,8 +80,7 @@ export default function InvoiceDetails() {
             ...prev.invoice,
             [updateFields[i]]: newValue,
           }
-        })
-      ); 
+        }));
       return hasChanges;
     }
   }
@@ -91,9 +88,8 @@ export default function InvoiceDetails() {
   
 
   const handleSave = async () => {
-
     const updatedInvoice = {
-      invoice_id: invoiceId || newInvoiceId,
+      invoice_id: invoiceId ? invoiceId : newInvoiceId,
       file_nr: invoice.file_nr,
       auth_nr: invoice.auth_nr,
       date_of_service: invoice.date_of_service,
@@ -149,6 +145,8 @@ export default function InvoiceDetails() {
           <tr className="cursor-pointer hover:bg-gray-blue-100"><td className="border border-gray-blue-100 p-2">Dependent Nr</td><td className="border border-gray-blue-100 p-2">{person[0]?.dependent_nr}</td></tr>
         </tbody>
       </table>
+      
+
     </div>
   );
 
@@ -160,35 +158,50 @@ export default function InvoiceDetails() {
             <h2 className='font-bold'>Invoice #{invoiceId || newInvoiceId}</h2>
             <div className='flex flex-row gap-4'>
               <div className='flex-1'>
-                <table className="table-auto w-full border-collapse border-gray-blue-100 text-gray-dark">
-                  <thead>
-                    <tr><th colSpan="2" className="border border-gray-blue-100 p-2">Client</th></tr>
-                  </thead>
-                  <tbody>
-                    <tr className="cursor-pointer hover:bg-gray-blue-100"><td className="border border-gray-blue-100 p-2">Name</td><td className="border border-gray-blue-100 p-2">{client.client_name}</td></tr>
-                    <tr className="cursor-pointer hover:bg-gray-blue-100"><td className="border border-gray-blue-100 p-2">Type</td><td className="border border-gray-blue-100 p-2">{client.client_type}</td></tr>
-                    <tr className="cursor-pointer hover:bg-gray-blue-100"><td className="border border-gray-blue-100 p-2">Email</td><td className="border border-gray-blue-100 p-2">{client.email}</td></tr>
-                    <tr className="cursor-pointer hover:bg-gray-blue-100"><td className="border border-gray-blue-100 p-2">Tell</td><td className="border border-gray-blue-100 p-2">{client.tell_nr}</td></tr>
-                    <tr className="cursor-pointer hover:bg-gray-blue-100"><td className="border border-gray-blue-100 p-2">Registration Nr</td><td className="border border-gray-blue-100 p-2">{client.registration_nr}</td></tr>
-                    <tr className="cursor-pointer hover:bg-gray-blue-100"><td className="border border-gray-blue-100 p-2">Practice Nr</td><td className="border border-gray-blue-100 p-2">{client.practice_nr}</td></tr>
-                  </tbody>
-                </table>
+                <VTable
+                  data={[client]} 
+                  // linkPrefix="medical" 
+                  type="Client"
+                  idField="client_id"
+                  excludedCol={['client_id']}
+                />
+                <VTable
+                    data={[medical]} 
+                    // linkPrefix="medical" 
+                    type="Medical Aid"
+                    idField="medical_id"
+                    excludedCol={['profile_id']}
+                  />
+                  {console.log("medical",medical)}
+                  {console.log("patient.details",patient.details[0])}
+                {/* <VTable
+                    data={patient.details} 
+                    // linkPrefix="medical" 
+                    type="Medical Aid"
+                    idField="medical_id"
+                    excludedCol={['profile_id']}
+                  /> */}
               </div>
-              <div className='flex-1'>
-                <table className="table-auto w-full border-collapse border-gray-blue-100 text-gray-dark">
-                  <thead>
-                    <tr><th colSpan="2" className="border border-gray-blue-100 p-2 ">Medical Aid</th></tr>
-                  </thead>
-                  <tbody>
-                    <tr className="cursor-pointer hover:bg-gray-blue-100"><td className="border border-gray-blue-100 p-2">Medical Aid</td><td className="border border-gray-blue-100 p-2">{medical.medical_aid_name}</td></tr>
-                    <tr className="cursor-pointer hover:bg-gray-blue-100"><td className="border border-gray-blue-100 p-2">Plan</td><td className="border border-gray-blue-100 p-2">{medical.plan_name}</td></tr>
-                    <tr className="cursor-pointer hover:bg-gray-blue-100"><td className="border border-gray-blue-100 p-2">Medical Aid Nr</td><td className="border border-gray-blue-100 p-2">{medical.medical_aid_nr}</td></tr>
-                    <tr className="cursor-pointer hover:bg-gray-blue-100"><td className="border border-gray-blue-100 p-2">Plan Code</td><td className="border border-gray-blue-100 p-2">{medical.plan_code}</td></tr>
-                  </tbody>
-                </table>
-                </div>
-              {renderPersonDetails('Guarantor', member)}
-              {renderPersonDetails('Patient', patient)}
+    
+              {/* {renderPersonDetails('Guarantor', member)}
+              {renderPersonDetails('Patient', patient)} */}
+{/* {console.log('member:', member)} */}
+            </div>
+            <div className='flex flex-col gap-4'>
+              {/* {console.log("member['details']",member.details[0])} */}
+              {/* <Table
+                data={[member.details[0]]} 
+                columns={['Client Name', 'Type', 'Email', 'Tell', 'Registration Nr', 'Practice Nr']}
+                // linkPrefix="clients" 
+                idField="client_id"
+              />
+              <Table
+                data={[patient.details[0]]} 
+                columns={['Client Name', 'Type', 'Email', 'Tell', 'Registration Nr', 'Practice Nr']}
+                // linkPrefix="clients" 
+                idField="client_id"
+              /> */}
+
             </div>
           </div>
           <div className="container-row justify-between items-center">
@@ -263,7 +276,7 @@ export default function InvoiceDetails() {
           </div>
           <Notes 
             tableName='invoices'
-            id={invoiceId || newInvoiceId}
+            id={invoiceId ? invoiceId : newInvoiceId   }
           />
         </>
       ) : (

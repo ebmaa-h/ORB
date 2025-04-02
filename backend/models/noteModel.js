@@ -5,7 +5,7 @@ const Note = {
   fetchNotes: async (targetTable, targetId) => {
     try {
       const [results] = await db.query(queries.fetchNotes, [targetTable, targetId]);
-      return results.length ? results : null;
+      return results;
     } catch (err) {
       throw err;
     }

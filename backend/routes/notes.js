@@ -1,6 +1,6 @@
 const express = require('express');
-const noteController = require('../controllers/noteController.js');
 const router = express.Router();
+const noteController = require('../controllers/noteController.js');
 
 // Consolidated GET route
 router.get('/:targetTable/:targetId', noteController.getNotes);

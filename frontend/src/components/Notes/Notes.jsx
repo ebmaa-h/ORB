@@ -9,7 +9,7 @@ export default function Notes({ tableName, id }) {
   const [notes, setNotes] = useState([]);
   const [newNote, setNewNote] = useState("");
   const [loading, setLoading] = useState(false);
-
+  
   // Fetch Notes on component mount or id change
   useEffect(() => {
     const fetchNotes = async () => {
@@ -20,16 +20,17 @@ export default function Notes({ tableName, id }) {
         console.error('Error fetching notes:', error);
       }
     };
-
+    
     if (id) {
       fetchNotes();
     }
-  }, [id]);
 
+  }, [tableName, id]);
+  
   // Handle adding a new note
   const handleAddNote = async () => {
     if (!newNote.trim()) return; // Prevent empty note submission
-
+    
     setLoading(true);
     try {
       const response = await axios.post(
@@ -38,7 +39,7 @@ export default function Notes({ tableName, id }) {
         { withCredentials: true }
       );
       console.log(response);
-
+      
       // Append new note to state (so we don’t need another fetch)
       setNotes((prevNotes) => [...prevNotes, response.data.note]);
       setNewNote(""); // Clear input after submission
@@ -47,7 +48,7 @@ export default function Notes({ tableName, id }) {
     }
     setLoading(false);
   };
-
+  
   return (
     <div className="container-col">
       <h3 className="uppercase font-bold">Notes</h3>

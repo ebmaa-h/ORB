@@ -1,14 +1,21 @@
+/* eslint-disable react/prop-types */
 import { useNavigate } from 'react-router-dom';
+import { useState } from 'react';
 
-export default function Table({ data, columns, linkPrefix, idField }) {
+export default function Table({ data, columns, linkPrefix, idField, excludedCol, direction }) {
   const navigate = useNavigate();
+  const [displayData, setDisplayData] = useState({})
+
 
   const handleRowClick = (id) => {
     // Navigate to the relevant page
-    if (id) {
+    if (id && linkPrefix) {
       navigate(`/${linkPrefix}/${id}`);  
     };
   }
+
+  console.log('data',data)
+  // console.log('excludedCol',excludedCol)
 
 
   // console.log("DATA: ",data); // {patient_full: 'Mrs Jo-Anne Smith', patient_id: '7207240000000'}
@@ -26,19 +33,17 @@ export default function Table({ data, columns, linkPrefix, idField }) {
           {data.length > 0 ? (
             data.map((item) => (
               <tr
-              key={item[idField]} //?? crypto.randomUUID()
-              className="cursor-pointer hover:bg-gray-blue-100"
-              onClick={() => handleRowClick(item[idField])} // Handle row click
+                key={item[idField]}
+                className="cursor-pointer hover:bg-gray-blue-100"
+                onClick={() => handleRowClick(item[idField])}
               >
-                {Object.values(item).map((value, key) => (
-                  <td 
-                    key={key} 
-                    className="border-y border-gray-blue-100 p-2 text-center "
-                    >
-                      {/* Not really rquired as most data is 'required' so table data wont really be empty, come back later */}
-                    {value !== null && value !== undefined ? value : '-'} 
-                  </td>
-                ))}
+              {Object.entries(item)
+                  .filter(([key]) => (excludedCol ?? []).includes(key) === false) // Default to [] to avoid error
+                  .map(([key, value]) => (
+                    <td key={key} className="border-y border-gray-blue-100 p-2 text-center">
+                      {value !== null && value !== undefined ? value : '-'}
+                    </td>
+                  ))}
               </tr>
             ))
           ) : (

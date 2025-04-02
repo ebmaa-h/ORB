@@ -1,26 +1,6 @@
 const Invoice = require('../models/invoiceModel');
 
 const invoiceController = {
-  getInvoices: async (req, res) => {
-    try {
-      const invoices = await Invoice.allInvoices();
-
-      if (!invoices || invoices.length === 0) {
-        console.log('No invoices found.');
-        return res.status(404).json({ message: 'No invoices found' });
-      }
-
-      console.log("Invoices Found: ", invoices);
-      return res.status(200).json({
-        message: 'Invoices retrieval successful',
-        invoices: invoices,
-      });
-    } catch (err) {
-      console.error('Error finding invoices:', err);
-      return res.status(500).json({ message: 'Internal server error', error: err });
-    }
-  },
-
 
   getInvoicesByClient: async (req, res) => {
     const clientId = req.params.clientId;
@@ -33,71 +13,66 @@ const invoiceController = {
       const invoices = await Invoice.clientInvoices(clientId);
 
       if (!invoices || invoices.length === 0) {
-        console.log('No invoices found.');
+        // console.log('No invoices found.');
         return res.status(404).json({ message: 'No invoices found' });
       }
 
-      console.log("Invoices Found: ", invoices);
+      // Format invoices
+      const formattedInvoices = invoices.map((invoice) => ({
+        invoice_id: invoice.invoice_id,
+        file_nr: invoice.file_nr,
+        auth_nr: invoice.auth_nr,
+        patient_full: `${invoice.patient_title} ${invoice.patient_first} ${invoice.patient_last}`,
+        patient_id: invoice.patient_id_nr,
+        member_full: `${invoice.member_title} ${invoice.member_first} ${invoice.member_last}`,
+        member_id: invoice.member_id_nr,
+        invoice_balance: invoice.invoice_balance,
+        date_of_service: invoice.date_of_service,
+        status: invoice.status,
+        updated_date: invoice.updated_date,
+      }));
+
+      // console.log("Invoices Found: ", formattedInvoices);
       return res.status(200).json({
         message: 'Invoices retrieval successful',
-        invoices: invoices,
+        invoices: formattedInvoices,
       });
     } catch (err) {
       console.error('Error finding invoices:', err);
-      return res.status(500).json({ message: 'Internal server error', error: err });
+      return res.status(500).json({ message: 'Internal server error', error: err.message });
     }
   },
   getInvoice: async (req, res) => {
-    const invoiceId = req.params.invoiceId;
-    const accountId = req.params.accountId;
-  
+    const { invoiceId, accountId } = req.params;
+
     if (!invoiceId && !accountId) {
-      return res.status(400).json({ message: 'ID is required' });
+      return res.status(400).json({ message: 'Invoice ID or Account ID is required' });
     }
   
     try {
-      const invoice = await Invoice.oneInvoice(invoiceId ? invoiceId : null, invoiceId ? null : accountId);
+      const invoiceData = await Invoice.oneInvoice(invoiceId || null, accountId || null);
   
-      if (!invoice) {
+      if (!invoiceData) {
         console.log('Invoice not found.');
         return res.status(404).json({ message: 'Invoice not found' });
       }
   
-      console.log("Invoice Found: ", invoice);
       return res.status(200).json({
         message: 'Invoice retrieval successful',
-        invoice: invoice,
+        invoice: {
+          invoiceId: invoiceData.invoiceId,
+          details: invoiceData.invoice,
+          member: invoiceData.member || {},
+          patient: invoiceData.patient || {},
+          client: invoiceData.client || {},
+          refClient: invoiceData.refClient || [],
+          medical: invoiceData.medical || {},
+        },
       });
+  
     } catch (err) {
       console.error('Error finding invoice:', err);
-      return res.status(500).json({ message: 'Internal server error', error: err });
-    }
-  },
-
-  createNewInvoice: async (req, res) => {
-    const accountId = req.params.accountId;
-    console.log("accountId", accountId)
-    // Account id for invoice to be related to
-    if (!accountId) {
-      return res.status(400).json({ message: 'Account ID is required' });
-    }
-
-    try {
-      const newInvoice = await Invoice.oneInvoice(accountId);
-
-      if (!newInvoice) {
-        return res.status(404).json({ message: 'Invoice not created.' });
-      }
-
-      return res.status(201).json({
-        message: createdInvoice,
-      });
-    } catch (err) {
-      console.error('Error creating invoice:', err);
-      return res.status(500).json({ 
-        message: 'Invoice creation successful',
-        invoice: newInvoice,
-       });
+      return res.status(500).json({ message: 'Internal server error', error: err.message });
     }
   },
 

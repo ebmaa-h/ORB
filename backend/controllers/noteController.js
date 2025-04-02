@@ -5,23 +5,24 @@ const noteController = {
   getNotes: async (req, res) => {
     const { targetTable, targetId } = req.params;
 
-    // Validate table name
-    if (!['accounts', 'invoices'].includes(targetTable)) {
-      return res.status(400).json({ message: 'Invalid target table specified' });
-    }
-
     try {
-      const notes = await Note.fetchNotes(targetTable, targetId);
-      if (!notes || notes.length === 0) {
-        return res.status(404).json({ message: 'No notes found' });
+      if (!['accounts', 'invoices'].includes(targetTable)) {
+        return res.status(404).json({ message: 'Invalid target table specified' });
       }
-
+  
+      const notes = await Note.fetchNotes(targetTable, targetId);
+  
+      if (notes.length === 0) {
+        return res.status(200).json({ message: 'No notes yet.', notes: [] });
+      }
+  
       return res.status(200).json({ message: 'Notes retrieved', notes });
     } catch (err) {
       console.error('Error fetching notes:', err);
-      return res.status(500).json({ message: 'Internal server error', error: err });
+      return res.status(500).json({ message: 'Internal server error', error: err.message });
     }
   },
+
 
   // Consolidated POST function
   addNote: async (req, res) => {

@@ -75,7 +75,7 @@ export default function AccountDetails() {
               <Table
                 data={Array.isArray(member) ? member : [member]} 
                 columns={['Record ID', 'Name', 'ID', 'Dependent Nr']}
-                linkPrefix="records" 
+                // linkPrefix="records" 
                 idField="record_id"
               />
             </div>
@@ -85,7 +85,7 @@ export default function AccountDetails() {
               <Table
                 data={Array.isArray(patient) ? patient : [patient]} 
                 columns={['Record ID', 'Name', 'ID', 'Dependent Nr']}
-                linkPrefix="records" 
+                // linkPrefix="records" 
                 idField="record_id"
               />
             </div>
