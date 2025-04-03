@@ -85,6 +85,23 @@ export default function InvoiceDetails() {
     }
   }
 }
+
+const formatRecordData = (record) => {
+  if (!record) return [];
+
+  const details = record.details?.[0] || {};
+  return [{
+    name: `${details.title} ${details.first} ${details.last}`,
+    gender: details.gender === 'M' ? 'Male' : 'Female',
+    id_nr: details.id_nr,
+    date_of_birth: details.date_of_birth,
+    addresses: record.addresses?.map(a => a.address).join(' | ') || '-',
+    contactNumbers: record.contactNumbers?.map(c => `${c.num_type}: ${c.num}`).join(' | ') || '-',
+    emails: record.emails?.map(e => e.email).join(' | ') || '-',
+    dependent_nr: details.dependent_nr,
+  }];
+};
+
   
 
   const handleSave = async () => {
@@ -126,30 +143,6 @@ export default function InvoiceDetails() {
     }
   };
 
-  const renderPersonDetails = (title, person) => (
-    <div className='flex-1'>
-      <table className="table-auto w-full border-collapse border-gray-blue-100 text-gray-dark">
-        <thead>
-          <tr>
-            <th colSpan="2" className="border border-gray-blue-100 p-2 ">{title}</th>
-          </tr>
-        </thead>
-        <tbody> 
-          <tr className="cursor-pointer hover:bg-gray-blue-100"><td className="border border-gray-blue-100 p-2">Name</td><td className="border border-gray-blue-100 p-2">{person[0]?.title} {person[0]?.first} {person[0]?.last}</td></tr>
-          <tr className="cursor-pointer hover:bg-gray-blue-100"><td className="border border-gray-blue-100 p-2">Gender</td><td className="border border-gray-blue-100 p-2">{person[0]?.gender === 'M' ? 'Male' : 'Female'}</td></tr>
-          <tr className="cursor-pointer hover:bg-gray-blue-100"><td className="border border-gray-blue-100 p-2">ID</td><td className="border border-gray-blue-100 p-2">{person[0]?.id_nr}</td></tr>
-          <tr className="cursor-pointer hover:bg-gray-blue-100"><td className="border border-gray-blue-100 p-2">Date of Birth</td><td className="border border-gray-blue-100 p-2">{person[0]?.date_of_birth}</td></tr>
-          <tr className="cursor-pointer hover:bg-gray-blue-100"><td className="border border-gray-blue-100 p-2">Addresses</td><td className="border border-gray-blue-100 p-2">{person.addresses?.map((address, index) => (<div key={index}>{address.address}</div>))}</td></tr>
-          <tr className="cursor-pointer hover:bg-gray-blue-100"><td className="border border-gray-blue-100 p-2">Contact</td><td className="border border-gray-blue-100 p-2">{person.contactNumbers?.map((contact, index) => (<div key={index}>{contact.num_type}: {contact.num}</div>))}</td></tr>
-          <tr className="cursor-pointer hover:bg-gray-blue-100"><td className="border border-gray-blue-100 p-2">Email</td><td className="border border-gray-blue-100 p-2">{person.emails?.map((email, index) => (<div key={index}>{email.email}</div>))}</td></tr>
-          <tr className="cursor-pointer hover:bg-gray-blue-100"><td className="border border-gray-blue-100 p-2">Dependent Nr</td><td className="border border-gray-blue-100 p-2">{person[0]?.dependent_nr}</td></tr>
-        </tbody>
-      </table>
-      
-
-    </div>
-  );
-
   return (
     <>
       {invoiceId || newInvoiceId ? (
@@ -157,57 +150,40 @@ export default function InvoiceDetails() {
           <div className="container-col gap-4">
             <h2 className='font-bold'>Invoice #{invoiceId || newInvoiceId}</h2>
             <div className='flex flex-row gap-4'>
-              <div className='flex-1'>
-                <VTable
-                  data={[client]} 
-                  // linkPrefix="medical" 
-                  type="Client"
-                  idField="client_id"
-                  excludedCol={['client_id']}
-                />
-                <VTable
-                    data={[medical]} 
-                    // linkPrefix="medical" 
-                    type="Medical Aid"
-                    idField="medical_id"
-                    excludedCol={['profile_id']}
-                  />
-                  {console.log("medical",medical)}
-                  {console.log("patient.details",patient.details[0])}
-                {/* <VTable
-                    data={patient.details} 
-                    // linkPrefix="medical" 
-                    type="Medical Aid"
-                    idField="medical_id"
-                    excludedCol={['profile_id']}
-                  /> */}
-              </div>
-    
-              {/* {renderPersonDetails('Guarantor', member)}
-              {renderPersonDetails('Patient', patient)} */}
-{/* {console.log('member:', member)} */}
-            </div>
-            <div className='flex flex-col gap-4'>
-              {/* {console.log("member['details']",member.details[0])} */}
-              {/* <Table
-                data={[member.details[0]]} 
-                columns={['Client Name', 'Type', 'Email', 'Tell', 'Registration Nr', 'Practice Nr']}
-                // linkPrefix="clients" 
+              <VTable
+                data={[client]} 
+                // linkPrefix="medical" 
+                type="Client"
                 idField="client_id"
+                excludedCol={['client_id']}
               />
-              <Table
-                data={[patient.details[0]]} 
-                columns={['Client Name', 'Type', 'Email', 'Tell', 'Registration Nr', 'Practice Nr']}
-                // linkPrefix="clients" 
-                idField="client_id"
-              /> */}
-
+              <VTable
+                  data={[medical]} 
+                  // linkPrefix="medical" 
+                  type="Medical Aid"
+                  idField="medical_id"
+                  excludedCol={['profile_id']}
+                />
+                {console.log("medical",medical)}
+                {console.log("patient",patient)}
+              <VTable
+                  data={formatRecordData(patient)} 
+                  // linkPrefix="medical" 
+                  type="Patient"
+                  idField="record_id"
+                />
+              <VTable
+                  data={formatRecordData(member)} 
+                  // linkPrefix="medical" 
+                  type="Guarantor"
+                  idField="record_id"
+                />
             </div>
           </div>
           <div className="container-row justify-between items-center">
             <div className='flex flex-row gap-4'>
               <InputField label="Procedure Date" 
-                value={invoice.date_of_service} 
+                value={invoice.date_of_service ? invoice.date_of_service : ""} 
                 id="procedure_date" 
                 onChange={(e) =>
                   setInvoice((prev) => ({
@@ -219,7 +195,7 @@ export default function InvoiceDetails() {
               />
               <InputField 
                 label="File Nr"
-                value={invoice.file_nr} 
+                value={invoice.file_nr ? invoice.file_nr : ""} 
                 id="file_nr" 
                 onChange={(e) =>
                   setInvoice((prev) => ({
@@ -230,7 +206,7 @@ export default function InvoiceDetails() {
               />
               <InputField 
                 label="Auth Nr"
-                value={invoice.auth_nr} 
+                value={invoice.auth_nr ? invoice.auth_nr : ""} 
                 id="auth_nr" 
                 onChange={(e) =>
                   setInvoice((prev) => ({

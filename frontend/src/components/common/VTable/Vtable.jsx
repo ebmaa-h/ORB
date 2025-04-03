@@ -2,7 +2,7 @@
 import { useNavigate } from 'react-router-dom';
 import { useState } from 'react';
 
-export default function VTable({ data, linkPrefix, idField, excludedCol, type}) {
+export default function VTable({ data, linkPrefix, idField, excludedCol = [], type }) {
   const navigate = useNavigate();
 
   // Mapping of object keys to human-readable column names
@@ -11,10 +11,17 @@ export default function VTable({ data, linkPrefix, idField, excludedCol, type}) 
     medical_aid_nr: 'Medical Aid Nr',
     plan_code: 'Plan Code',
     plan_name: 'Plan Name',
-    profile_id: 'Profile ID',
-    // Add more as needed...
+    name: 'Full Name',
+    gender: 'Gender',
+    date_of_birth: 'Date of Birth',
+    addresses: 'Addresses',
+    contactNumbers: 'Contact Nrs',
+    emails: 'Emails',
+    dependent_nr: 'Dept Nr',
+
   };
 
+  console.log(data)
   const handleRowClick = (id) => {
     if (id && linkPrefix) {
       navigate(`/${linkPrefix}/${id}`);
@@ -25,7 +32,7 @@ export default function VTable({ data, linkPrefix, idField, excludedCol, type}) 
     <table className="table-auto w-full border-collapse border-y border-gray-blue-100 text-gray-dark">
       <thead>
         <tr>
-          <th colSpan="2" className="border border-gray-blue-100 p-2">{type}</th>
+          <th colSpan="2" className="border border-gray-blue-100 p-2 w-[50%]">{type}</th>
         </tr>
       </thead>
       <tbody>
@@ -33,7 +40,7 @@ export default function VTable({ data, linkPrefix, idField, excludedCol, type}) 
           data.map((item) => (
             <tr
               key={item[idField]}
-              className="cursor-pointer hover:bg-gray-blue-100"
+              className="cursor-pointer w-full"
               onClick={() => handleRowClick(item[idField])}
             >
               {Object.entries(item)
@@ -41,9 +48,10 @@ export default function VTable({ data, linkPrefix, idField, excludedCol, type}) 
                 .map(([key, value]) => {
                   const label = columnMapping[key] || key; // Get human-readable label from mapping or use key as fallback
                   return (
-                    <tr key={key} className="cursor-pointer hover:bg-gray-blue-100">
-                      <th className="border border-gray-blue-100 p-2">{label}</th>
-                      <td className="border border-gray-blue-100 p-2">
+                    <tr key={key} className="cursor-pointer hover:bg-gray-blue-100 w-full flex text-left">
+                      <th className="border border-gray-blue-100 p-2 min-w-[150px]">{label}</th>
+                      <td className="border border-gray-blue-100 p-2 w-full">
+                        {/* {console.log(value)} */}
                         {value !== null && value !== undefined ? value : '-'}
                       </td>
                     </tr>

@@ -1,5 +1,5 @@
 import { useRef } from 'react';
-import { Notes } from '../../components';
+import { Notes } from '..';
 
 export default function NotesPopup({ tableName, id, onClose }) {
   const modalRef = useRef(null);

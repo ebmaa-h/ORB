@@ -3,10 +3,10 @@ require('dotenv').config();
 // Require necessary modules
 const express = require('express');
 const cors = require('cors');
-const authRoutes = require('./routes/auth');
-const userRoutes = require('./routes/user');
-const accRoutes = require('./routes/accounts');
-const profRoutes = require('./routes/profiles');
+const authRoutes = require('./routes/auth.js');
+const userRoutes = require('./routes/user.js');
+const accRoutes = require('./routes/accounts.js');
+const profRoutes = require('./routes/profiles.js');
 const invRoutes = require('./routes/invoices.js');
 const recordRoutes = require('./routes/records.js');
 const noteRoutes = require('./routes/notes.js');

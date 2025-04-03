@@ -67,7 +67,13 @@ export default function Nav() {
       </div>
       <div className='flex flex-row gap-4 mr-4'>
           <>
-          {/* should reset the  'select' */}
+          <Link 
+            to="/records" 
+            className={`link-class ${isActive('/records')}`}
+            onClick={() => setClientId("")} 
+          >
+            Records
+          </Link>
           <Link 
             to="/dashboard" 
             onClick={() => setClientId("")} 
