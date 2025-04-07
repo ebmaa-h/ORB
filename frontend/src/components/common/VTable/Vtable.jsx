@@ -21,7 +21,7 @@ export default function VTable({ data, linkPrefix, idField, excludedCol = [], ty
 
   };
 
-  console.log(data)
+  // console.log(data)
   const handleRowClick = (id) => {
     if (id && linkPrefix) {
       navigate(`/${linkPrefix}/${id}`);

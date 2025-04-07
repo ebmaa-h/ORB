@@ -17,6 +17,7 @@ export default function Dashboard() {
     <>        
       <div className='container-col'>
         <p>Hello {user.first}.</p>
+        
       </div>
 
       <p>

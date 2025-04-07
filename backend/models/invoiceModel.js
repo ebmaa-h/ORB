@@ -67,14 +67,15 @@ const Invoice = {
         invoiceId: newInvoiceId ?? invoiceId,
         invoice,
         member: memberResults[0] ? {
-          details: memberResults[0],
+          // details: memberResults[0],
+          ...memberResults[0][0],
           addresses: memberAddresses[0] || [],
           contactNumbers: memberContact[0] || [],
           emails: memberEmail[0] || [],
         } : null,
         patient: patientResults[0] ? {
-          // ...patientResults[0],
-          details: patientResults[0],
+          ...patientResults[0][0],
+          // details: patientResults[0],
           addresses: patientAddresses[0] || [],
           contactNumbers: patientContact[0] || [],
           emails: patientEmail[0] || [],

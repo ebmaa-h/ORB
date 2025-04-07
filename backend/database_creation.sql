@@ -62,13 +62,14 @@ CREATE TABLE logs (
     log_id INT AUTO_INCREMENT PRIMARY KEY,
     user_id INT,
     action ENUM('create', 'update', 'delete') NOT NULL,
-    old_value JSON,
-    new_value JSON,
-    target_table VARCHAR(255),
-    target_id INT,
+    target_table VARCHAR(255) NOT NULL,
+    target_id INT NOT NULL,
+    changes JSON, -- Merged old + new values here
     timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    
     FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE SET NULL
 );
+
 
 
 CREATE TABLE notes (

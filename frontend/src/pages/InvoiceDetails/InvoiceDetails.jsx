@@ -1,11 +1,13 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useContext } from 'react';
+import { UserContext } from '../../context/UserContext';
 import { useParams } from 'react-router-dom';
 import ENDPOINTS from '../../config/apiEndpoints';
 import axios from 'axios';
-import { InputField, BackButton, Notes, Table, VTable } from '../../components';
+import { InputField, BackButton, NotesAndLogs, Table, VTable, NotesPopup } from '../../components';
 import { useOutletContext } from "react-router-dom";
 
 export default function InvoiceDetails() {
+  const { user } = useContext(UserContext); 
   const { accountId, invoiceId } = useParams();
   const { triggerToast } = useOutletContext(); 
   const [invoice, setInvoice] = useState({});
@@ -15,9 +17,11 @@ export default function InvoiceDetails() {
   const [refClient, setRefClient] = useState([]);
   const [medical, setMedical] = useState([]);
   const [newInvoiceId, setNewInvoiceId  ] = useState();
+  const [refreshLogs, setRefreshLogs] = useState(false);
 
   const [ ogData, setOgData ] = useState({});
-
+  const rowClass = "cursor-pointer hover:bg-gray-blue-100";
+  const cellClass = "border border-gray-blue-100 p-2";
 
   useEffect(() => {
     const getInvoiceDetails = async () => {
@@ -26,10 +30,12 @@ export default function InvoiceDetails() {
   
         if (accountId) {
           // Fetch invoice data using accountId
-          response = await axios.get(ENDPOINTS.newInvoice(accountId), {
+          response = await axios.get(ENDPOINTS.newInvoice(accountId),{
+            params: { userId: user.user_id },
             withCredentials: true,
           });
           setNewInvoiceId(response.data.invoice.invoiceId);
+          triggerToast(true, "New Invoice Created!");
         } else if (invoiceId) {
           // Fetch invoice details using invoiceId
           response = await axios.get(ENDPOINTS.invoiceDetails(invoiceId), {
@@ -60,49 +66,39 @@ export default function InvoiceDetails() {
   }, [accountId, invoiceId]);
 
 
-  const checkChange = (fields, updateFields) => {
-    let hasChanges = false;
-
-    for (let i = 0; i < updateFields.length; i++) {
-      let newValue = fields[updateFields[i]];
-      let oldValue = ogData[updateFields[i]];
-
-      if (newValue !== oldValue) {
-
-        console.log('Change Detected');
-        console.log(updateFields[i],": ",newValue)
-        console.log(updateFields[i],": ",oldValue)
-        hasChanges = true;
-        
-        setOgData((prev) => ({
-          ...prev,
-          invoice: {
-            ...prev.invoice,
-            [updateFields[i]]: newValue,
-          }
-        }));
-      return hasChanges;
+  const logChanges = async (invoiceId, changedFields) => {
+    try {
+      const payload = {
+        userId: user.user_id,
+        table: 'invoices',
+        action: 'update',
+        id: invoiceId,
+        changes: changedFields,
+      };
+  
+      await axios.post(ENDPOINTS.addLog, payload, { withCredentials: true });
+      console.log("Changes logged:", payload);
+    } catch (error) {
+      console.error("Failed to log changes:", error);
     }
-  }
-}
+  };
 
-const formatRecordData = (record) => {
-  if (!record) return [];
 
-  const details = record.details?.[0] || {};
-  return [{
-    name: `${details.title} ${details.first} ${details.last}`,
-    gender: details.gender === 'M' ? 'Male' : 'Female',
-    id_nr: details.id_nr,
-    date_of_birth: details.date_of_birth,
-    addresses: record.addresses?.map(a => a.address).join(' | ') || '-',
-    contactNumbers: record.contactNumbers?.map(c => `${c.num_type}: ${c.num}`).join(' | ') || '-',
-    emails: record.emails?.map(e => e.email).join(' | ') || '-',
-    dependent_nr: details.dependent_nr,
-  }];
+const getChangedFields = (newData, originalData, updateFields) => {
+  const changed = {};
+
+  updateFields.forEach((field) => {
+    if (newData[field] !== originalData[field]) {
+      changed[field] = {
+        old: originalData[field],
+        new: newData[field]
+      };
+    }
+  });
+
+  return Object.keys(changed).length > 0 ? changed : null;
 };
 
-  
 
   const handleSave = async () => {
     const updatedInvoice = {
@@ -114,34 +110,39 @@ const formatRecordData = (record) => {
       ref_client_id: invoice.ref_client_id,
     };
 
-    let updateFields = [
+    const updateFields = [
       "file_nr",
       "auth_nr",
       "date_of_service",
       "status",
       "ref_client_id",
-    ]
+    ];
 
-    const hasChanges = checkChange(updatedInvoice, updateFields);
+    const changes = getChangedFields(updatedInvoice, ogData, updateFields);
 
-    if (!hasChanges) {
+    if (!changes) {
       console.log("No changes detected, skipping save.");
       triggerToast(false, "No changes made.");
-      return; // Stop execution if nothing changed
+      return;
     }
-
 
     try {
       await axios.patch(ENDPOINTS.updateInvoice, updatedInvoice, {
         withCredentials: true,
       });
+
       triggerToast(true, "Invoice Updated Successfully!");
-      // navigate(-1);
+      setOgData(updatedInvoice); // Update the original data state -> Resetting the changes
+      setRefreshLogs(prev => !prev); // Refresh notes & logs
+      await logChanges(updatedInvoice.invoice_id, changes);
+
     } catch (error) {
       console.error('Error saving invoice details:', error);
-      triggerToast(false, "Failed to update invoice."); // Error toast
+      triggerToast(false, "Failed to update invoice.");
     }
   };
+
+
 
   return (
     <>
@@ -152,7 +153,7 @@ const formatRecordData = (record) => {
             <div className='flex flex-row gap-4'>
               <VTable
                 data={[client]} 
-                // linkPrefix="medical" 
+                // linkPrefix="client" 
                 type="Client"
                 idField="client_id"
                 excludedCol={['client_id']}
@@ -163,21 +164,41 @@ const formatRecordData = (record) => {
                   type="Medical Aid"
                   idField="medical_id"
                   excludedCol={['profile_id']}
-                />
-                {console.log("medical",medical)}
-                {console.log("patient",patient)}
-              <VTable
-                  data={formatRecordData(patient)} 
-                  // linkPrefix="medical" 
-                  type="Patient"
-                  idField="record_id"
-                />
-              <VTable
-                  data={formatRecordData(member)} 
-                  // linkPrefix="medical" 
-                  type="Guarantor"
-                  idField="record_id"
-                />
+                  />
+                <table className="table-auto w-full border-collapse border-y border-gray-blue-100 text-gray-dark">
+                  <thead>
+                    <tr>
+                    <th colSpan="2" className={cellClass}>Patient</th>
+                    </tr>
+                  </thead>
+                  <tbody> 
+                    <tr className={rowClass}><td className={cellClass}>Name</td><td className={cellClass}>{patient?.title} {patient?.first} {patient?.last}</td></tr>
+                    <tr className={rowClass}><td className={cellClass}>Gender</td><td className={cellClass}>{patient?.gender === 'M' ? 'Male' : 'Female'}</td></tr>
+                    <tr className={rowClass}><td className={cellClass}>ID</td><td className={cellClass}>{patient?.id_nr}</td></tr>
+                    <tr className={rowClass}><td className={cellClass}>Date of Birth</td><td className={cellClass}>{patient?.date_of_birth}</td></tr>
+                    <tr className={rowClass}><td className={cellClass}>Addresses</td><td className={cellClass}>{patient.addresses?.map((address, index) => (<div key={index}>{address.address}</div>))}</td></tr>
+                    <tr className={rowClass}><td className={cellClass}>Contact</td><td className={cellClass}>{patient.contactNumbers?.map((contact, index) => (<div key={index}>{contact.num_type}: {contact.num}</div>))}</td></tr>
+                    <tr className={rowClass}><td className={cellClass}>Email</td><td className={cellClass}>{patient.emails?.map((email, index) => (<div key={index}>{email.email}</div>))}</td></tr>
+                    <tr className={rowClass}><td className={cellClass}>Dependent Nr</td><td className={cellClass}>{patient?.dependent_nr}</td></tr>
+                  </tbody>
+                </table>
+                <table className="table-auto w-full border-collapse border-y border-gray-blue-100 text-gray-dark">
+                  <thead>
+                    <tr>
+                    <th colSpan="2" className={cellClass}>Member</th>
+                    </tr>
+                  </thead>
+                  <tbody> 
+                    <tr className={rowClass}><td className={cellClass}>Name</td><td className={cellClass}>{member?.title} {member?.first} {member?.last}</td></tr>
+                    <tr className={rowClass}><td className={cellClass}>Gender</td><td className={cellClass}>{member?.gender === 'M' ? 'Male' : 'Female'}</td></tr>
+                    <tr className={rowClass}><td className={cellClass}>ID</td><td className={cellClass}>{member?.id_nr}</td></tr>
+                    <tr className={rowClass}><td className={cellClass}>Date of Birth</td><td className={cellClass}>{member?.date_of_birth}</td></tr>
+                    <tr className={rowClass}><td className={cellClass}>Addresses</td><td className={cellClass}>{member.addresses?.map((address, index) => (<div key={index}>{address.address}</div>))}</td></tr>
+                    <tr className={rowClass}><td className={cellClass}>Contact</td><td className={cellClass}>{member.contactNumbers?.map((contact, index) => (<div key={index}>{contact.num_type}: {contact.num}</div>))}</td></tr>
+                    <tr className={rowClass}><td className={cellClass}>Email</td><td className={cellClass}>{member.emails?.map((email, index) => (<div key={index}>{email.email}</div>))}</td></tr>
+                    <tr className={rowClass}><td className={cellClass}>Dependent Nr</td><td className={cellClass}>{member?.dependent_nr}</td></tr>
+                  </tbody>
+                </table>
             </div>
           </div>
           <div className="container-row justify-between items-center">
@@ -250,10 +271,13 @@ const formatRecordData = (record) => {
               <button type="button" className="btn-class w-[100px]" onClick={handleSave}>Save</button>
             </div>
           </div>
-          <Notes 
+          <NotesAndLogs 
             tableName='invoices'
             id={invoiceId ? invoiceId : newInvoiceId   }
+            refreshTrigger={refreshLogs}
+
           />
+          {/* <NotesPopup /> */}
         </>
       ) : (
         <div className='container-col items-center'>

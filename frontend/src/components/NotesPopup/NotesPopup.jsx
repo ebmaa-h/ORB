@@ -1,5 +1,5 @@
 import { useRef } from 'react';
-import { Notes } from '..';
+import { NotesAndLogs } from '..';
 
 export default function NotesPopup({ tableName, id, onClose }) {
   const modalRef = useRef(null);
@@ -20,7 +20,7 @@ export default function NotesPopup({ tableName, id, onClose }) {
         >
           ✕
         </button>
-        <Notes tableName={tableName} id={id} />
+        <NotesAndLogs tableName={tableName} id={id} />
       </div>
     </div>
   );

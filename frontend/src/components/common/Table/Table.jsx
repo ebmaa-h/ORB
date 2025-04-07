@@ -14,7 +14,7 @@ export default function Table({ data, columns, linkPrefix, idField, excludedCol,
     };
   }
 
-  console.log('data',data)
+  console.log('table loaded')
   // console.log('excludedCol',excludedCol)
 
 

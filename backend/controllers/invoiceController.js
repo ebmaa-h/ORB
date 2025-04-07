@@ -1,4 +1,5 @@
 const Invoice = require('../models/invoiceModel');
+const Log = require('../models/logModel');
 
 const invoiceController = {
 
@@ -56,6 +57,15 @@ const invoiceController = {
         console.log('Invoice not found.');
         return res.status(404).json({ message: 'Invoice not found' });
       }
+
+      // Log invoice created.
+      if (accountId) {
+        const userId = req.query.userId;
+        if (userId) {
+          Log.addLog(userId, 'create', 'invoices', invoiceData.invoiceId, '');
+        }
+      }
+      
   
       return res.status(200).json({
         message: 'Invoice retrieval successful',

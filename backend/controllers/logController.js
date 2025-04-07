@@ -1,13 +1,39 @@
 const Log = require('../models/logModel');
 
 const logController = {
+  addLog: async (req, res) => {
+    try {
+      const { userId, action, table, id, changes } = req.body;
 
-  // getLogs : async (req,res) => {
-  //   const {targetTable, targetId} = req.params;
-  //   const logs = await Log.fetchLogs(targetTable, targetId);
-  //   if (!logs || logs.length === 0) {
-  //     return res.status(404).json({ message: 'No logs found' });
-  //   }
-  //   return res.status(200).json({ message: 'Logs retrieved', logs });
-  // },
-}
+      if (!userId || !action || !table || !id || !changes) {
+        return res.status(400).json({ message: 'Missing required fields' });
+      }
+
+      await Log.addLog(userId, action, table, id, changes);
+      console.log('Log added successfully');
+      res.status(201).json({ message: 'Log added successfully' });
+    } catch (error) {
+      console.error('Error adding log:', error);
+      res.status(500).json({ message: 'Failed to add log' });
+    }
+  },
+  
+  getLogs: async (req, res) => {
+    try {
+      const { targetTable, targetId } = req.params;
+  
+      if (!targetTable || !targetId) {
+        return res.status(400).json({ message: 'Missing required parameters' });
+      }
+  
+      const logs = await Log.getLogs(targetTable, targetId);
+      res.status(200).json(logs);
+    } catch (error) {
+      console.error('Error fetching logs:', error);
+      res.status(500).json({ message: 'Failed to fetch logs' });
+    }
+  }
+  
+};
+
+module.exports = logController;

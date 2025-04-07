@@ -27,7 +27,7 @@ export default function ProfileDetails() {
         
         // console.log('Profile data response:', response.data.profile);
         const data = response.data.profileData; 
-        console.log(data);
+        // console.log(data);
         const { dependents, accounts, invoices, profileData } = data;
         
         // console.log('Dependents:', dependents);

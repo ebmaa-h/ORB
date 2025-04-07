@@ -69,7 +69,7 @@ export default function PersonRecordDetails() {
   const addNewEmail = () => {
     setEmails((prev) => [
       ...prev,
-      { email: '' },
+      { email_id: Date.now(), email: '' },
     ]);
   };
 
@@ -78,11 +78,10 @@ export default function PersonRecordDetails() {
       { num_type: 'Other', num: '' },
     ]);
   };
-
   const addNewAddress = () => {
     setAddresses((prev) => [
       ...prev,
-      { address: '', is_domicilium: false },
+      { address_id: Date.now(), address: '', is_domicilium: false },
     ]);
   };
   

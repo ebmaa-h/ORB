@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import axios from 'axios';
-import { SearchBar, Table, BackButton, Notes } from '../../components';
+import { SearchBar, Table, BackButton, NotesAndLogs } from '../../components';
 import ENDPOINTS from '../../config/apiEndpoints';
 import { useNavigate } from 'react-router-dom';
 
@@ -65,7 +65,7 @@ export default function AccountDetails() {
             <p><strong>Medical Aid:</strong> {account.medical_aid_name} - {account.plan_name}</p>
             <p><strong>Client:</strong> {account.client_name}</p>
             <p><strong>Balance:</strong> 0.00</p>
-            <span className="material-symbols-outlined">two_pager</span>
+            {/* <span className="material-symbols-outlined">two_pager</span> */}
           </div>
 
           <div className='container-row'>
@@ -120,7 +120,7 @@ export default function AccountDetails() {
             </div>
           </div>
 
-          <Notes 
+          <NotesAndLogs 
             tableName='accounts'
             id={account.account_id}
             
