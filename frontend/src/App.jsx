@@ -3,7 +3,7 @@ import { useContext } from 'react';
 import { BrowserRouter as Router, Route, Routes, Navigate, useLocation } from 'react-router-dom';
 import { Logout } from './components/index'
 import { UserContext } from './context/UserContext';
-import { Login, Dashboard, ProtectedLayout, Tools, TimeSheet, Profiles, ProfileDetails, AccountDetails, InvoiceDetails, ClientAccounts, ClientInvoices, PersonRecords, PersonRecordDetails, ClientInfo, NewInvoice } from './pages/index';
+import { Login, Dashboard, ProtectedLayout, Tools, TimeSheet, Profiles, Profile, AccountDetails, Invoice, ClientAccounts, ClientInvoices, Records, Record, ClientInfo, NewInvoice } from './pages/index';
 
 function App() {
   const { user } = useContext(UserContext);
@@ -24,7 +24,7 @@ function App() {
           <Route path="/tools" element={<Tools />} />
           
           <Route path="/profiles" element={<Profiles />} />
-          <Route path="/profiles/:profileId" element={<ProfileDetails />} />
+          <Route path="/profiles/:profileId" element={<Profile />} />
 
           <Route path="/client/info" element={<ClientInfo />} />
 
@@ -32,15 +32,15 @@ function App() {
           <Route path="/accounts/:accountId" element={<AccountDetails />} />
 
           <Route path="/invoices" element={<ClientInvoices />} />
-          {/* <Route path="/invoices/:invoiceId" element={<InvoiceDetails />} /> */}
-          <Route path="/invoices/:invoiceId" element={<InvoiceDetails />} />
-          <Route path="/invoices/new/:accountId" element={<InvoiceDetails />} />
-          {/* <Route path="/invoices/new-invoice/:accountId" component={<InvoiceDetails />} /> */}
+          {/* <Route path="/invoices/:invoiceId" element={<Invoice />} /> */}
+          <Route path="/invoices/:invoiceId" element={<Invoice />} />
+          <Route path="/invoices/new/:accountId" element={<Invoice />} />
+          {/* <Route path="/invoices/new-invoice/:accountId" component={<Invoice />} /> */}
           
           {/* <Route path="/invoices/new/:accountId" element={<NewInvoice />} /> */}
 
-          <Route path="/records" element={<PersonRecords />} />
-          <Route path="/records/:recordId" element={<PersonRecordDetails />} />
+          <Route path="/records" element={<Records />} />
+          <Route path="/records/:recordId" element={<Record />} />
 
           <Route path="/time" element={<TimeSheet />} />
           <Route path="/logout" element={<Logout />} />

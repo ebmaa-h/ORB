@@ -400,39 +400,8 @@ VALUES
 (4, 2, 11, 13),
 (4, 2, 11, 14),
 
-
 (5, 3, 2, 2),
 (5, 3, 2, 3);
-
--- Inserting sample data for invoices
-INSERT INTO invoices (account_id, date_of_service, status, auth_nr)
-VALUES
--- Profile 1: Thabo, Naledi, Lerato
-(1, '2024-12-01', 'Processing', '861614'),
-(2, '2024-12-02', 'Processing', '761614'),
-(3, '2024-12-03', 'Processing', '661614'),
-(4, '2024-12-04', 'Processing', '561614'),
-
--- Profile 2: Pieter, Annelize, Jaco, Saki
-(5, '2024-12-01', 'Processing', '461614'),
-(6, '2024-12-02', 'Processing', '361614'),
-(7, '2024-12-03', 'Processing', '261614'),
-(8, '2024-12-04', 'Processing', '161614'),
-
--- Profile 3: Jo-Anne, John, Emily
-(9, '2024-12-01', 'Processing', '161614'),
-(10, '2024-12-02', 'Processing', '261614'),
-(11, '2024-12-03', 'Processing', '361614'),
-
--- Profile 4: Rajesh, Priya, Kavita, Sanjay
-(12, '2024-12-01', 'Processing', '461614'),
-(13, '2024-12-02', 'Processing', '561614'),
-(14, '2024-12-03', 'Processing', '661614'),
-(15, '2024-12-04', 'Processing', '761614'),
-
--- Additional cases
-(16, '2024-12-02', 'Processing', '568486673'),
-(17, '2024-12-03', 'Processing', '568486673');
 
 
 -- Inserting sample data for features
