@@ -12,7 +12,6 @@ LEFT JOIN medical_aids ma ON p.medical_aid_id = ma.medical_aid_id
 LEFT JOIN medical_aid_plans map ON p.plan_id = map.plan_id
 LEFT JOIN accounts a ON p.profile_id = a.profile_id
 LEFT JOIN profile_person_map ppm ON p.profile_id = ppm.profile_id
-LEFT JOIN invoices i ON p.profile_id = i.profile_id
 -- Main member join
 LEFT JOIN profile_person_map main_map ON p.profile_id = main_map.profile_id AND main_map.is_main_member = TRUE
 LEFT JOIN person_records mm ON main_map.record_id = mm.record_id

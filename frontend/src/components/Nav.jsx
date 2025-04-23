@@ -20,6 +20,7 @@ export default function Nav() {
   return (
     <div className="bg-white shadow flex justify-between items-center flex-row h-[60px]">
       <div className='flex flex-row gap-4 ml-4'>
+        {clientId && location.pathname !== '/dashboard' ? (
           <>
             <select
               className="cursor-pointer border rounded border-gray-300 px-2 hover:border-ebmaa-purple transition duration-300"
@@ -39,41 +40,39 @@ export default function Nav() {
                 </option>
               ))}
             </select>
-          
-            {clientId && (
-              <>
-                <Link 
-                  to="/accounts" 
-                  className={`link-class ${isActive('/accounts')}`}
-                >
-                  Accounts
-                </Link>
-                <Link 
-                  to="/invoices" 
-                  className={`link-class ${isActive('/invoices')}`}
-                >
-                  Invoices
-                </Link>
-                <Link 
-                  to="/client/info" 
-                  className={`link-class ${isActive('/client/info')}`}
-                >
-                  Client Info
-                </Link>
-              </>
-            )}
-
-          </>
+            <Link 
+              to="/accounts" 
+              className={`link-class ${isActive('/accounts')}`}
+            >
+              Accounts
+            </Link>
+            <Link 
+              to="/invoices" 
+              className={`link-class ${isActive('/invoices')}`}
+            >
+              Invoices
+            </Link>
+            <Link 
+              to="/client/info" 
+              className={`link-class ${isActive('/client/info')}`}
+            >
+              Client Info
+            </Link>
+            </>
+        ) : (
+          <img className='h-[25px]' src="/ebmaa-orb-text.svg" alt="EBMAA Orb" />
+        )} 
       </div>
       <div className='flex flex-row gap-4 mr-4'>
           <>
-          <Link 
+
+          {/* <Link 
             to="/records" 
             className={`link-class ${isActive('/records')}`}
             onClick={() => setClientId("")} 
           >
             Records
-          </Link>
+          </Link> */}
           <Link 
             to="/dashboard" 
             onClick={() => setClientId("")} 

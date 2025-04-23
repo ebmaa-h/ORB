@@ -2,13 +2,15 @@ import { useEffect, useState, useContext } from 'react';
 import axios from 'axios';
 import ENDPOINTS from '../config/apiEndpoints';
 import { UserContext } from '../context/UserContext';
+import { SearchBar } from '../components';
 
 export default function NotesAndLogs({ tableName, id, refreshTrigger }) {
   const { user } = useContext(UserContext);
   const [items, setItems] = useState([]);
   const [newNote, setNewNote] = useState("");
   const [loading, setLoading] = useState(false);
-  const [showLogs, setShowLogs] = useState(true);
+  const [showLogs, setShowLogs] = useState(false);
+  const [searchTerm, setSearchTerm] = useState('');
 
   useEffect(() => {
     const fetchNotesAndLogs = async () => {
@@ -138,25 +140,31 @@ export default function NotesAndLogs({ tableName, id, refreshTrigger }) {
     setLoading(false);
   };
 
+  const filteredHistory = items.filter((item) =>
+    Object.values(item).join(' ').toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
   return (
     <div className="container-col">
-      <div className='flex gap-6'>
-        <h3 className="font-bold">Notes & Logs</h3>
-        {/* Toggling logs visibility */}
-        <div className="flex gap-4">
-        <label className='flex gap-2 items-center text-gray-800'>
+      <div className='flex flex-row items-center justify-start gap-6'>
+        <h3 className="font-bold">History</h3>
+
+          <label className='flex gap-2 items-center text-gray-800'>
+            {/* Toggling logs visibility */}
             <input
               type="checkbox"
               checked={showLogs}
               onChange={() => setShowLogs(!showLogs)}
             />
-            {showLogs ? "Hide Logs" : "Show Logs"}
+            {/* {showLogs ? "Hide Logs" : "Show Logs"} */}
+            Logs
           </label>
-        </div>
+          {/* Filter */}
+          <SearchBar searchTerm={searchTerm} setSearchTerm={setSearchTerm} classes="h-[25px] text-sm btn-class"/>
       </div>
       <div className="flex flex-col gap-1 justify-center">
-        {items.length ? (
-          items.map((item) => (
+        {filteredHistory.length ? (
+          filteredHistory.map((item) => (
             <div key={item.id} className={`flex gap-4 items-start ${item.type === 'log' && !showLogs ? 'hidden' : ''}`}>
               <p className="text-gray-700 w-[160px] shrink-0">
                 {new Date(item.created_at).toLocaleString()}

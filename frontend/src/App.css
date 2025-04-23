@@ -3,3 +3,18 @@
   line-height: 1.5;
   /* color: #273444; */
 }
+
+
+input:focus,
+textarea:focus,
+select:focus,
+button:focus {
+  outline: none;
+  box-shadow: none;
+}
+
+
+.disabled {
+  opacity: 0.5;
+  pointer-events:none
+}

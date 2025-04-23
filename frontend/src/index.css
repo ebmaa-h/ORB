@@ -14,7 +14,7 @@
   }
 
   .container-col {
-    @apply flex flex-col gap-6 p-4 my-4 bg-white shadow rounded w-full;
+    @apply flex flex-col gap-6 p-4 mt-4 bg-white shadow rounded w-full;
   }
 
   .container-row {
