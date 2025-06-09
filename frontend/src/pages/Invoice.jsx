@@ -84,6 +84,43 @@ export default function Invoice() {
   };
 
 
+// how to refactor and how to comment
+// Key Tip: Use comments to answer:
+
+// Why does this exist?
+// When or where is this useful?
+// What problem does it solve elegantly?
+// (Optionally): Any gotchas the next dev (or future-you) should know?
+
+/**
+ * Tracks changes between two objects based on a defined set of fields.
+ * Used to detect what the user modified in a form or data entry before saving.
+ * 
+ * Returns an object containing the fields that were changed,
+ * with both the original and updated values — or null if nothing changed.
+ * 
+ * This is useful for:
+ * - Auditing or logging specific field changes.
+ * - Avoiding unnecessary updates if nothing changed.
+ * - Generating user-friendly "You changed X to Y" messages.
+ */
+
+
+const useChangeTracker = (original, fields) => {
+  return (updated) => {
+    const changes = {};
+    fields.forEach(f => {
+      if (updated[f] !== original[f]) {
+        changes[f] = { old: original[f], new: updated[f] };
+      }
+    });
+    return Object.keys(changes).length ? changes : null;
+  };
+};
+
+
+
+
 const getChangedFields = (newData, originalData, updateFields) => {
   const changed = {};
 

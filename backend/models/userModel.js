@@ -3,48 +3,62 @@ const queries = require('./queries/userQueries')
 
 const User = {
 
-  loginUser: async (email) => {
+  findByEmail: async (email) => {
     try {
-      // Fetch user by email
       const [results] = await db.query(queries.login, [email]);
-  
-      // If no user is found, return null
       const user = results[0];
+
       if (!user) {
         console.log(`User with email ${email} not found.`);
-        return null; 
+        return null;
       }
-  
-      const [features] = await db.query(queries.features, [user.user_id]);
+
+      const [[features], [clientAccess]] = await Promise.all([
+        db.query(queries.features, [user.user_id]),
+        db.query(queries.clientAccess, [user.user_id])
+      ]);
+
       user.features = features;
-  
-      const [clientAccess] = await db.query(queries.clientAccess, [user.user_id]);
       user.client_access = clientAccess;
-  
-      return user; // Return complete user object
-  
+
+      return user;
     } catch (err) {
       console.error('Error fetching user data:', err);
       throw new Error('Internal Server Error');
     }
-  },  
-  
+  },
 
-// Create new user
-createUser: async (userDetails) => {
-  const { email, password, first, last, address, tell_nr } = userDetails;
+  findById: async (id) => {
+    try {
+      const [results] = await db.query(queries.sessionId, [id]);
+      const user = results[0];
 
-  try {
-    const [result] = await db.query(queries.newUser, [email, password, first, last, address, tell_nr]);
-    
-    return { userId: result.insertId };
-  } catch (err) {
-    if (err.code === 'ER_DUP_ENTRY') {
-      throw { message: 'Email already exists' };
+      if (!user) {
+        console.log(`User with ${id} not found.`);
+        return null;
+      }
+
+      return user;
+    } catch (err) {
+      console.error('Error fetching user data:', err);
+      throw new Error('Internal Server Error');
     }
-    throw { message: 'Database error', details: err };
-  }
-},
+  },
+
+  // Create new user
+  createUser: async (userDetails) => {
+    const { email, first, last, address = '', tell_nr = '' } = userDetails;
+
+    try {
+      const [result] = await db.query(queries.newUser, [email, first, last, address, tell_nr]);
+      return { userId: result.insertId };
+    } catch (err) {
+      if (err.code === 'ER_DUP_ENTRY') {
+        throw { message: 'Email already exists' };
+      }
+      throw { message: 'Database error', details: err };
+    }
+  },
 
 
   // Create new client

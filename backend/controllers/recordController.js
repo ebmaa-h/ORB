@@ -1,4 +1,3 @@
-const { verifyToken } = require('../utils/jwt.js');
 const Record = require('../models/recordModel.js');
 
 const recordController = {

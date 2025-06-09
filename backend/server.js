@@ -1,4 +1,5 @@
 require('dotenv').config();
+require('./config/passport');
 
 // Require necessary modules
 const express = require('express');
@@ -11,14 +12,30 @@ const invRoutes = require('./routes/invoices.js');
 const recordRoutes = require('./routes/records.js');
 const noteRoutes = require('./routes/notes.js');
 const logRoutes = require('./routes/logs.js');
+const session = require('express-session');
+const passport = require('passport');
 
 // Express app
 const app = express();
 
-const cookieParser = require('cookie-parser');
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
 
-// Add cookie-parser middleware to handle cookies
-app.use(cookieParser());
+// Configure session middleware
+app.use(session({
+  secret: process.env.SESSION_SECRET,
+  resave: false,
+  saveUninitialized: false,
+  cookie: {
+    httpOnly: true,
+    maxAge: 24 * 60 * 60 * 1000, // 1 day
+  },
+}));
+
+// Initialize Passport and session
+app.use(passport.initialize());
+app.use(passport.session());
+
 
 app.use(cors({
   origin: ['http://localhost:5173', 'http://167.99.196.172', 'http://orb.ebmaa.co.za'], // Local dev and production

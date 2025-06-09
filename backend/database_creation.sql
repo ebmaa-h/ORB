@@ -5,7 +5,6 @@ DROP TABLE IF EXISTS person_contact_numbers,person_emails, person_numbers, invoi
 CREATE TABLE users (
     user_id INT AUTO_INCREMENT PRIMARY KEY,
     email VARCHAR(255) NOT NULL UNIQUE,
-    password VARCHAR(512) NOT NULL,
     first VARCHAR(255),
     last VARCHAR(255),
     address VARCHAR(255),
@@ -18,7 +17,7 @@ CREATE TABLE users (
 CREATE TABLE clients (
     client_id INT AUTO_INCREMENT PRIMARY KEY,
     email VARCHAR(255) NOT NULL UNIQUE,
-    password VARCHAR(512) NOT NULL,
+    password VARCHAR(255) NOT NULL,
     first VARCHAR(255),
     last VARCHAR(255),
     registration_nr VARCHAR(255),
@@ -240,14 +239,14 @@ CREATE TABLE invoices (
 
 
 -- Inserting sample data for users
-INSERT INTO users (email, password, first, last, address, tell_nr)
+INSERT INTO users (email, first, last, address, tell_nr)
 VALUES 
-('Henri', 'test', 'Henri', 'Doe', '123 Main St', '123-456-7890'),
-('Andrea', 'test', 'Andrea', 'Smith', '456 Elm St', '987-654-3210'),
-('Nicolene', 'test', 'Nicolene', 'Doe', '123 Main St', '123-456-7890'),
-('Francois', 'test', 'Francois', 'Smith', '456 Elm St', '987-654-3210'),
-('Alet', 'test', 'Alet', 'Smith', '456 Elm St', '987-654-3210'),
-('Ilze', 'test', 'test', 'Smith', '456 Elm St', '987-654-3210');
+('henri@ebmaa.co.za', 'Henri', 'van', '123 St', '123-456-7890'),
+('andrea@ebmaa.co.za', 'Andrea', 'van', '456 St', '987-654-3210'),
+('nicolene@ebmaa.co.za', 'Nicolene', 'van', '123 St', '012-456-7890'),
+('francois@ebmaa.co.za', 'Francois', 'van', '456 St', '012-654-3210'),
+('alet@ebmaa.co.za', 'Alet', 'van', '456 St', '012-654-3210'),
+('ilze@ebmaa.co.za', 'Ilze', 'van', '456 St', '012-654-3210');
 
 
 -- Inserting sample data for clients

@@ -1,4 +1,3 @@
-const { verifyToken } = require('../utils/jwt');
 const Profile = require('../models/profileModel');
 
 const profileController = {
