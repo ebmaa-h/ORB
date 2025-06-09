@@ -13,7 +13,7 @@ async (accessToken, refreshToken, profile, done) => {
     let user = await User.findByEmail(profile.emails[0].value);
 
     if (!user) {
-      return done(err, null);
+      return done(null, false);
     }
 
     return done(null, user);
