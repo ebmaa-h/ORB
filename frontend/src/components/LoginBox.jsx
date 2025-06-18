@@ -1,6 +1,11 @@
+import { useEffect } from 'react';
 import ENDPOINTS from '../config/apiEndpoints';
 
 export default function LoginBox() {
+
+  useEffect(() => {
+    window.location.href = 'http://localhost:4000/auth/google';
+  }, []);
 
   const handleGoogleLogin = async () => {
     window.location.href = 'http://localhost:4000/auth/google';

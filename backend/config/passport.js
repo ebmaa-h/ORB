@@ -9,7 +9,7 @@ passport.use(new GoogleStrategy({
 },
 async (accessToken, refreshToken, profile, done) => {
   try {
-    // Check if user exists by Google ID or email
+    // Check if user exists via email
     let user = await User.findByEmail(profile.emails[0].value);
 
     if (!user) {
@@ -26,9 +26,9 @@ async (accessToken, refreshToken, profile, done) => {
 passport.serializeUser((user, done) => {
   done(null, user.user_id);
 });
-passport.deserializeUser(async (id, done) => {
+passport.deserializeUser(async (user_id, done) => {
   try {
-  const user = await User.findById(id);
+  const user = await User.findById(user_id);
     done(null, user);
   } catch (err) {
     done(err, null);

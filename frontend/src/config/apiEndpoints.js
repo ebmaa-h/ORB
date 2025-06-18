@@ -5,7 +5,7 @@ if (!API_URL) {
 }
 
 const ENDPOINTS = {
-  login: `${API_URL}/login`,
+  getUser: `${API_URL}/login`,
   logout : `${API_URL}/logout`,
   auth : `${API_URL}/users/data`, // Backend should maybe be changed to auth focused rather than user data focused, as that is a byproduct of being authorized
   googleAuth : `https://accounts.google.com/o/oauth2/v2/auth`, 

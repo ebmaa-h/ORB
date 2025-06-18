@@ -6,14 +6,22 @@ export const UserContext = createContext();
 
 export const UserProvider = ({ children }) => {
   const [user, setUser] = useState(null);
+  const [loading, setLoading] = useState(true); // <-- add this
 
   useEffect(() => {
     const fetchUser = async () => {
       try {
-        const response = await axios.get(ENDPOINTS.getUser, { withCredentials: true });
-        if (response.data.user) setUser(response.data.user);
+        console.log('requesting user info...');
+        const response = await axios.get(ENDPOINTS.auth, { withCredentials: true });
+        console.log(response);
+        console.log('response: ',response);
+        
+        if (response.data) setUser(response.data);
+        console.log(response);
       } catch (e) {
         setUser(null);
+      } finally {
+        setLoading(false);
       }
     };
     fetchUser();
@@ -21,7 +29,7 @@ export const UserProvider = ({ children }) => {
 
 
   return (
-    <UserContext.Provider value={{ user, setUser }}>
+    <UserContext.Provider value={{ user, setUser, loading  }}>
       {children}
     </UserContext.Provider>
   );

@@ -8,6 +8,8 @@ const User = {
       const [results] = await db.query(queries.login, [email]);
       const user = results[0];
 
+      console.log('User retrieved from db login request initial: ', user)
+
       if (!user) {
         console.log(`User with email ${email} not found.`);
         return null;
@@ -37,6 +39,14 @@ const User = {
         console.log(`User with ${id} not found.`);
         return null;
       }
+
+       const [[features], [clientAccess]] = await Promise.all([
+        db.query(queries.features, [user.user_id]),
+        db.query(queries.clientAccess, [user.user_id])
+      ]);
+
+      user.features = features;
+      user.client_access = clientAccess;
 
       return user;
     } catch (err) {

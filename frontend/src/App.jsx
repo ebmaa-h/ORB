@@ -11,8 +11,11 @@ axios.defaults.withCredentials = true;
 // Still need to remove withcredentials from old requests
 
 function App() {
-  const { user } = useContext(UserContext);
+  const { user, loading  } = useContext(UserContext);
 
+  if (loading) return <div>Loading...</div>;
+
+  console.log(user);
 
   return (
 
