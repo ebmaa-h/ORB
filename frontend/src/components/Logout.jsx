@@ -1,4 +1,4 @@
-import { useContext } from 'react';
+import { useContext, useState, useEffect } from 'react';
 import { UserContext } from '../context/UserContext';
 import { ClientContext } from '../context/ClientContext';
 import { useNavigate } from 'react-router-dom';
@@ -6,40 +6,55 @@ import axios from 'axios';
 import ENDPOINTS from '../config/apiEndpoints';
 
 export default function Logout() {
-  const { setUser } = useContext(UserContext);
+  const { user, setUser } = useContext(UserContext);
   const { setClientId } = useContext(ClientContext);
   const navigate = useNavigate();
+  const [loggedOut, setLoggedOut] = useState(false);
 
-  const handleLogout = async () => {
-    try {
-      // Make a request to the backend to clear the JWT cookie
-      await axios.post(`${ENDPOINTS.logout}`, { withCredentials: true });
-      
-      // Clear the user context
-      setUser(null);
-      setClientId(null);
-      
+  useEffect(() => {
+    const logout = async () => {
+      try {
+        const response = await axios.post(`${ENDPOINTS.logout}`, {}, { withCredentials: true });
 
-      // Redirect to the login page
-      navigate('/');
-    
-      console.log('logged out');
-    } catch (error) {
-      console.error('Logout error:', error);
-    }
-  };
+        if (response.status === 200) {
+          setUser(null);
+          console.log('User Cleared & Session Cleared')
+          setClientId(null);
+          console.log('Logged out');
+          setLoggedOut(true);
+
+          // setTimeout(() => {
+          //   navigate('/');
+          // }, 1000); 
+        }
+      } catch (error) {
+        console.error('Logout error:', error);
+        setUser(null);
+        setClientId(null);
+        // Not sure, but logout error is huge prob. not sure how to best handle yet.
+        navigate('/');
+      }
+    };
+
+    logout();
+  }, []);
+
+  const toLogin = () => {
+    navigate('/');
+  }
+
 
   return (
     <div>
+      {!loggedOut ? (
+        <p>Logging out....</p>
 
-      <button
-      type='submit'
-      onClick={handleLogout} 
-      className='link-class'
-      aria-label='Log out' // Accessibility
-    >
-      Log out
-    </button>
+      ) :
+        <div>
+          <p>logged out</p>
+          <button onClick={toLogin}>Back to Login</button>
+        </div>
+      }
     </div>
     
   );

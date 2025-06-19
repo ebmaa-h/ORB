@@ -22,11 +22,15 @@ async (accessToken, refreshToken, profile, done) => {
   }
 }));
 
-// Required for sessions
+// Save user_id in session
 passport.serializeUser((user, done) => {
+  console.log('✅ serializeUser:', user.user_id);
   done(null, user.user_id);
 });
+
+// Validate session & retrieve user data
 passport.deserializeUser(async (user_id, done) => {
+  console.log('🔍 deserializeUser for id:', user_id);
   try {
   const user = await User.findById(user_id);
     done(null, user);

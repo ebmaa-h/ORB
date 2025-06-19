@@ -19,40 +19,35 @@ function App() {
 
   return (
 
-      <Routes>
-        {/* If the user is logged in, redirect to dashboard; else, show login */}
-        <Route 
-          path="/" 
-          element={user ? <Navigate to="/dashboard" /> : <Login />} 
-        />
-        
-        {/* Secure routes and render protected layout */}
-        <Route element={user ? <ProtectedLayout /> : <Navigate to="/" />}>
-          <Route path="/dashboard" element={<Dashboard />} />
-          <Route path="/tools" element={<Tools />} />
-          
-          <Route path="/profiles" element={<Profiles />} />
-          <Route path="/profiles/:profileId" element={<Profile />} />
+    <Routes>
+      {/* Login route */}
+      <Route path="/" element={
+        user ? <Navigate to="/dashboard" /> : <Login />
+      } />
 
-          <Route path="/client/info" element={<ClientInfo />} />
+      <Route path="/logout" element={<Logout />} />
 
-          <Route path="/accounts" element={<ClientAccounts />} />
-          <Route path="/accounts/:accountId" element={<AccountDetails />} />
-
-          <Route path="/invoices" element={<ClientInvoices />} />
-          <Route path="/invoices/:invoiceId" element={<Invoice />} />
-          <Route path="/invoices/new/:accountId" element={<Invoice />} />
-
-          <Route path="/records" element={<Records />} />
-          <Route path="/records/:recordId" element={<Record />} />
-
-          <Route path="/time" element={<TimeSheet />} />
-          <Route path="/logout" element={<Logout />} />
+      {/* Protected routes */}
+      <Route element={user ? <ProtectedLayout /> : <Navigate to="/" />}>
+        <Route path="/dashboard" element={<Dashboard />} />
+        <Route path="/tools" element={<Tools />} />
+        <Route path="/profiles" element={<Profiles />} />
+        <Route path="/profiles/:profileId" element={<Profile />} />
+        <Route path="/client/info" element={<ClientInfo />} />
+        <Route path="/accounts" element={<ClientAccounts />} />
+        <Route path="/accounts/:accountId" element={<AccountDetails />} />
+        <Route path="/invoices" element={<ClientInvoices />} />
+        <Route path="/invoices/:invoiceId" element={<Invoice />} />
+        <Route path="/invoices/new/:accountId" element={<Invoice />} />
+        <Route path="/records" element={<Records />} />
+        <Route path="/records/:recordId" element={<Record />} />
+        <Route path="/time" element={<TimeSheet />} />
       </Route>
 
-      {/* Catch-all route to redirect to login */}
+      {/* Catch-all */}
       <Route path="*" element={<Navigate to="/" />} />
-      </Routes>
+    </Routes>
+
 
   );
 }

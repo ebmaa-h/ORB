@@ -80,8 +80,14 @@ export default function Nav() {
           >
             Dashboard
           </Link>
-            <p className="text-gray-300">|</p>
-            <Logout />
+          <p className="text-gray-300">|</p>
+          <Link 
+            to="/logout" 
+            onClick={() => setClientId("")} 
+            className={`link-class`}
+          >
+            Log Out
+          </Link>
           </>
       </div>
     </div>
