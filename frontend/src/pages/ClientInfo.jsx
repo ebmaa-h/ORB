@@ -6,7 +6,6 @@ export default function ClientInfo() {
   const [clientId, setClientId] = useState(null);
   const [clientInfo, setClientInfo] = useState(null);
 
-  ClientInfo
   // Fetch invoice details
   useEffect(() => {
     const getClientDetails = async () => {

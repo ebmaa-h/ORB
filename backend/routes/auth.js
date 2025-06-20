@@ -16,7 +16,7 @@ router.get('/auth/google/callback', authController.googleCallback);
 router.post('/logout', authController.logout);
 
 // Verify route
-router.get('/verify', authController.verifySession);
+// router.get('/verify', authController.verifySession);
 
 // Client Register routes
 // router.post('/register/client', authController.clientRegister);

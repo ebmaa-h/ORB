@@ -17,11 +17,6 @@ export default function Dashboard() {
     <div className='flex flex-col'>
       <div className='container-col'>
         <p>Hello {user.first}.</p>
-        <p>Stats here</p>
-        <p>Hello {user.first}.</p>
-        <p>maybe other details graphs or workflow, not yet sure where ill put the workflow, its quite complicated, might take a full page or if displayed on dash ill have to make it smaller and with a scroll bar</p>
-        <p>Hello {user.first}.</p>
-        <p>Hello {user.first}.</p>
       </div>
       <div className='flex flex-row gap-4'>
         <div className='container-col'>
@@ -31,9 +26,6 @@ export default function Dashboard() {
             onChange={(e) => {
               const selectedClientId = e.target.value;
               setClientId(selectedClientId);
-              // if (selectedClientId) {
-                //   navigate('/client/info');
-                // }
               }}
               >
             <option disabled={!!clientId}>Select Client</option>
@@ -52,10 +44,10 @@ export default function Dashboard() {
               <FeatureBlock text="Invoices" link="/invoices" />
             )}
             {findFeature("crq") && (
-              <FeatureBlock text="CRQ" link="/client/info" />
+              <FeatureBlock text="CRQ" link="/client/crq" />
             )}
-            {findFeature("crq") && (
-              <FeatureBlock text="Reports" link="/client/info" />
+            {findFeature("reports") && (
+              <FeatureBlock text="Reports" link="/client/reports" />
             )}
 
           </div>
@@ -69,29 +61,21 @@ export default function Dashboard() {
             {findFeature("records") && (
               <FeatureBlock text="Profiles" link="/profiles" />
             )}
-            {/* {findFeature("records") && (
-              <FeatureBlock text="Records" link="/records" />
-              )} */}
-            {/* {findFeature("records") && (
-              <FeatureBlock text="Profiles" link="/profiles" />
-              )} */}
           </div>
         </div>
         <div className='container-col'>
           <p>Tools</p>
           <div className={`flex gap-4`}>
-            {findFeature("records") && (
-              <FeatureBlock text="Records" link="/records" />
+            {/* these are only drafts, not yet implemented*/}
+            {findFeature("users") && (
+              <FeatureBlock text="Manage Users" link="/users" />
             )}
-            {findFeature("records") && (
-              <FeatureBlock text="Profiles" link="/profiles" />
+            {findFeature("notes") && (
+              <FeatureBlock text="Notes" link="/notes" />
             )}
-            {/* {findFeature("records") && (
-              <FeatureBlock text="Records" link="/records" />
-              )} */}
-            {/* {findFeature("records") && (
-              <FeatureBlock text="Profiles" link="/profiles" />
-              )} */}
+            {findFeature("logs") && (
+              <FeatureBlock text="Logs" link="/logs" />
+            )}
           </div>
         </div>
       </div>

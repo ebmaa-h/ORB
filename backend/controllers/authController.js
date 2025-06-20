@@ -69,13 +69,13 @@ googleCallback: (req, res, next) => {
     });
   },
   
-  verifySession: (req, res) => {
-    if (req.isAuthenticated()) {
-      res.status(200).json({ user: req.user });
-    } else {
-      res.status(401).json({ message: 'Not authenticated' });
-    }
-  },
+  // verifySession: (req, res) => {
+  //   if (req.isAuthenticated()) {
+  //     res.status(200).json({ user: req.user });
+  //   } else {
+  //     res.status(401).json({ message: 'Not authenticated' });
+  //   }
+  // },
 
 
 };
