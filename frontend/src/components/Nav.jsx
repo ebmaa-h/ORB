@@ -76,7 +76,7 @@ export default function Nav() {
             onClick={() => setClientId("")} 
             className={`link-class`}
           >
-            Log Out
+            Logout
           </Link>
           </>
       </div>

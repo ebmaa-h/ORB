@@ -4,7 +4,7 @@ import { useContext } from 'react';
 import { BrowserRouter as Router, Route, Routes, Navigate } from 'react-router-dom';
 import { Logout } from './components/index'
 import { UserContext } from './context/UserContext';
-import { Login, Dashboard, ProtectedLayout, Tools, TimeSheet, Profiles, Profile, AccountDetails, Invoice, ClientAccounts, ClientInvoices, Records, Record, ClientInfo, ClientCRQ } from './pages/index';
+import { Login, Dashboard, ProtectedLayout, Profiles, Profile, AccountDetails, Invoice, ClientAccounts, ClientInvoices, Records, Record } from './pages/index';
 
 // Set Axios to include cookies by default
 axios.defaults.withCredentials = true;
@@ -20,15 +20,12 @@ function App() {
   return (
 
     <Routes>
-      {/* Login route */}
-      <Route path="/" element={
-        user ? <Navigate to="/dashboard" /> : <Login />
-      } />
-
+      {/* Login/logout routes */}
+      <Route path="/" element={user ? <Navigate to="/dashboard" /> : <Login />} />
       <Route path="/logout" element={<Logout />} />
 
       {/* Protected routes */}
-      <Route element={user ? <ProtectedLayout /> : <Navigate to="/" />}>
+      <Route element={<ProtectedLayout />}>
         <Route path="/dashboard" element={<Dashboard />} />
         <Route path="/profiles" element={<Profiles />} />
         <Route path="/profiles/:profileId" element={<Profile />} />
