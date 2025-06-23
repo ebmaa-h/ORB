@@ -43,9 +43,9 @@ export default function Dashboard() {
             {findFeature("invoices") && (
               <FeatureBlock text="Invoices" link="/invoices" />
             )}
-            {findFeature("crq") && (
+            {/* {findFeature("crq") && (
               <FeatureBlock text="CRQ" link="/client/crq" />
-            )}
+            )} */}
             {findFeature("reports") && (
               <FeatureBlock text="Reports" link="/client/reports" />
             )}
