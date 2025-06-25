@@ -1,11 +1,10 @@
-const User = require('../models/userModel');
+// const User = require('../models/userModel');
 
 const userController = {
 
   // Request made from userContext to retrieve user data.
   getUserData: async (req, res) => {
-    console.log("Getting user info...");
-
+    console.log('✅ Retrieving user data');
     // After de-serialize
     if (!req.user) {
       return res.status(401).json({ message: 'Not authenticated' });

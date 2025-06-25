@@ -9,7 +9,7 @@ const profileController = {
         return res.status(404).json({ message: 'No profiles found' });
       }
 
-      console.log('Profiles Found:', profiles);
+      // console.log('Profiles Found:', profiles);
       return res.status(200).json({
         message: 'Profiles retrieval successful',
         profiles,
@@ -33,7 +33,7 @@ const profileController = {
         return res.status(404).json({ message: 'Profile not found' });
       }
 
-      console.log('Profile Found:', profileData);
+      // console.log('Profile Found:', profileData);
       return res.status(200).json({
         message: 'Profile retrieval successful',
         profileData,

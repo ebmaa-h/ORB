@@ -12,6 +12,8 @@ async (accessToken, refreshToken, profile, done) => {
     // Check if user exists via email
     let user = await User.findByEmail(profile.emails[0].value);
 
+    console.log('✅ User found for passport: ', user);
+
     if (!user) {
       return done(null, false);
     }
@@ -30,7 +32,7 @@ passport.serializeUser((user, done) => {
 
 // Validate session & retrieve user data
 passport.deserializeUser(async (user_id, done) => {
-  console.log('🔍 deserializeUser for id:', user_id);
+  console.log('✅ deserializeUser for id:', user_id);
   try {
   const user = await User.findById(user_id);
     done(null, user);

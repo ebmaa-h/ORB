@@ -36,7 +36,6 @@ app.use(session({
 app.use(passport.initialize());
 app.use(passport.session());
 
-
 app.use(cors({
   origin: ['http://localhost:5173', 'http://167.99.196.172', 'http://orb.ebmaa.co.za'], // Local dev and production
   methods: ['GET', 'POST', 'OPTIONS', 'PATCH', 'PUT'],
@@ -53,8 +52,8 @@ app.use((req, res, next) => {
 });
 
 // Routes
-app.use('/', authRoutes);
-app.use('/users', userRoutes);
+app.use('/auth', authRoutes);
+// app.use('/users', userRoutes);
 app.use('/accounts', accRoutes);
 app.use('/profiles', profRoutes);
 app.use('/invoices', invRoutes);

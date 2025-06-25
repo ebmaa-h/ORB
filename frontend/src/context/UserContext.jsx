@@ -12,13 +12,11 @@ export const UserProvider = ({ children }) => {
 
     const fetchUser = async () => {
       try {
-        console.log('requesting user info...');
+        console.log('Requesting user info...');
         const response = await axios.get(ENDPOINTS.auth, { withCredentials: true });
-        console.log(response);
-        console.log('response: ',response);
         
         if (response.data) setUser(response.data);
-        console.log(response);
+        console.log('✅ User data retrieved: ', response.data);
       } catch (e) {
         setUser(null);
       } finally {

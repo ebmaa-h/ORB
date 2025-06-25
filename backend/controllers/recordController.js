@@ -9,7 +9,7 @@ const recordController = {
         return res.status(404).json({ message: 'No records found' });
       }
 
-      console.log('Records Found:', records);
+      // console.log('Records Found:', records);
       return res.status(200).json({
         message: 'Records retrieval successful',
         records,
@@ -33,7 +33,7 @@ const recordController = {
         return res.status(404).json({ message: 'Record not found' });
       }
 
-      console.log('Record Found:', record);
+      // console.log('Record Found:', record);
       return res.status(200).json({
         message: 'Record retrieval successful',
         record,

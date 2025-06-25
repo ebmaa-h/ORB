@@ -92,7 +92,7 @@ const Invoice = {
 
   updateInvoice: async (updatedInvoice) => {
     console.log('updating....')
-    console.log('updatedInvoice', updatedInvoice)
+    // console.log('updatedInvoice', updatedInvoice)
     try {
       const [results] = await db.query(
         queries.updateInvoice, 
