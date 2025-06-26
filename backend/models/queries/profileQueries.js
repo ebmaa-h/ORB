@@ -52,22 +52,21 @@ GROUP BY a.account_id, a.client_id, a.profile_id, d.first, d.last, pr.title, pr.
 const inv = `
 SELECT
   i.invoice_id,
-  CONCAT(p.first, ' ', p.last) AS 'Patient Name',
-  p.id_nr AS 'Patient ID',
-  CONCAT(m.first, ' ', m.last) AS 'Member Name',
-  m.id_nr AS 'Member ID',
+  CONCAT(p.first, ' ', p.last) AS patient_name,
+  p.id_nr AS patient_id,
+  CONCAT(m.first, ' ', m.last) AS member_name,
+  m.id_nr AS member_id,
   CONCAT('R ', FORMAT(i.balance, 2)) AS invoice_balance,
   DATE_FORMAT(i.date_of_service, '%Y-%m-%d') AS date_of_service,
-  i.status AS 'Status',
+  i.status,
   DATE_FORMAT(i.updated_at, '%Y-%m-%d') AS updated_at
 FROM invoices i
 JOIN accounts a ON i.account_id = a.account_id
-JOIN clients d ON a.client_id = d.client_id
-LEFT JOIN person_records p ON i.patient_id = p.record_id
-LEFT JOIN person_records m ON i.main_member_id = m.record_id
-WHERE i.profile_id = ?;
-
+LEFT JOIN person_records p ON a.patient_id = p.record_id
+LEFT JOIN person_records m ON a.main_member_id = m.record_id
+WHERE a.profile_id = ?;
 `;
+
 
 const prof = `
 SELECT 

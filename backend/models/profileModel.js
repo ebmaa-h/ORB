@@ -17,7 +17,6 @@ const Profile = {
       }
     },
 
-  // Refactor `oneProfile` to use promises and async/await
   oneProfile: async (profileId) => {
     try {
       const [dependentsResults] = await db.query(queries.dependents, [profileId]);

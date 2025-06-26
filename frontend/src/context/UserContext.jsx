@@ -21,7 +21,12 @@ export const UserProvider = ({ children }) => {
         console.log('✅ User data retrieved: ', response.data);
       } catch (e) {
         setUser(null);
-        navigate('/not-found?reason=session-expired');
+          if (e.response?.status === 401) {
+            // Only redirect if the user is not already on the login page
+            if (location.pathname !== '/') {
+              navigate('/not-found?reason=session-expired');
+            }
+          }
       } finally {
         setLoading(false);
       }

@@ -19,6 +19,7 @@ export default function Dashboard() {
         <p>Hello {user.first}.</p>
       </div>
       <div className='flex flex-row gap-4'>
+
         <div className='container-col'>
           <select
             className="cursor-pointer border rounded border-gray-300 px-2 hover:border-ebmaa-purple transition duration-300 w-[200px] h-[30px]"
@@ -52,6 +53,7 @@ export default function Dashboard() {
 
           </div>
         </div>
+
         <div className='container-col'>
           <p>Other</p>
           <div className={`flex gap-4`}>
@@ -63,6 +65,7 @@ export default function Dashboard() {
             )}
           </div>
         </div>
+
         <div className='container-col'>
           <p>Tools</p>
           <div className={`flex gap-4`}>
@@ -78,6 +81,16 @@ export default function Dashboard() {
             )}
           </div>
         </div>
+        <div className='container-col'>
+          <p>Account</p>
+          <div className={`flex gap-4`}>
+            {/* these are only drafts, not yet implemented*/}
+            <FeatureBlock text="Logout" link="/logout" />
+
+
+          </div>
+        </div>
+
       </div>
     </div>
   );

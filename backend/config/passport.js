@@ -20,6 +20,9 @@ async (accessToken, refreshToken, profile, done) => {
       return done(null, false);
     }
 
+    // Add profile picture to auth/me response
+    user.profile_picture = profile.photos?.[0]?.value || null;
+
     return done(null, user);
   } catch (err) {
     return done(err, null);

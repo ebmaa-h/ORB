@@ -27,7 +27,6 @@ export default function Logout() {
         console.error('Logout error:', error);
         setUser(null);
         setClientId(null);
-        // Not sure, but logout error is huge prob. not sure how to best handle yet.
         navigate('/');
       }
     };

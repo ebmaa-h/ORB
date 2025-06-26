@@ -71,13 +71,13 @@ export default function Nav() {
             Dashboard
           </Link>
           <p className="text-gray-300">|</p>
-          <Link 
+          {/* <Link 
             to="/logout" 
             onClick={() => setClientId("")} 
             className={`link-class`}
           >
             Logout
-          </Link>
+          </Link> */}
           </>
       </div>
     </div>
