@@ -2,6 +2,7 @@ export { default as LoginBox } from './LoginBox'
 export { default as Logout } from './Logout'
 export { default as Nav } from './Nav'
 export { default as SideNav } from './SideNav'
+export { default as NotFound } from './NotFound'
 
 // Common
 export { default as FeatureBlock } from './FeatureBlock'

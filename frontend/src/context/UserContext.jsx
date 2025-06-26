@@ -10,9 +10,9 @@ export const UserProvider = ({ children }) => {
 
   useEffect(() => {
 
-    const fetchUser = async () => {
+    const getAuthUser = async () => {
       try {
-        console.log('Requesting user info...');
+        console.log('Authenticating session & retrieving user data...');
         const response = await axios.get(ENDPOINTS.auth, { withCredentials: true });
         
         if (response.data) setUser(response.data);
@@ -23,7 +23,7 @@ export const UserProvider = ({ children }) => {
         setLoading(false);
       }
     };
-    fetchUser();
+    getAuthUser();
   }, []);
 
 

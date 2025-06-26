@@ -45,15 +45,11 @@ export default function Logout() {
 
     <div className="flex justify-center items-center min-h-screen bg-gray-300 ">
       <div className="min-w-[300px] min-h-[110px] bg-white shadow flex flex-col justify-evenly items-center rounded-lg">
-        {/* <img className='max-w-[190px] h-auto translate-x-[-15px]' src="/ebmaa-orb-logo.svg" alt="" /> */}
-
         {!loggedOut ? (
-        <p>Logging out....</p>
-
-      ) :
-          <div className='flex gap-3 flex-col'>
-            {/* <p className='text-gray-dark'>Logged Out.</p> */}
-            <p className='text-gray-900'>Successfully logged out...</p>
+          <p>Logging out....</p>
+        ) :
+          <div className='flex gap-3 flex-col text-center'>
+            <p className='text-gray-900'>Successfully logged out.</p>
             <button
             onClick={backToLogin}
             type='submit'

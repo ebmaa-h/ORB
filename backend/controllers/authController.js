@@ -3,19 +3,19 @@ const passport = require('passport');
 
 const authController = {
 
-googleAuth: (req, res, next) => {
-  console.log('🔑 Starting Google OAuth...');
-  passport.authenticate('google', { scope: ['profile', 'email'] })(req, res, next);
-},
+  googleAuth: (req, res, next) => {
+    console.log('🔑 Starting Google OAuth...');
+    passport.authenticate('google', { scope: ['profile', 'email'] })(req, res, next);
+  },
 
-googleCallback: (req, res, next) => {
-  console.log('🔁 Returned from Google, processing callback...');
-  passport.authenticate('google', {
-    failureRedirect: `${process.env.CLIENT_URL}`,
-    successRedirect: `${process.env.CLIENT_URL}/dashboard`,
-    session: true,
-  })(req, res, next);
-},
+  googleCallback: (req, res, next) => {
+    console.log('🔁 Returned from Google, processing callback...');
+    passport.authenticate('google', {
+      failureRedirect: `${process.env.CLIENT_URL}/not-found?reason=unauthorized`,
+      successRedirect: `${process.env.CLIENT_URL}/dashboard`,
+      session: true,
+    })(req, res, next);
+  },
 
   getMe: async (req, res) => {
     console.log('✅ Retrieving user data');

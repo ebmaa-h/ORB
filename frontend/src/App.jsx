@@ -2,7 +2,7 @@ import './App.css';
 import axios from 'axios';
 import { useContext } from 'react';
 import { BrowserRouter as Router, Route, Routes, Navigate } from 'react-router-dom';
-import { Logout } from './components/index'
+import { Logout, NotFound } from './components/index'
 import { UserContext } from './context/UserContext';
 import { Login, Dashboard, ProtectedLayout, Profiles, Profile, AccountDetails, Invoice, ClientAccounts, ClientInvoices, Records, Record } from './pages/index';
 
@@ -12,10 +12,7 @@ axios.defaults.withCredentials = true;
 
 function App() {
   const { user, loading  } = useContext(UserContext);
-
   if (loading) return <div>Loading...</div>;
-
-  console.log(user);
 
   return (
 
@@ -38,10 +35,11 @@ function App() {
         <Route path="/records/:recordId" element={<Record />} />
       </Route>
 
-      {/* Catch-all */}
-      <Route path="*" element={<Navigate to="/" />} />
-    </Routes>
+      {/* Catch-all // Not found*/}
+      <Route path="/not-found" element={<NotFound />} />
+      <Route path="*" element={<Navigate to="/not-found" />} />
 
+    </Routes>
 
   );
 }
