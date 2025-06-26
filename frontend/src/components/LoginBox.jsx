@@ -3,23 +3,8 @@ const API_URL = import.meta.env.VITE_API_URL;
 
 export default function LoginBox() {
 
-  // useEffect(() => {
-  //   const timer = setTimeout(() => {
-  //     setShowRetry(true); // Swap to retry button after delay
-  //   }, 10000);
-
-  //   window.location.href = `${API_URL}/auth/google`;
-
-  //   return () => clearTimeout(timer);
-  // }, []);
-
-  // const timer = setTimeout(() => {
-  //     setShowRetry(true); // Swap to retry button after delay
-  //   }, 10000);
-
   const handleGoogleLogin = () => {
     window.location.href = `${API_URL}/auth/google`;
-
 
   };
 
@@ -31,7 +16,6 @@ export default function LoginBox() {
           onClick={handleGoogleLogin}
           type='button'
           className='btn-class px-6'
-          aria-label='Retry Login'
         >
           Login
         </button>

@@ -13,9 +13,9 @@ export default function NotFound() {
   console.log(reason)
 
   const message = (() => {
-    if (reason === 'unauthorized') return 'You are not authorized to access this page.';
+    if (reason === 'unauthorized') return 'You are not authorized to access this page.'; // Google callback failure -> unregistered or failure on google's side.
     if (reason === 'forbidden') return 'Access denied. You do not have permission.';
-    if (reason === 'session-expired') return 'Session expired. Please log in again.';
+    if (reason === 'session-expired') return 'Session expired. Please log in again.'; // Session expired, tampered with, missing, invalid session.
     return user ? 'Page not found.' : 'Unauthorized.';
   })();
 
@@ -31,7 +31,6 @@ export default function NotFound() {
             onClick={handleClick}
             type="button"
             className="btn-class px-6"
-            aria-label={buttonText}
           >
             {buttonText}
           </button>

@@ -9,11 +9,13 @@ passport.use(new GoogleStrategy({
 },
 async (accessToken, refreshToken, profile, done) => {
   try {
-    // Check if user exists via email
+    // User authenticated on google's side
+    // Check if user is on our db and get user data
     let user = await User.findByEmail(profile.emails[0].value);
 
     console.log('✅ User found for passport: ', user);
 
+    // Trigger google callback failure if user is not registered.
     if (!user) {
       return done(null, false);
     }

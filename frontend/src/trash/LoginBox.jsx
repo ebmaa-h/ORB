@@ -70,7 +70,6 @@ export default function LoginBox() {
             <button
               type='submit'
               className='btn-class px-6'
-              aria-label='Log In' // Accessibility
             >
               Log In
             </button>

@@ -54,7 +54,6 @@ export default function Logout() {
             onClick={backToLogin}
             type='submit'
             className='btn-class px-6'
-            aria-label='Log In' // Accessibility
             >
               Back to login
             </button>
