@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import axios from 'axios';
 import ENDPOINTS from '../config/apiEndpoints';
 import { useContext } from 'react';
-import { ClientContext } from '../context/ClientContext'; 
+import { ClientContext } from '../context/ClientContext';
 import { SearchBar, Table } from '../components';
 
 export default function ClientAccounts() {
@@ -20,7 +20,9 @@ export default function ClientAccounts() {
         console.error('Error fetching accounts:', error);
       }
     };
-    fetchAccounts();
+    if (clientId) {
+      fetchAccounts();
+    }
   }, [clientId]);
 
   const columns = ['Account ID', 'Patient', 'Dependent Nr', 'Guarantor', 'Guarantor ID', 'Balance'];
@@ -37,7 +39,7 @@ export default function ClientAccounts() {
         </div>
       ) : (
         <div className='container-col items-center'>
-          <p>Loading accounts...</p>
+          <p>Select a client.</p>
         </div>
       )}
     </>

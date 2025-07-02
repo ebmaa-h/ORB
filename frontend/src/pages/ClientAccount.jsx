@@ -1,11 +1,14 @@
 import { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import axios from 'axios';
+import { useContext } from 'react';
+import { ClientContext } from '../context/ClientContext';
 import { SearchBar, Table, BackButton, NotesAndLogs } from '../components';
 import ENDPOINTS from '../config/apiEndpoints';
 import { useNavigate } from 'react-router-dom';
 
-export default function AccountDetails() {
+export default function ClientAccount() {
+  const { clientId } = useContext(ClientContext);
   const { accountId } = useParams(); 
   const [account, setAccount] = useState({});
   const [invoices, setInvoices] = useState([]);
@@ -20,10 +23,10 @@ export default function AccountDetails() {
 
   // Fetch account details
   useEffect(() => {
-    const getAccountDetails = async () => {
+    const fetchAccount = async () => {
       try {
         console.log('requesting with', accountId);
-        const response = await axios.get(ENDPOINTS.partialAcc(accountId), {
+        const response = await axios.get(ENDPOINTS.clientAccount(clientId, accountId), {
           withCredentials: true,
         });
 
@@ -41,10 +44,10 @@ export default function AccountDetails() {
       }
     };
 
-    if (accountId) {
-      getAccountDetails();
+    if (clientId && accountId) {
+      fetchAccount();
     }
-  }, [accountId]);
+  }, [accountId, clientId]);
 
   return (
     <>
@@ -128,7 +131,7 @@ export default function AccountDetails() {
         </>
       ) : (
         <div className='container-col'>
-          <p>Loading account details...</p>
+          <p>Select a client.</p>
         </div>
       )}
     </>

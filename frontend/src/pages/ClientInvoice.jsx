@@ -1,13 +1,15 @@
 import { useEffect, useState, useContext } from 'react';
 import { UserContext } from '../context/UserContext';
+import { ClientContext } from '../context/ClientContext';
 import { useParams } from 'react-router-dom';
 import ENDPOINTS from '../config/apiEndpoints';
 import axios from 'axios';
 import { InputField, BackButton, NotesAndLogs, Table, VTable, NotesPopup } from '../components';
 import { useOutletContext } from "react-router-dom";
 
-export default function Invoice() {
+export default function ClientInvoice() {
   const { user } = useContext(UserContext); 
+  const { clientId } = useContext(ClientContext);
   const { accountId, invoiceId } = useParams();
   const { triggerToast } = useOutletContext(); 
   const [invoice, setInvoice] = useState({});
@@ -30,7 +32,7 @@ export default function Invoice() {
   
         if (accountId) {
           // Fetch invoice data using accountId
-          response = await axios.get(ENDPOINTS.newInvoice(accountId),{
+          response = await axios.get(ENDPOINTS.newInvoice(clientId, accountId),{
             params: { userId: user.user_id },
             withCredentials: true,
           });
@@ -58,8 +60,7 @@ export default function Invoice() {
       }
     };
   
-    // Trigger the effect when either accountId or invoiceId changes
-    if (accountId || invoiceId) {
+    if (clientId && accountId || invoiceId) {
       getInvoiceDetails();
     }
   
@@ -164,7 +165,7 @@ const getChangedFields = (newData, originalData, updateFields) => {
     }
 
     try {
-      await axios.patch(ENDPOINTS.updateInvoice, updatedInvoice, {
+      await axios.patch(ENDPOINTS.updateInvoice(client.client_id, updatedInvoice.invoice_id), updatedInvoice, {
         withCredentials: true,
       });
 

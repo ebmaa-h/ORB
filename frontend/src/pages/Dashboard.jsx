@@ -84,7 +84,6 @@ export default function Dashboard() {
         <div className='container-col'>
           <p>Account</p>
           <div className={`flex gap-4`}>
-            {/* these are only drafts, not yet implemented*/}
             <FeatureBlock text="Logout" link="/logout" />
 
 

@@ -13,7 +13,7 @@ const features = `
 
 // User client/doctor access
 const clientAccess = `
-  SELECT d.client_id, CONCAT('Dr ', d.first, ' ', d.last) AS client_name, d.practice_nr, uda.permissions
+  SELECT d.client_id, CONCAT('Dr ', d.first, ' ', d.last) AS client_name, d.practice_nr
   FROM user_client_access uda
   JOIN clients d ON uda.client_id = d.client_id
   WHERE uda.user_id = ?`;

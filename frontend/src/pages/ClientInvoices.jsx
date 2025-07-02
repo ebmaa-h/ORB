@@ -21,7 +21,9 @@ export default function ClientInvoices() {
         console.error('Error fetching invoices:', error);
       }
     };
-    fetchInvoices();
+    if (clientId) {
+      fetchInvoices();
+    }
   }, [clientId]);
 
   const columns = ['Invoice Nr','File Nr','Auth Nr', 'Patient', 'Patient ID', 'Guarantor', 'Guarantor ID', 'Balance', 'Date of Service', 'Status', 'Last Update'];
@@ -38,7 +40,7 @@ export default function ClientInvoices() {
         </div>
       ) : (
         <div className='container-col items-center'>
-          <p>Loading invoices...</p>
+          <p>Select a client.</p>
         </div>
       )}
     </>

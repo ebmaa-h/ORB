@@ -1,4 +1,4 @@
-const User = require('../models/userModel');
+// const User = require('../models/userModel');
 const passport = require('passport');
 
 const authController = {
@@ -24,8 +24,8 @@ const authController = {
       return res.status(401).json({ message: 'Not authenticated' });
     }
 
-    res.json(req.user); // sends user info back to client
-    console.log('✅ User data retrieved: ', req.user);
+    res.json(req.user);
+    console.log('✅ User data retrieved:   req.user', req.user);
   },
 
   logout: (req, res) => {

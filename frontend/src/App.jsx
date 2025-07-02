@@ -4,7 +4,7 @@ import { useContext } from 'react';
 import { BrowserRouter as Router, Route, Routes, Navigate } from 'react-router-dom';
 import { Logout, NotFound } from './components/index'
 import { UserContext } from './context/UserContext';
-import { Login, Dashboard, ProtectedLayout, Profiles, Profile, AccountDetails, Invoice, ClientAccounts, ClientInvoices, Records, Record } from './pages/index';
+import { Login, Dashboard, ProtectedLayout, Profiles, Profile, ClientAccount, ClientInvoice, ClientAccounts, ClientInvoices, Records, Record } from './pages/index';
 
 // Set Axios to include cookies by default
 axios.defaults.withCredentials = true;
@@ -27,10 +27,10 @@ function App() {
         <Route path="/profiles" element={<Profiles />} />
         <Route path="/profiles/:profileId" element={<Profile />} />
         <Route path="/accounts" element={<ClientAccounts />} />
-        <Route path="/accounts/:accountId" element={<AccountDetails />} />
+        <Route path="/accounts/:accountId" element={<ClientAccount />} />
         <Route path="/invoices" element={<ClientInvoices />} />
-        <Route path="/invoices/:invoiceId" element={<Invoice />} />
-        <Route path="/invoices/new/:accountId" element={<Invoice />} />
+        <Route path="/invoices/:invoiceId" element={<ClientInvoice />} />
+        <Route path="/invoices/new/:accountId" element={<ClientInvoice />} />
         <Route path="/records" element={<Records />} />
         <Route path="/records/:recordId" element={<Record />} />
       </Route>
