@@ -1,5 +1,5 @@
 const express = require('express');
-const invoiceController = require('../controllers/invoiceController.js');
+const invoiceController = require('../../../backend/controllers/invoiceController.js');
 const router = express.Router();
 
 // Check if user is authorized to client

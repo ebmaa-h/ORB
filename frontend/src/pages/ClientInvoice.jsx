@@ -40,7 +40,7 @@ export default function ClientInvoice() {
           triggerToast(true, "New Invoice Created!");
         } else if (invoiceId) {
           // Fetch invoice details using invoiceId
-          response = await axios.get(ENDPOINTS.invoiceDetails(invoiceId), {
+          response = await axios.get(ENDPOINTS.clientInvoice(clientId, invoiceId), {
             withCredentials: true,
           });
           
@@ -60,7 +60,7 @@ export default function ClientInvoice() {
       }
     };
   
-    if (clientId && accountId || invoiceId) {
+    if ( accountId || invoiceId) {
       getInvoiceDetails();
     }
   
@@ -175,6 +175,11 @@ const getChangedFields = (newData, originalData, updateFields) => {
       await logChanges(updatedInvoice.invoice_id, changes);
 
     } catch (error) {
+      if (error.response?.status === 403) {
+        console.warn('🔒 Access denied for this action:', error.response?.data?.message || '');
+        triggerToast(false, "Access Denied");
+        return;
+      } 
       console.error('Error saving invoice details:', error);
       triggerToast(false, "Failed to update invoice.");
     }

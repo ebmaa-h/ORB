@@ -16,7 +16,6 @@ export default function ClientInvoices() {
       try {
         const response = await axios.get(ENDPOINTS.clientInvoices(clientId));
         setInvoices(response.data.invoices);
-        console.log(response.data.invoices);
       } catch (error) {
         console.error('Error fetching invoices:', error);
       }

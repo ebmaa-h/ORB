@@ -1,4 +1,4 @@
-function authGuard(featureName, requiredPerm = 'view') {
+function clientAccessGuard(featureName, requiredPerm = 'view') {
   return (req, res, next) => {
     const match = req.user?.features?.find(f => 
       f.feature_name === featureName && f.is_active
@@ -14,4 +14,4 @@ function authGuard(featureName, requiredPerm = 'view') {
   };
 }
 
-module.exports = { authGuard };
+module.exports = { clientAccessGuard };

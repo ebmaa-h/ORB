@@ -1,5 +1,5 @@
 const express = require('express');
-const accController = require('../controllers/accController');
+const accController = require('../../../backend/controllers/accController');
 const router = express.Router();
 
 // /accounts/ prefefix

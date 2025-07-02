@@ -2,10 +2,10 @@ const db = require('../config/db');
 const queries = require('./queries/clientQueries.js')
 
 const Client = {
-  clientInvoices: async (clientId) => {
+  invoices: async (clientId) => {
     try {
       const [results] = await db.query(queries.clientInvoices, [clientId]);
-      console.log(results)
+      // console.log(results)
       return results;
     } catch (error) {
       console.error('Error fetching invoices:', error);
@@ -13,7 +13,7 @@ const Client = {
     }
   },
 
-  oneInvoice: async (invoiceId, accountId) => {
+  invoice: async (invoiceId, accountId) => {
     try {
       let invoiceResults;
       let newInvoiceId = null;
@@ -113,7 +113,7 @@ const Client = {
     }
   },
 
-  clientAccounts: async (clientId) => {
+  accounts: async (clientId) => {
     try {
       const [results] = await db.query(queries.clientAccounts, [clientId]);
       return results;
@@ -122,7 +122,7 @@ const Client = {
     }
   },
 
-  clientAccount: async (accountId) => {
+  account: async (accountId) => {
     try {
       const [accountResults] = await db.query(queries.clientAccount, [accountId]);
       if (!accountResults.length) return null;

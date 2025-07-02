@@ -11,7 +11,7 @@ const clientController = {
     }
 
     try {
-      const invoices = await Client.clientInvoices(clientId);
+      const invoices = await Client.invoices(clientId);
 
       if (!invoices || invoices.length === 0) {
         // console.log('No invoices found.');
@@ -44,6 +44,8 @@ const clientController = {
     }
   },
 
+  // CIf accountId is set, create a new invoice
+  // if invoiceId is set, view old invoice
   getClientInvoice: async (req, res) => {
     const { invoiceId, accountId } = req.params;
 
@@ -52,7 +54,7 @@ const clientController = {
     }
   
     try {
-      const invoiceData = await Client.oneInvoice(invoiceId || null, accountId || null);
+      const invoiceData = await Client.invoice(invoiceId || null, accountId || null);
   
       if (!invoiceData) {
         console.log('Invoice not found.');
@@ -119,7 +121,7 @@ const clientController = {
     }
 
     try {
-      const accounts = await Client.clientAccounts(clientId);
+      const accounts = await Client.accounts(clientId);
 
       if (!accounts || accounts.length === 0) {
         console.log('No accounts found.');
@@ -146,7 +148,7 @@ const clientController = {
     }
 
     try {
-      const account = await Client.partialAccount(accountId);
+      const account = await Client.account(accountId);
 
       if (!account) {
         return res.status(404).json({ message: 'Account not found' });
