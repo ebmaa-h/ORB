@@ -6,6 +6,7 @@ import ENDPOINTS from '../config/apiEndpoints';
 import axios from 'axios';
 import { InputField, BackButton, NotesAndLogs, Table, VTable, NotesPopup } from '../components';
 import { useOutletContext } from "react-router-dom";
+import { useNavigate } from 'react-router-dom';
 
 export default function ClientInvoice() {
   const { user } = useContext(UserContext); 
@@ -20,12 +21,22 @@ export default function ClientInvoice() {
   const [medical, setMedical] = useState([]);
   const [newInvoiceId, setNewInvoiceId  ] = useState();
   const [refreshLogs, setRefreshLogs] = useState(false);
+  const navigate = useNavigate();
 
   const [ ogData, setOgData ] = useState({});
   const rowClass = "cursor-pointer hover:bg-gray-blue-100";
   const cellClass = "border border-gray-blue-100 p-2";
 
   useEffect(() => {
+  if (!clientId) {
+    console.log('test')
+    navigate('/not-found?reason=unauthorized');
+  }
+  }, [clientId]);
+
+  useEffect(() => {
+    if (!clientId || (!accountId && !invoiceId)) return;
+
     const getInvoiceDetails = async () => {
       try {
         let response;
@@ -176,10 +187,17 @@ const getChangedFields = (newData, originalData, updateFields) => {
 
     } catch (error) {
       if (error.response?.status === 403) {
-        console.warn('🔒 Access denied for this action:', error.response?.data?.message || '');
-        triggerToast(false, "Access Denied");
+        const code = error.response?.data?.code;
+
+      if (code === 'CLIENT_ACCESS_DENIED') {
+        console.warn('🔒 Unauthorized. CA');
+        navigate('/not-found?reason=unauthorized');
+      } else {
+        console.warn('🔒 Unauthorized. FL');
+        triggerToast(false, "Unauthorized");
         return;
-      } 
+      }
+    }
       console.error('Error saving invoice details:', error);
       triggerToast(false, "Failed to update invoice.");
     }
@@ -189,7 +207,7 @@ const getChangedFields = (newData, originalData, updateFields) => {
 
   return (
     <>
-      {invoiceId || newInvoiceId ? (
+      {invoiceId || newInvoiceId ? ( 
         <>
           <div className="container-col gap-4">
             <h2 className='font-bold'>Invoice #{invoiceId || newInvoiceId}</h2>

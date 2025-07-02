@@ -5,11 +5,14 @@ function accessGuard(featureName) {
     );
 
     if (!match) {
-      console.log('Access to ', featureName, ' DENIED.');
-      return res.status(403).json({ message: 'Access denied' });
+      console.log('🔒 Access to ', featureName, ' DENIED.');
+    return res.status(403).json({ 
+      message: 'Feature access denied', 
+      code: 'FEATURE_ACCESS_DENIED' 
+    });
     }
 
-    console.log('Access to ', featureName, ' granted.');
+    console.log('🔒 Access to ', featureName, ' granted.');
 
     next();
   };

@@ -1,9 +1,13 @@
-import { useContext } from 'react';
+import { useContext, useEffect, useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { UserContext } from '../context/UserContext';
+import { ClientContext } from '../context/ClientContext';
+import ENDPOINTS from '../config/apiEndpoints';
+import axios from 'axios';
 
 export default function NotFound() {
-  const { user } = useContext(UserContext);
+  const { user, setUser } = useContext(UserContext);
+  const { setClientId } = useContext(ClientContext);
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -11,6 +15,26 @@ export default function NotFound() {
   const reason = params.get('reason');
 
   console.log(reason)
+
+    useEffect(() => {
+    const logout = async () => {
+      try {
+        await axios.post(`${ENDPOINTS.logout}`, {}, { withCredentials: true });
+      } catch (error) {
+        console.error('Logout error:', error);
+        setUser(null);
+        setClientId(null);
+        navigate('/');
+      } finally {
+        setUser(null);
+        console.log('User Cleared & Session Cleared')
+        setClientId(null);
+        console.log('Logged out');
+      }
+    };
+
+    logout();
+  }, []);
 
   const message = (() => {
     if (reason === 'unauthorized') return 'You are not authorized to access this page.'; // Google callback failure -> unregistered or failure on google's side.

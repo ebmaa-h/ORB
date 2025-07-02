@@ -1,17 +1,21 @@
-function clientAccessGuard(featureName, requiredPerm = 'view') {
-  return (req, res, next) => {
-    const match = req.user?.features?.find(f => 
-      f.feature_name === featureName && f.is_active
-    );
+function clientAccessGuard(req, res, next) {
+  const { clientId } = req.params;
+  const user = req.user;
 
-    if (!match || !hasPermission(match.permissions, requiredPerm)) {
-      return res.status(403).json({ message: 'Access denied' });
-    }
+  const match = user?.client_access?.find(
+    (c) => c.client_id === parseInt(clientId)
+  );
 
-    console.log('Access to ', featureName, ' granted.');
+  if (!match) {
+    console.log(`🔒 Access to client ${clientId} denied for user ${user?.email}`);
+    return res.status(403).json({ 
+      message: 'Client access denied', 
+      code: 'CLIENT_ACCESS_DENIED' 
+    });
+  }
 
-    next();
-  };
+    console.log(`🔒 Access to client ${clientId} granted for user ${user?.email}`);
+  next();
 }
 
 module.exports = { clientAccessGuard };

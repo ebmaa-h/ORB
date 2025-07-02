@@ -21,6 +21,13 @@ export default function ClientAccount() {
     Object.values(invoice).join(' ').toLowerCase().includes(invoiceSearchTerm.toLowerCase())
   );
 
+  useEffect(() => {
+  if (!clientId) {
+    console.log('test')
+    navigate('/not-found?reason=unauthorized');
+  }
+  }, [clientId]);
+
   // Fetch account details
   useEffect(() => {
     const fetchAccount = async () => {
