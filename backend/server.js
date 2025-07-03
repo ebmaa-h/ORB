@@ -32,7 +32,7 @@ app.use(session({
 
 // Initialize Passport and session
 app.use(passport.initialize());
-app.use(passport.session());
+app.use(passport.session()); 
 
 app.use(cors({
   origin: ['http://localhost:5173', 'http://167.99.196.172', 'http://orb.ebmaa.co.za'], // Local dev and production

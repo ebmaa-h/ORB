@@ -1,45 +1,17 @@
-// Maps feature names to high-level categories
-const featureCategoryMap = {
-  accounts: 'main',
-  invoices: 'main',
-  // crq: 'main',
-  records: 'other',
-  profiles: 'other',
-};
+import { FEATURES } from "../config/featureConfig";
 
-// Labels for display purposes
-export const featureLabels = {
-  accounts: 'Accounts',
-  invoices: 'Invoices',
-  // crq: 'CRQ',
-  records: 'Records',
-  profiles: 'Profiles',
-};
+export const findUserFeature = (user, name) =>
+  user?.features?.some((f) => f.feature_name === name && f.is_active);
 
-// Maps specific routes to feature categories
-const routeToCategoryMap = {
-  '/dashboard': 'dash',
-  '/accounts': 'main',
-  '/invoices': 'main',
-  '/records': 'other',
-  '/profiles': 'other',
-};
-
-// Helper to get category based on current path
-export function getCategoryByRoute(pathname) {
-  return routeToCategoryMap[pathname];
-}
-
-// Returns only active features for a user within a specific category
-export function getAccessibleFeaturesByCategory(user, category) {
-  if (!user?.features) return [];
-
-  // Filter user's features by:
-  // 1. Active status
-  // 2. Matching category (e.g., 'main', 'other') using the map
-  return user.features.filter(
-    (feature) =>
-      feature.is_active &&
-      featureCategoryMap[feature.feature_name] === category
+export const getUserFeaturesByCategory = (user, category) =>
+  FEATURES.filter(f =>
+    f.category === category &&
+    f.dashboard &&
+    findUserFeature(user, f.name)
   );
-}
+
+export const getNavLinks = (user) =>
+  FEATURES.filter(f =>
+    f.nav &&
+    findUserFeature(user, f.name)
+  );

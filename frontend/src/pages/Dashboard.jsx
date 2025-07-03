@@ -3,6 +3,7 @@ import { UserContext } from '../context/UserContext';
 import { ClientContext } from '../context/ClientContext';
 import { Nav, FeatureBlock } from '../components';
 import { Link, useNavigate } from 'react-router-dom';
+import { getUserFeaturesByCategory } from '../utility/featureAccess'
 
 export default function Dashboard() {
   const { user } = useContext(UserContext); 
@@ -82,13 +83,23 @@ export default function Dashboard() {
           </div>
         </div>
         <div className='container-col'>
-          <p>Account</p>
-          <div className={`flex gap-4`}>
-            <FeatureBlock text="Logout" link="/logout" />
+          <p>Users</p>
+            {findFeature("user-access") && (
+              <FeatureBlock text="Access" link="/users/access" />
+            )}
+        </div>
 
-
+        {['main', 'other', 'tools', 'users'].map((category) => (
+        <div className="container-col" key={category}>
+          <p>{category.charAt(0).toUpperCase() + category.slice(1)}</p>
+          <div className="flex gap-4">
+            {getUserFeaturesByCategory(user, category).map(({ name, label, path }) => (
+              <FeatureBlock key={name} text={label} link={path} />
+            ))}
           </div>
         </div>
+      ))}
+
 
       </div>
     </div>

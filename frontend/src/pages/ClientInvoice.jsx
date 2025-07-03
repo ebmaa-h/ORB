@@ -338,7 +338,6 @@ const getChangedFields = (newData, originalData, updateFields) => {
             refreshTrigger={refreshLogs}
 
           />
-          {/* <NotesPopup /> */}
         </>
       ) : (
         <div className='container-col items-center'>

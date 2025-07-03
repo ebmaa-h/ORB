@@ -10,18 +10,15 @@ passport.use(new GoogleStrategy({
 async (accessToken, refreshToken, profile, done) => {
   try {
     // User authenticated on google's side
-    // Check if user is on our db and get user data
+    // Check if user is on our db -> registered
     let user = await User.findByEmail(profile.emails[0].value);
 
-    console.log('✅ User found for passport: ', user);
+    // console.log('✅ User found for passport: ', user);
 
     // Trigger google callback failure if user is not registered.
     if (!user) {
       return done(null, false);
     }
-
-    // Add profile picture to auth/me response
-    // user.profile_picture = profile.photos?.[0]?.value || null;
 
     return done(null, user);
   } catch (err) {
@@ -31,17 +28,18 @@ async (accessToken, refreshToken, profile, done) => {
 
 // Save user_id in session
 passport.serializeUser((user, done) => {
-  console.log('✅ serializeUser:', user.user_id);
+  console.log('✅ 🔒1/3 serializeUser: saving session for ID', user.user_id);
   done(null, user.user_id);
 });
 
 // Validate session & retrieve user data
 passport.deserializeUser(async (user_id, done) => {
-  console.log('✅ deserializeUser for id:', user_id);
   try {
-  const user = await User.findById(user_id);
+    const user = await User.findById(user_id);
+    console.log('✅ 🔒2/3 deserializeUser: user fetched from DB for ID', user_id);
     done(null, user);
   } catch (err) {
+    console.log('❌ 🔒2/3 deserializeUser failed');
     done(err, null);
   }
 });

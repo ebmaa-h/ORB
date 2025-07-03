@@ -123,6 +123,9 @@ export default function Nav() {
                 {findFeature("logs") && (
                   <li><Link to="/logs" className="dropdown-link">Logs</Link></li>
                 )}
+                {findFeature("user-access") && (
+                  <li><Link to="/users/access" className="dropdown-link">Users</Link></li>
+                )}
                 <li>
                   <Link to="/logout" className="dropdown-link text-red-500">Logout</Link>
                 </li>

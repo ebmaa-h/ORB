@@ -8,7 +8,7 @@ const User = {
       const [results] = await db.query(queries.login, [email]);
       const user = results[0];
 
-      console.log('User retrieved from db login request initial: ', user)
+      // console.log('User retrieved from db login request initial: ', user)
 
       if (!user) {
         console.log(`User with email ${email} not found.`);

@@ -18,14 +18,14 @@ const authController = {
   },
 
   getMe: async (req, res) => {
-    console.log('✅ Retrieving user data');
     // After de-serialize
     if (!req.user) {
+      console.log('❌ 🔒3/3 route hit: /auth/me — req.user NOT present');
       return res.status(401).json({ message: 'Not authenticated' });
     }
+    console.log('✅ 🔒3/3 route hit: /auth/me — req.user present');
 
     res.json(req.user);
-    console.log('✅ User data retrieved:   req.user', req.user);
   },
 
   logout: (req, res) => {
@@ -35,6 +35,7 @@ const authController = {
           return res.status(500).json({ message: 'Logout failed' });
         }
 
+        console.log('✅ 🔒 User logged out');
         res.clearCookie('connect.sid'); // clear cookie on client
         res.status(200).json({ message: 'Logged out successfully' });
       });
