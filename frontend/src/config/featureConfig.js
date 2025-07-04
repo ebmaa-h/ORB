@@ -3,56 +3,52 @@ export const FEATURES = [
     name: 'accounts',
     label: 'Accounts',
     path: '/accounts',
-    category: 'main',
-    nav: true,
-    dashboard: true,
+    category: 'clients',
   },
   {
     name: 'invoices',
     label: 'Invoices',
     path: '/invoices',
-    category: 'main',
-    nav: true,
-    dashboard: true,
+    category: 'clients',
+
   },
   {
     name: 'records',
     label: 'Records',
     path: '/records',
     category: 'other',
-    nav: true,
-    dashboard: true,
+
   },
   {
     name: 'profiles',
     label: 'Profiles',
     path: '/profiles',
     category: 'other',
-    nav: true,
-    dashboard: true,
+
   },
   {
     name: 'notes',
     label: 'Notes',
     path: '/notes',
     category: 'tools',
-    nav: true,
-    dashboard: true,
+
   },
   {
     name: 'logs',
     label: 'Logs',
     path: '/logs',
     category: 'tools',
-    nav: true,
-    dashboard: true,
+
   },
   {
     name: 'user-access',
     label: 'Access',
     path: '/users/access',
     category: 'users',
-    nav: true,
-    dashboard: true,
+
   },
 ];
+
+
+    // nav: true,
+    // dashboard: true,

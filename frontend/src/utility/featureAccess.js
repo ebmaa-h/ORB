@@ -1,17 +1,18 @@
 import { FEATURES } from "../config/featureConfig";
 
+// Checks if a user has access to a specific feature 
 export const findUserFeature = (user, name) =>
-  user?.features?.some((f) => f.feature_name === name && f.is_active);
+  user?.features?.some((f) => f.feature_name === name);
 
+// Get features of user has access to based on current category
 export const getUserFeaturesByCategory = (user, category) =>
   FEATURES.filter(f =>
     f.category === category &&
-    f.dashboard &&
     findUserFeature(user, f.name)
   );
 
-export const getNavLinks = (user) =>
-  FEATURES.filter(f =>
-    f.nav &&
-    findUserFeature(user, f.name)
-  );
+// Get currrent category based on frontend location 
+export function getCategoryByRoute(pathname) {
+    const feature = FEATURES.find(f => pathname.startsWith(f.path));
+  return feature?.category || null;
+}
