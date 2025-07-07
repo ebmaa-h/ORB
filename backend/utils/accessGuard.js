@@ -1,7 +1,7 @@
 function accessGuard(featureName) {
   return (req, res, next) => {
     const match = req.user?.features?.find(f => 
-      f.feature_name === featureName && f.is_active
+      f.feature_name === featureName
     );
 
     if (!match) {

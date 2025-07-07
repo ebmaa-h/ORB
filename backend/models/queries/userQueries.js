@@ -6,7 +6,7 @@ const sessionId = 'SELECT * FROM users WHERE user_id = ?';
 
 // User specific features
 const features = `
-  SELECT f.feature_name, uf.is_active, uf.permissions
+  SELECT f.feature_name
   FROM user_feature_access uf
   JOIN features f ON uf.feature_id = f.feature_id
   WHERE uf.user_id = ?`;

@@ -42,8 +42,9 @@ export default function ClientInvoice() {
         let response;
   
         if (accountId) {
-          // Fetch invoice data using accountId
-          response = await axios.get(ENDPOINTS.newInvoice(clientId, accountId),{
+          // Means its a new invoice
+          console.log('creating new invoice...')
+          response = await axios.put(ENDPOINTS.newInvoice(clientId, accountId),{
             params: { userId: user.user_id },
             withCredentials: true,
           });
@@ -54,7 +55,6 @@ export default function ClientInvoice() {
           response = await axios.get(ENDPOINTS.clientInvoice(clientId, invoiceId), {
             withCredentials: true,
           });
-          
         }
         
         console.log('response.data.invoice',response.data.invoice)
@@ -68,6 +68,12 @@ export default function ClientInvoice() {
         setOgData(response.data.invoice.details);
       } catch (error) {
         console.error('Error fetching invoice details:', error);
+
+         if (error.response?.status === 403) {
+          navigate('/not-found?reason=forbidden');
+        } else {
+          triggerToast(false, "Error loading invoice.");
+        }
       }
     };
   

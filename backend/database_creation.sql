@@ -33,7 +33,6 @@ CREATE TABLE user_client_access (
     user_client_access_id INT AUTO_INCREMENT PRIMARY KEY,
     user_id INT,
     client_id INT,
-    permissions ENUM('View', 'Edit', 'Delete') DEFAULT 'View',
     FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE SET NULL,
     FOREIGN KEY (client_id) REFERENCES clients(client_id) ON DELETE SET NULL
 );
@@ -49,8 +48,6 @@ CREATE TABLE user_feature_access (
     user_feature_access_id INT AUTO_INCREMENT PRIMARY KEY,
     user_id INT,
     feature_id INT,
-    is_active BOOLEAN DEFAULT FALSE,
-    permissions ENUM('View', 'Edit', 'Delete') DEFAULT 'View',
     FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE SET NULL,
     FOREIGN KEY (feature_id) REFERENCES features(feature_id) ON DELETE SET NULL
 );
@@ -241,20 +238,20 @@ CREATE TABLE invoices (
 -- Inserting sample data for users
 INSERT INTO users (email, first, last, address, tell_nr)
 VALUES 
-('henri@ebmaa.co.za', 'Henri', 'van', '123 St', '123-456-7890'),
-('andrea@ebmaa.co.za', 'Andrea', 'van', '456 St', '987-654-3210'),
-('nicolene@ebmaa.co.za', 'Nicolene', 'van', '123 St', '012-456-7890'),
-('francois@ebmaa.co.za', 'Francois', 'van', '456 St', '012-654-3210'),
-('alet@ebmaa.co.za', 'Alet', 'van', '456 St', '012-654-3210'),
-('ilze@ebmaa.co.za', 'Ilze', 'van', '456 St', '012-654-3210');
+('henri@ebmaa.co.za', 'Henri', 'Surname', '123 St', '012-345-6789'),
+('andrea@ebmaa.co.za', 'Andrea', 'Surname', '456 St', '012-345-6789'),
+('nicolene@ebmaa.co.za', 'Nicolene', 'Surname', '123 St', '012-345-6789'),
+('francois@ebmaa.co.za', 'Francois', 'Surname', '456 St', '012-345-6789'),
+('alet@ebmaa.co.za', 'Alet', 'Surname', '456 St', '012-345-6789'),
+('ilze@ebmaa.co.za', 'Ilze', 'Surname', '456 St', '012-345-6789');
 
 
 -- Inserting sample data for clients
 INSERT INTO clients (email, password, first, last, registration_nr, practice_nr, tell_nr, client_type)
 VALUES 
-('client1@email.co.za', 'test', 'van der Wolt', 'James', 'REG1234', '21515151', '012-222-3333', 'Surgeon'),
-('client2@email.co.za', 'test', 'Lievenberg', 'Alicia', 'REG5678', '21235151', '012-555-6666', 'Specialist'),
-('client3@email.co.za', 'test', 'Bellings', 'Sando', 'REG1234', '21775151', '012-222-3333', 'Anaesthetist');
+('client1@email.co.za', 'test', 'Surname', 'Apple', 'REG1234', '21515151', '012-345-6789', 'Surgeon'),
+('client2@email.co.za', 'test', 'Surname', 'Orange', 'REG5678', '21235151', '012-345-6789', 'Specialist'),
+('client3@email.co.za', 'test', 'Surname', 'Lemon', 'REG1234', '21775151', '012-345-6789', 'Anaesthetist');
 
 -- Inserting sample data for medical aids
 INSERT INTO medical_aids (name)
@@ -275,13 +272,13 @@ VALUES
 (5, 'BonClassic', 'BONCLA0054');
 
 -- Inserting sample data for profiles
-INSERT INTO profiles (medical_aid_id, plan_id, medical_aid_nr, is_active)
+INSERT INTO profiles (medical_aid_id, plan_id, medical_aid_nr)
 VALUES 
-(1, 1, '91672345', TRUE),
-(2, 2, '42125516', TRUE),
-(3, 3, '74577457', TRUE),
-(4, 4, 'FW515212', TRUE),
-(3, 3, '74566457', TRUE);
+(1, 1, '91672345'),
+(2, 2, '42125516'),
+(3, 3, '74577457'),
+(4, 4, 'FW515212'),
+(3, 3, '74566457');
 
 -- Inserting sample data for person_records
 INSERT INTO person_records (first, last, title, date_of_birth, gender, id_nr)
@@ -413,38 +410,38 @@ VALUES
 ('clients');
 
 -- Inserting sample data for user features
-INSERT INTO user_feature_access (user_id, feature_id, is_active, permissions)
+INSERT INTO user_feature_access (user_id, feature_id)
 VALUES 
-(1, 1, TRUE, 'Edit'),
-(1, 2, TRUE, 'Edit'),
-(1, 3, TRUE, 'Edit'),
-(1, 4, TRUE, 'Edit'),
-(1, 5, TRUE, 'Edit'),
-(2, 1, TRUE, 'Edit'),
-(2, 2, TRUE, 'Edit'),
-(2, 3, TRUE, 'Edit'),
-(2, 4, TRUE, 'Edit'),
-(2, 5, TRUE, 'Edit'),
-(3, 1, TRUE, 'Edit'),
-(3, 2, TRUE, 'Edit'),
-(3, 3, TRUE, 'Edit'),
-(3, 4, TRUE, 'Edit'),
-(3, 5, TRUE, 'Edit'),
-(4, 1, TRUE, 'Edit'),
-(4, 2, TRUE, 'Edit'),
-(4, 3, TRUE, 'Edit'),
-(4, 4, TRUE, 'Edit'),
-(4, 5, TRUE, 'Edit'),
-(5, 1, TRUE, 'Edit'),
-(5, 2, TRUE, 'Edit'),
-(5, 3, TRUE, 'Edit'),
-(5, 4, TRUE, 'Edit'),
-(5, 5, TRUE, 'Edit'),
-(6, 1, TRUE, 'Edit'),
-(6, 2, TRUE, 'Edit'),
-(6, 3, TRUE, 'Edit'),
-(6, 4, TRUE, 'Edit'),
-(6, 5, TRUE, 'Edit');
+(1, 1),
+(1, 2),
+(1, 3),
+(1, 4),
+(1, 5),
+(2, 1),
+(2, 2),
+(2, 3),
+(2, 4),
+(2, 5),
+(3, 1),
+(3, 2),
+(3, 3),
+(3, 4),
+(3, 5),
+(4, 1),
+(4, 2),
+(4, 3),
+(4, 4),
+(4, 5),
+(5, 1),
+(5, 2),
+(5, 3),
+(5, 4),
+(5, 5),
+(6, 1),
+(6, 2),
+(6, 3),
+(6, 4),
+(6, 5);
 
 -- Inserting sample data for service centers
 INSERT INTO service_centers_list (service_center_name, service_center_type)
@@ -479,31 +476,31 @@ VALUES
 (2, 3);
 
 -- Insert data into user_client_access table
-INSERT INTO user_client_access (user_id, client_id, permissions)
+INSERT INTO user_client_access (user_id, client_id)
 VALUES
-(1, 1, 'Edit'),
-(1, 2, 'Edit'),
-(1, 3, 'Edit'),
+(1, 1),
+(1, 2),
+(1, 3),
 
-(2, 1, 'Edit'),
-(2, 2, 'Edit'),
-(2, 3, 'Edit'),
+(2, 1),
+(2, 2),
+(2, 3),
 
-(3, 1, 'Edit'),
-(3, 2, 'Edit'),
-(3, 3, 'Edit'),
+(3, 1),
+(3, 2),
+(3, 3),
 
-(4, 1, 'Edit'),
-(4, 2, 'Edit'),
-(4, 3, 'Edit'),
+(4, 1),
+(4, 2),
+(4, 3),
 
-(5, 1, 'Edit'),
-(5, 2, 'Edit'),
-(5, 3, 'Edit'),
+(5, 1),
+(5, 2),
+(5, 3),
 
-(6, 1, 'Edit'),
-(6, 2, 'Edit'),
-(6, 3, 'Edit');
+(6, 1),
+(6, 2),
+(6, 3);
 
 -- person_addresses
 INSERT INTO person_addresses (record_id, address_type, is_domicilium, address)

@@ -6,7 +6,7 @@ export default function Tools() {
 
   // Helper function to find a specific feature by name
   const findFeature = (featureName) => 
-    user.features.find((feature) => feature.feature_name === featureName && feature.is_active);
+    user.features.find((feature) => feature.feature_name === featureName);
 
   return (
     <div className='container-col'>

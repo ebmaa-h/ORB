@@ -22,9 +22,6 @@ export default function NotFound() {
         await axios.post(`${ENDPOINTS.logout}`, {}, { withCredentials: true });
       } catch (error) {
         console.error('Logout error:', error);
-        setUser(null);
-        setClientId(null);
-        navigate('/');
       } finally {
         setUser(null);
         console.log('User Cleared & Session Cleared')
@@ -33,8 +30,11 @@ export default function NotFound() {
       }
     };
 
-    logout();
-  }, []);
+    // Only logout for session-related reasons
+    if (reason === 'session-expired' || reason === 'unauthorized') {
+      logout();
+    }
+  }, [reason]);
 
   const message = (() => {
     if (reason === 'unauthorized') return 'You are not authorized to access this page.'; // Google callback failure -> unregistered or failure on google's side.
