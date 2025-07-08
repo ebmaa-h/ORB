@@ -51,9 +51,7 @@ app.use((req, res, next) => {
 
 // Routes
 app.use('/auth', authRoutes);
-
 app.use('/clients', clientRoutes);
-
 app.use('/profiles', profRoutes);
 app.use('/records', recordRoutes);
 app.use('/notes', noteRoutes);
