@@ -22,10 +22,9 @@ export default function ClientAccount() {
   );
 
   useEffect(() => {
-  if (!clientId) {
-    console.log('test')
-    navigate('/not-found?reason=unauthorized');
-  }
+    if (!clientId) {
+      navigate('/accounts');
+    }
   }, [clientId]);
 
   // Fetch account details

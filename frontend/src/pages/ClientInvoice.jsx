@@ -28,10 +28,9 @@ export default function ClientInvoice() {
   const cellClass = "border border-gray-blue-100 p-2";
 
   useEffect(() => {
-  if (!clientId) {
-    console.log('test')
-    navigate('/not-found?reason=unauthorized');
-  }
+    if (!clientId) {
+      navigate('/invoices');
+    }
   }, [clientId]);
 
   useEffect(() => {

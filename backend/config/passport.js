@@ -12,9 +12,7 @@ async (accessToken, refreshToken, profile, done) => {
     // User authenticated on google's side
     // Check if user is on our db -> registered
     let user = await User.findByEmail(profile.emails[0].value);
-
-    // console.log('✅ User found for passport: ', user);
-
+    
     // Trigger google callback failure if user is not registered.
     if (!user) {
       return done(null, false);

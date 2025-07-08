@@ -22,11 +22,12 @@ export default function Nav() {
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
-
-
   
+  // Check page cateogory 
   const currentCategory = getCategoryByRoute(location.pathname);
 
+  // Check if path ends with ID 
+  const isOnSpecificPage = /\/(accounts|invoices)\/\d+/.test(location.pathname);
   
   return (
     <div className="bg-white shadow flex justify-between items-center flex-row h-[60px]">
@@ -34,14 +35,15 @@ export default function Nav() {
 
         {currentCategory == 'clients'&&
           <select
-            className="cursor-pointer border rounded border-gray-300 px-2 hover:border-ebmaa-purple transition duration-300 w-[200px] h-[30px]"
+            className={`cursor-pointer border rounded border-gray-300 px-2 hover:border-ebmaa-purple transition duration-300 w-[200px] h-[30px]`}
             value={clientId || ""}
+            disabled={isOnSpecificPage}
             onChange={(e) => {
               const selectedClientId = e.target.value;
               setClientId(selectedClientId);
               }}
               >
-            <option disabled={!!clientId}>Select Client</option>
+            <option>Select Client</option>
             {user.client_access.map((client, i) => (
               <option key={i} className='hover:bg-ebmaa-purple' value={client.client_id}>
                 {client.client_name}
