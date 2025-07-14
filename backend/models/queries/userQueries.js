@@ -1,5 +1,5 @@
 // Login
-const login = 'SELECT * FROM users WHERE email = ?';
+const login = 'SELECT user_id FROM users WHERE email = ?';
 
 // Get user ID
 const sessionId = 'SELECT * FROM users WHERE user_id = ?';

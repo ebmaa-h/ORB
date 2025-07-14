@@ -32,7 +32,7 @@ app.use(session({
 
 // Initialize Passport and session
 app.use(passport.initialize());
-app.use(passport.session()); 
+app.use(passport.session());  // Triggers deserializeUser automatically
 
 app.use(cors({
   origin: ['http://localhost:5173', 'http://167.99.196.172', 'http://orb.ebmaa.co.za'], // Local dev and production
@@ -48,6 +48,38 @@ app.use((req, res, next) => {
   console.log(`A ${req.method} request has been made from ${req.path}`);
   next();
 });
+
+// // Debug
+// app.use((req, res, next) => {
+//   console.log('🧠 Session data:', req.session);
+//   console.log('👤 req.user:', req.user);
+//   next();
+// });
+
+
+// Check if session is valid and user is deserialized ? i think
+// 
+app.use((req, res, next) => {
+  const safePaths = [
+    '/auth/google',
+    '/auth/google/callback',
+    '/auth/me',
+    '/auth/logout'
+  ];
+
+  const isSafe = safePaths.some(path => req.path.startsWith(path));
+
+  if (!req.user && !isSafe) {
+    console.warn('⚠️ No user found in session. Session likely invalid or expired.');
+    return res.status(401).json({
+      message: 'Session expired or invalid',
+      code: 'SESSION_INVALID'
+    });
+  }
+  next();
+});
+
+
 
 // Routes
 app.use('/auth', authRoutes);

@@ -28,9 +28,9 @@ function SideNav({ setNavWidth }) {
       <ul className="flex flex-col h-full justify-between">
         <div className="space-y-4">
           <li>
-            <Link to="/dashboard" className="flex items-center justify-center w-full">
+            <Link to="/workflow" className="flex items-center justify-center w-full">
               <span className={`text-base whitespace-nowrap ${!isExpanded ? 'material-symbols-outlined' : ''}`}>
-                {isExpanded ? 'Dashboard' : 'dashboard'}
+                {isExpanded ? 'Workflow' : 'workflow'}
               </span>        
             </Link>
           </li>

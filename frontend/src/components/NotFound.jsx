@@ -3,7 +3,7 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import { UserContext } from '../context/UserContext';
 import { ClientContext } from '../context/ClientContext';
 import ENDPOINTS from '../config/apiEndpoints';
-import axios from 'axios';
+import axiosClient from '../config/axiosClient';
 
 export default function NotFound() {
   const { user, setUser } = useContext(UserContext);
@@ -19,7 +19,7 @@ export default function NotFound() {
     useEffect(() => {
     const logout = async () => {
       try {
-        await axios.post(`${ENDPOINTS.logout}`, {}, { withCredentials: true });
+        await axiosClient.post(`${ENDPOINTS.logout}`, {}, { withCredentials: true });
       } catch (error) {
         console.error('Logout error:', error);
       } finally {
@@ -43,8 +43,8 @@ export default function NotFound() {
     return user ? 'Page not found.' : 'Unauthorized.';
   })();
 
-  const buttonText = user ? 'Back to Dashboard' : 'Back to Login';
-  const handleClick = () => navigate(user ? '/dashboard' : '/');
+  const buttonText = user ? 'Back to Workflow' : 'Back to Login';
+  const handleClick = () => navigate(user ? '/workflow' : '/');
 
   return (
     <div className="flex justify-center items-center min-h-screen bg-gray-300">

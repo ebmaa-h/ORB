@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import axios from 'axios';
+import axiosClient from '../config/axiosClient';
 import ENDPOINTS from '../config/apiEndpoints';
 import { useContext } from 'react';
 import { ClientContext } from '../context/ClientContext';
@@ -14,7 +14,7 @@ export default function ClientAccounts() {
   useEffect(() => {
     const fetchAccounts = async () => {
       try {
-        const response = await axios.get(ENDPOINTS.clientAccounts(clientId));
+        const response = await axiosClient.get(ENDPOINTS.clientAccounts(clientId));
         setAccounts(response.data.accounts);
       } catch (error) {
         console.error('Error fetching accounts:', error);

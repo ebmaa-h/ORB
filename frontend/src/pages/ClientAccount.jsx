@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
-import axios from 'axios';
+import axiosClient from '../config/axiosClient';
 import { useContext } from 'react';
 import { ClientContext } from '../context/ClientContext';
 import { SearchBar, Table, BackButton, NotesAndLogs } from '../components';
@@ -32,7 +32,7 @@ export default function ClientAccount() {
     const fetchAccount = async () => {
       try {
         console.log('requesting with', accountId);
-        const response = await axios.get(ENDPOINTS.clientAccount(clientId, accountId), {
+        const response = await axiosClient.get(ENDPOINTS.clientAccount(clientId, accountId), {
           withCredentials: true,
         });
 

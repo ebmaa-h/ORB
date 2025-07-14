@@ -81,7 +81,7 @@ export default function Nav() {
               if (path.includes('/profiles')) return 'Profiles';
               if (path.includes('/notes')) return 'Notes';
               if (path.includes('/logs')) return 'Logs';
-              if (path.includes('/dashboard')) return 'Dashboard';
+              if (path.includes('/workflow')) return 'Workflow';
               return 'More';
             })()}
             <span className="ml-1">▾</span>
@@ -91,7 +91,7 @@ export default function Nav() {
             <div className="absolute right-0 mt-2 gap-2 p-2 w-40 bg-white rounded shadow-md z-10">
               <ul className="flex flex-col divide-y divide-gray-100">
                 <li>
-                  <Link to="/dashboard" className="dropdown-link">Dashboard</Link>
+                  <Link to="/workflow" className="dropdown-link">Workflow</Link>
                 </li>
 
                 {/* Loop through features and output those user has access to */}

@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom'; // For accessing profile_id from the URL
-import axios from 'axios';
+import axiosClient from '../config/axiosClient';
 import { SearchBar, Table } from '../components';
 import ENDPOINTS from '../config/apiEndpoints';
 import { BackButton } from '../components/index';
@@ -22,7 +22,7 @@ export default function Profile() {
   useEffect(() => {
     const fetchProfile = async () => {
       try {
-          const response = await axios.get(ENDPOINTS.profileDetails(profileId), {
+          const response = await axiosClient.get(ENDPOINTS.profileDetails(profileId), {
           withCredentials: true,
         });
         

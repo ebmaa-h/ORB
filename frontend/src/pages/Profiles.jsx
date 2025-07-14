@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import axios from 'axios';
+import axiosClient from '../config/axiosClient';
 import { SearchBar, Table } from '../components';
 import ENDPOINTS from '../config/apiEndpoints';
 
@@ -11,7 +11,7 @@ export default function Profiles() {
   useEffect(() => {
     const fetchProfiles = async () => {
       try {
-        const response = await axios.get(ENDPOINTS.profiles);
+        const response = await axiosClient.get(ENDPOINTS.profiles);
         setProfiles(response.data.profiles);
       } catch (error) {
         console.error('Error fetching profiles:', error);

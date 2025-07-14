@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import ENDPOINTS from '../config/apiEndpoints';
-import axios from 'axios';
+import axiosClient from '../config/axiosClient';
 import { InputField } from '../components';
 import { BackButton } from '../components/index';
 import { Table } from '../components';
@@ -20,7 +20,7 @@ export default function Record() {
   useEffect(() => {
     const getRecordDetails = async () => {
       try {
-        const response = await axios.get(ENDPOINTS.recordDetails(recordId), {
+        const response = await axiosClient.get(ENDPOINTS.recordDetails(recordId), {
           withCredentials: true,
         });
         const { record, addresses, accounts, invoices, contactNumbers, emails } = response.data.record;
@@ -157,7 +157,7 @@ export default function Record() {
 // Next to do.
 
     // try {
-    //   const response = await axios.patch(ENDPOINTS.updatePerson, updatedData, {
+    //   const response = await axiosClient.patch(ENDPOINTS.updatePerson, updatedData, {
     //     withCredentials: true,
     //   });
 

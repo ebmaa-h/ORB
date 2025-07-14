@@ -1,4 +1,3 @@
-// const User = require('../models/userModel');
 const passport = require('passport');
 
 const authController = {
@@ -12,7 +11,7 @@ const authController = {
     console.log('🔁 Returned from Google, processing callback...');
     passport.authenticate('google', {
       failureRedirect: `${process.env.CLIENT_URL}/not-found?reason=unauthorized`,
-      successRedirect: `${process.env.CLIENT_URL}/dashboard`,
+      successRedirect: `${process.env.CLIENT_URL}/workflow`,
       session: true,
     })(req, res, next);
   },

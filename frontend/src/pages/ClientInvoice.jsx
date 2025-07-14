@@ -3,7 +3,7 @@ import { UserContext } from '../context/UserContext';
 import { ClientContext } from '../context/ClientContext';
 import { useParams } from 'react-router-dom';
 import ENDPOINTS from '../config/apiEndpoints';
-import axios from 'axios';
+import axiosClient from '../config/axiosClient';
 import { InputField, BackButton, NotesAndLogs, Table, VTable, NotesPopup } from '../components';
 import { useOutletContext } from "react-router-dom";
 import { useNavigate } from 'react-router-dom';
@@ -43,7 +43,7 @@ export default function ClientInvoice() {
         if (accountId) {
           // Means its a new invoice
           console.log('creating new invoice...')
-          response = await axios.put(ENDPOINTS.newInvoice(clientId, accountId),{
+          response = await axiosClient.put(ENDPOINTS.newInvoice(clientId, accountId),{
             params: { userId: user.user_id },
             withCredentials: true,
           });
@@ -51,7 +51,7 @@ export default function ClientInvoice() {
           triggerToast(true, "New Invoice Created!");
         } else if (invoiceId) {
           // Fetch invoice details using invoiceId
-          response = await axios.get(ENDPOINTS.clientInvoice(clientId, invoiceId), {
+          response = await axiosClient.get(ENDPOINTS.clientInvoice(clientId, invoiceId), {
             withCredentials: true,
           });
         }
@@ -93,7 +93,7 @@ export default function ClientInvoice() {
         changes: changedFields,
       };
   
-      await axios.post(ENDPOINTS.addLog, payload, { withCredentials: true });
+      await axiosClient.post(ENDPOINTS.addLog, payload, { withCredentials: true });
       console.log("Changes logged:", payload);
     } catch (error) {
       console.error("Failed to log changes:", error);
@@ -181,7 +181,7 @@ const getChangedFields = (newData, originalData, updateFields) => {
     }
 
     try {
-      await axios.patch(ENDPOINTS.updateInvoice(client.client_id, updatedInvoice.invoice_id), updatedInvoice, {
+      await axiosClient.patch(ENDPOINTS.updateInvoice(client.client_id, updatedInvoice.invoice_id), updatedInvoice, {
         withCredentials: true,
       });
 

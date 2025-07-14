@@ -1,9 +1,9 @@
 import { useEffect, useState } from 'react';
-import axios from 'axios';
 import ENDPOINTS from '../config/apiEndpoints';
 import { useContext } from 'react';
 import { ClientContext } from '../context/ClientContext'; 
 import { SearchBar, Table } from '../components';
+import axiosClient from '../config/axiosClient';
 
 export default function ClientInvoices() {
   const [invoices, setInvoices] = useState([]);
@@ -14,7 +14,7 @@ export default function ClientInvoices() {
   useEffect(() => {
     const fetchInvoices = async () => {
       try {
-        const response = await axios.get(ENDPOINTS.clientInvoices(clientId));
+        const response = await axiosClient.get(ENDPOINTS.clientInvoices(clientId));
         setInvoices(response.data.invoices);
       } catch (error) {
         console.error('Error fetching invoices:', error);

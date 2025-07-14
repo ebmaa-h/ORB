@@ -92,7 +92,7 @@ const Client = {
   },
 
   updateInvoice: async (updatedInvoice) => {
-    console.log('updating....')
+    // console.log('updating....')
     // console.log('updatedInvoice', updatedInvoice)
     try {
       const [results] = await db.query(

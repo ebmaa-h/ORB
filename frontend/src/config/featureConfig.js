@@ -51,4 +51,4 @@ export const FEATURES = [
 
 
     // nav: true,
-    // dashboard: true,
+    // workflow: true,

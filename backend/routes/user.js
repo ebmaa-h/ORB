@@ -1,5 +1,5 @@
 const express = require('express');
-const userController = require('../controllers/userController');
+const userController = require('../../frontend/src/trash/userController');
 const router = express.Router();
 
 // Get user data route

@@ -11,13 +11,14 @@ async (accessToken, refreshToken, profile, done) => {
   try {
     // User authenticated on google's side
     // Check if user is on our db -> registered
+    // user_id only
     let user = await User.findByEmail(profile.emails[0].value);
     
     // Trigger google callback failure if user is not registered.
     if (!user) {
       return done(null, false);
     }
-
+    console.log('✅ 🔒0/3 passport: user_id retrieved.', user.user_id);
     return done(null, user);
   } catch (err) {
     return done(err, null);
@@ -30,7 +31,7 @@ passport.serializeUser((user, done) => {
   done(null, user.user_id);
 });
 
-// Validate session & retrieve user data
+// Validate session & retrieve user data, save user data in req
 passport.deserializeUser(async (user_id, done) => {
   try {
     const user = await User.findById(user_id);

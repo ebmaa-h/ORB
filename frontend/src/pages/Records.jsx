@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import axios from 'axios';
+import axiosClient from '../config/axiosClient';
 import ENDPOINTS from '../config/apiEndpoints';
 import { SearchBar, Table } from '../components';
 
@@ -11,7 +11,7 @@ export default function Records() {
   useEffect(() => {
     const fetchRecords = async () => {
       try {
-        const response = await axios.get(ENDPOINTS.records);
+        const response = await axiosClient.get(ENDPOINTS.records);
         console.log(response)
         setRecords(response.data.records);
       } catch (error) {

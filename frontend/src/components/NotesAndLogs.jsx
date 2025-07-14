@@ -1,5 +1,5 @@
 import { useEffect, useState, useContext } from 'react';
-import axios from 'axios';
+import axiosClient from '../config/axiosClient';
 import ENDPOINTS from '../config/apiEndpoints';
 import { UserContext } from '../context/UserContext';
 import { SearchBar } from '../components';
@@ -17,11 +17,11 @@ export default function NotesAndLogs({ tableName, id, refreshTrigger }) {
       setLoading(true);
       try {
         const [notesRes, logsRes] = await Promise.all([
-          axios.get(ENDPOINTS.fetchNotes(tableName, id)),
-          axios.get(ENDPOINTS.fetchLogs(tableName, id)),
+          axiosClient.get(ENDPOINTS.fetchNotes(tableName, id)),
+          axiosClient.get(ENDPOINTS.fetchLogs(tableName, id)),
         ]);
 
-        console.log(logsRes)
+        // console.log(logsRes)
 
         const formattedNotes = notesRes.data.notes.map(note => ({
           type: 'note',
@@ -31,7 +31,7 @@ export default function NotesAndLogs({ tableName, id, refreshTrigger }) {
           content: note.note,
         }));
 
-        console.log(logsRes)
+        // console.log(logsRes)
         const formattedLogs = logsRes.data.map(log => ({
           type: 'log',
           id: `log-${log.log_id}`,
@@ -43,6 +43,7 @@ export default function NotesAndLogs({ tableName, id, refreshTrigger }) {
           content: formatLogContent(log),
         }));
 
+        // Combine notes and logs then sort by date
         const combined = [...formattedNotes, ...formattedLogs].sort(
           (a, b) => new Date(a.created_at) - new Date(b.created_at)
         );
@@ -115,7 +116,7 @@ export default function NotesAndLogs({ tableName, id, refreshTrigger }) {
 
     setLoading(true);
     try {
-      const res = await axios.post(
+      const res = await axiosClient.post(
         ENDPOINTS.addNote(tableName, id),
         { userId: user.user_id, note: newNote },
         { withCredentials: true }

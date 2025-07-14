@@ -4,7 +4,7 @@ import { ClientContext } from '../context/ClientContext';
 import { FeatureBlock } from '../components';
 import { getUserFeaturesByCategory } from '../utility/featureAccess'
 
-export default function Dashboard() {
+export default function Workflow() {
   const { user } = useContext(UserContext); 
   const { clientId, setClientId } = useContext(ClientContext);
 

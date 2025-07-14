@@ -1,5 +1,5 @@
 import { createContext, useState, useEffect } from 'react';
-import axios from 'axios';
+import axiosClient from '../config/axiosClient';
 import ENDPOINTS from '../config/apiEndpoints';
 import { useNavigate } from 'react-router-dom';
 
@@ -15,7 +15,7 @@ export const UserProvider = ({ children }) => {
     const getAuthUser = async () => {
       try {
         console.log('Authenticating session & retrieving user data...');
-        const response = await axios.get(ENDPOINTS.auth, { withCredentials: true });
+        const response = await axiosClient.get(ENDPOINTS.auth, { withCredentials: true });
         
         if (response.data) setUser(response.data);
         console.log('✅ User data retrieved: ', response.data);

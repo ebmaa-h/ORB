@@ -2,7 +2,7 @@ import { useContext, useState, useEffect } from 'react';
 import { UserContext } from '../context/UserContext';
 import { ClientContext } from '../context/ClientContext';
 import { useNavigate } from 'react-router-dom';
-import axios from 'axios';
+import axiosClient from '../config/axiosClient';
 import ENDPOINTS from '../config/apiEndpoints';
 
 export default function Logout() {
@@ -14,7 +14,7 @@ export default function Logout() {
   useEffect(() => {
     const logout = async () => {
       try {
-        const response = await axios.post(`${ENDPOINTS.logout}`, {}, { withCredentials: true });
+        const response = await axiosClient.post(`${ENDPOINTS.logout}`, {}, { withCredentials: true });
 
         if (response.status === 200) {
           setUser(null);
