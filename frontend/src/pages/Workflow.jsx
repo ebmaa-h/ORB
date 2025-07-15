@@ -1,19 +1,23 @@
 import { useContext } from 'react';
 import { UserContext } from '../context/UserContext'; 
-import { ClientContext } from '../context/ClientContext';
-import { FeatureBlock } from '../components';
-import { getUserFeaturesByCategory } from '../utility/featureAccess'
 
 export default function Workflow() {
   const { user } = useContext(UserContext); 
-  const { clientId, setClientId } = useContext(ClientContext);
+
 
   return (
     <div className='flex flex-col'>
       <div className='container-col'>
         <p>Hello {user.first}.</p>
       </div>
-      <div className='flex gap-4'>
+
+
+      </div>
+  );
+}
+
+  // const { clientId, setClientId } = useContext(ClientContext);
+      {/* <div className='flex gap-4'>
         {['clients', 'other', 'users'].map((category) => (
           <div className="container-col" key={category}>
             <p>{category.charAt(0).toUpperCase() + category.slice(1)}</p>
@@ -41,8 +45,4 @@ export default function Workflow() {
           </div>
           
         ))}
-      </div>
-
-      </div>
-  );
-}
+      </div> */}

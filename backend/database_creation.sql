@@ -5,10 +5,8 @@ DROP TABLE IF EXISTS person_contact_numbers,person_emails, person_numbers, invoi
 CREATE TABLE users (
     user_id INT AUTO_INCREMENT PRIMARY KEY,
     email VARCHAR(255) NOT NULL UNIQUE,
-    first VARCHAR(255),
-    last VARCHAR(255),
-    address VARCHAR(255),
-    tell_nr VARCHAR(20),
+    role ENUM('Reception','Admittance', 'Billing', 'Credit Controller', 'Finance/Recon', 'Filing', 'Manager', 'Admin') DEFAULT 'Reception',
+    active BOOLEAN DEFAULT 1,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 );
@@ -236,14 +234,14 @@ CREATE TABLE invoices (
 
 
 -- Inserting sample data for users
-INSERT INTO users (email, first, last, address, tell_nr)
+INSERT INTO users (email, role)
 VALUES 
-('henri@ebmaa.co.za', 'Henri', 'Surname', '123 St', '012-345-6789'),
-('andrea@ebmaa.co.za', 'Andrea', 'Surname', '456 St', '012-345-6789'),
-('nicolene@ebmaa.co.za', 'Nicolene', 'Surname', '123 St', '012-345-6789'),
-('francois@ebmaa.co.za', 'Francois', 'Surname', '456 St', '012-345-6789'),
-('alet@ebmaa.co.za', 'Alet', 'Surname', '456 St', '012-345-6789'),
-('ilze@ebmaa.co.za', 'Ilze', 'Surname', '456 St', '012-345-6789');
+('henri@ebmaa.co.za', 'Admin'),
+('andrea@ebmaa.co.za', 'Manager'),
+('nicolene@ebmaa.co.za', 'Manager'),
+('francois@ebmaa.co.za', 'Manager'),
+('alet@ebmaa.co.za', 'Manager'),
+('ilze@ebmaa.co.za', 'Manager');
 
 
 -- Inserting sample data for clients

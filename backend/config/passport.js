@@ -1,6 +1,6 @@
 const passport = require('passport');
 const GoogleStrategy = require('passport-google-oauth20').Strategy;
-const User = require('../models/userModel');
+const Auth = require('../models/authModel');
 
 passport.use(new GoogleStrategy({
   clientID: process.env.GOOGLE_CLIENT_ID,
@@ -11,15 +11,15 @@ async (accessToken, refreshToken, profile, done) => {
   try {
     // User authenticated on google's side
     // Check if user is on our db -> registered
-    // user_id only
-    let user = await User.findByEmail(profile.emails[0].value);
+    // user_id only -> authenticated user
+    let authUser = await Auth.findByEmail(profile.emails[0].value);
     
     // Trigger google callback failure if user is not registered.
-    if (!user) {
+    if (!authUser) {
       return done(null, false);
     }
-    console.log('✅ 🔒0/3 passport: user_id retrieved.', user.user_id);
-    return done(null, user);
+    console.log('✅ 🔒0/3 passport: user_id retrieved.', authUser.user_id);
+    return done(null, authUser);
   } catch (err) {
     return done(err, null);
   }
@@ -34,9 +34,9 @@ passport.serializeUser((user, done) => {
 // Validate session & retrieve user data, save user data in req
 passport.deserializeUser(async (user_id, done) => {
   try {
-    const user = await User.findById(user_id);
+    const authUser = await Auth.findById(user_id);
     console.log('✅ 🔒2/3 deserializeUser: user fetched from DB for ID', user_id);
-    done(null, user);
+    done(null, authUser);
   } catch (err) {
     console.log('❌ 🔒2/3 deserializeUser failed');
     done(err, null);

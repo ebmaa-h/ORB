@@ -1,10 +1,32 @@
-// Login
-const login = 'SELECT user_id FROM users WHERE email = ?';
+// Main user queries
+const getAll = `
+  SELECT user_id, email, role, active, created_at, updated_at
+  FROM users
+  ORDER BY created_at DESC`;
 
-// Get user ID
-const sessionId = 'SELECT * FROM users WHERE user_id = ?';
+const getById = `
+  SELECT user_id, email, role, active, created_at, updated_at
+  FROM users
+  WHERE user_id = ?`;
 
-// User specific features
+// Create a new user
+const create = `
+  INSERT INTO users (email, role, active)
+  VALUES (?, ?, ?)`;
+
+// Update user info
+const update = `
+  UPDATE users
+  SET email = ?, role = ?
+  WHERE user_id = ?`;
+
+// Soft delete user (set active = 0)
+const deactivate = `
+  UPDATE users
+  SET active = 0
+  WHERE user_id = ?`;
+
+// User-specific features
 const features = `
   SELECT f.feature_name
   FROM user_feature_access uf
@@ -18,15 +40,12 @@ const clientAccess = `
   JOIN clients d ON uda.client_id = d.client_id
   WHERE uda.user_id = ?`;
 
-const newUser = `INSERT INTO users (email, first, last, address, tell_nr) VALUES (?, ?, ?, ?, ?, ?)`;
-
-const newClient = `INSERT INTO clients (email, password, first, last, registration_nr, practice_nr, client_type, tell_nr) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`;
-
 module.exports = {
+  getAll,
+  getById,
+  create,
+  update,
+  deactivate,
   features,
-  clientAccess,
-  newUser,
-  newClient,
-  login,
-  sessionId,
-}
+  clientAccess
+};
