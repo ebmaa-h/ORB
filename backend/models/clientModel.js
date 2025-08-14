@@ -2,7 +2,7 @@ const db = require('../config/db');
 const queries = require('./queries/clientQueries.js')
 
 const Client = {
-  invoices: async (clientId) => {
+  listInvoices: async (clientId) => {
     try {
       const [results] = await db.query(queries.clientInvoices, [clientId]);
       // console.log(results)
@@ -13,7 +13,7 @@ const Client = {
     }
   },
 
-  invoice: async (invoiceId, accountId) => {
+  getInvoice: async (invoiceId, accountId) => {
     try {
       let invoiceResults;
       let newInvoiceId = null;
@@ -113,7 +113,7 @@ const Client = {
     }
   },
 
-  accounts: async (clientId) => {
+  listAccounts: async (clientId) => {
     try {
       const [results] = await db.query(queries.clientAccounts, [clientId]);
       return results;
@@ -122,7 +122,7 @@ const Client = {
     }
   },
 
-  account: async (accountId) => {
+  getAccount: async (accountId) => {
     try {
       const [accountResults] = await db.query(queries.clientAccount, [accountId]);
       if (!accountResults.length) return null;

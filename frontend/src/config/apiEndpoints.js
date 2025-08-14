@@ -28,7 +28,7 @@ const ENDPOINTS = {
   addNote: (tableName, id) => `${API_URL}/notes/${tableName}/${id}`,
 
   fetchLogs: (tableName, id) => `${API_URL}/logs/${tableName}/${id}`,
-  addLog: `${API_URL}/logs/add`,
+  addLog: `${API_URL}/logs`,
   // clientInfo : `${API_URL}/client/info`,
 
 

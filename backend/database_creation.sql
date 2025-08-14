@@ -234,14 +234,14 @@ CREATE TABLE invoices (
 
 
 -- Inserting sample data for users
-INSERT INTO users (email, role)
+INSERT INTO users (email, role, active)
 VALUES 
-('henri@ebmaa.co.za', 'Admin'),
-('andrea@ebmaa.co.za', 'Manager'),
-('nicolene@ebmaa.co.za', 'Manager'),
-('francois@ebmaa.co.za', 'Manager'),
-('alet@ebmaa.co.za', 'Manager'),
-('ilze@ebmaa.co.za', 'Manager');
+('henri@ebmaa.co.za', 'Admin', 'active'),
+-- ('andrea@ebmaa.co.za', 'Manager'),
+-- ('nicolene@ebmaa.co.za', 'Manager'),
+-- ('francois@ebmaa.co.za', 'Manager'),
+-- ('alet@ebmaa.co.za', 'Manager'),
+-- ('ilze@ebmaa.co.za', 'Manager');
 
 
 -- Inserting sample data for clients

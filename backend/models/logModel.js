@@ -2,7 +2,7 @@ const db = require('../config/db');
 const queries = require('./queries/logQueries');
 
 const Log = {
-  addLog: async (userId, action, table, id, changes) => {
+  createLog: async (userId, action, table, id, changes) => {
     const values = [
       userId,
       action,
@@ -14,7 +14,7 @@ const Log = {
     await db.query(queries.insertLog, values);
   },
 
-  getLogs: async (targetTable, targetId) => {
+  listLogs: async (targetTable, targetId) => {
     const [rows] = await db.query(queries.getLogs, [targetTable, targetId]);
     return rows;
   }

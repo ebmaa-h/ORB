@@ -8,7 +8,7 @@ const getLogs = `
   SELECT 
     l.log_id,
     l.user_id,
-    u.first AS user_name,
+    u.email,
     l.action,
     l.target_table,
     l.target_id,

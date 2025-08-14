@@ -1,13 +1,22 @@
-// Main user queries
+// Get only active users
 const getAll = `
+  SELECT user_id, email, role, active, created_at, updated_at
+  FROM users
+  WHERE active = 1
+  ORDER BY created_at DESC`;
+
+// Get all users (active + inactive)
+const getAllWithInactive = `
   SELECT user_id, email, role, active, created_at, updated_at
   FROM users
   ORDER BY created_at DESC`;
 
+// Specific user
 const getById = `
   SELECT user_id, email, role, active, created_at, updated_at
   FROM users
-  WHERE user_id = ?`;
+  WHERE user_id = ?
+  LIMIT 1`; // limit -> speeds up lookup apparently
 
 // Create a new user
 const create = `
@@ -24,6 +33,11 @@ const update = `
 const deactivate = `
   UPDATE users
   SET active = 0
+  WHERE user_id = ?`;
+
+const reactivate = `
+  UPDATE users
+  SET active = 1
   WHERE user_id = ?`;
 
 // User-specific features
@@ -46,6 +60,8 @@ module.exports = {
   create,
   update,
   deactivate,
+  reactivate,
   features,
-  clientAccess
+  clientAccess,
+  getAllWithInactive,
 };

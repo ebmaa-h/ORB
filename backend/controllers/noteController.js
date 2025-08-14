@@ -1,8 +1,8 @@
 const Note = require('../models/noteModel.js');
 
 const noteController = {
-  // Consolidated GET function
-  getNotes: async (req, res) => {
+  // Get all notes
+  listLogs: async (req, res) => {
     const { targetTable, targetId } = req.params;
 
     try {
@@ -10,7 +10,7 @@ const noteController = {
         return res.status(404).json({ message: 'Invalid target table specified' });
       }
   
-      const notes = await Note.fetchNotes(targetTable, targetId);
+      const notes = await Note.listNotes(targetTable, targetId);
   
       if (notes.length === 0) {
         return res.status(200).json({ message: 'No notes yet.', notes: [] });
@@ -23,9 +23,8 @@ const noteController = {
     }
   },
 
-
-  // Consolidated POST function
-  addNote: async (req, res) => {
+  // Create new note
+  createNote: async (req, res) => {
     const { targetTable, targetId } = req.params;
     const { userId, note } = req.body;
 

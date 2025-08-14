@@ -63,10 +63,6 @@ const getNewInvoiceId = `
   SELECT LAST_INSERT_ID() AS invoice_id;
 `;
 
-// Full Invoice
-// const invoice = `
-// select * from invoices where invoice_id = ?;
-// `;
 
 const updateInvoice = `
 UPDATE invoices
@@ -327,27 +323,6 @@ FROM accounts a
 WHERE a.account_id = ?;
 `;
 
-// const client = `
-// SELECT
-//   c.client_id,
-//   c.email,
-//   CONCAT('Dr ', LEFT(c.first, 1), ' ', c.last) AS client_name,
-//   c.registration_nr,
-//   c.practice_nr,
-//   c.tell_nr,
-//   c.client_type
-// FROM clients c
-// WHERE c.client_id = ?;
-// `;
-
-// const refClient = `
-// SELECT 
-// * 
-// FROM ref_clients rc
-// LEFT JOIN ref_clients_list rcl ON rc.ref_client_list_id = rcl.ref_client_list_id
-// WHERE rc.client_id = 1;
-// `;
-
 const recordAll = `
 SELECT
 * 
@@ -355,32 +330,6 @@ FROM person_records pr
 WHERE pr.record_id = ?;
 
 `;
-
-// const addresses = `
-// SELECT
-//   pa.address_id,
-//   pa.is_domicilium,
-//   pa.address
-// FROM person_addresses pa
-// WHERE pa.record_id = ?;
-// `;
-
-// const contactNumbers = `
-// SELECT
-//   pc.number_id,
-//   pc.num_type,
-//   pc.num
-// FROM person_contact_numbers pc
-// WHERE pc.record_id = ?;
-// `;
-
-// const emails = `
-// SELECT
-//   pe.email_id,
-//   pe.email
-// FROM person_emails pe
-// WHERE pe.record_id = ?;
-// `;
 
 const partialRecord = `
   SELECT 
@@ -394,36 +343,6 @@ const partialRecord = `
   WHERE pr.record_id = ? AND a.account_id = ?;
 `;
 
-// const record = `
-//   SELECT 
-//     pr.record_id,
-//     pr.title,
-//     pr.first,
-//     pr.last,
-//     pr.id_nr,
-//     DATE_FORMAT(pr.date_of_birth, '%Y-%m-%d') AS date_of_birth,
-//     pr.gender,
-//     ppm.dependent_nr
-//   FROM person_records pr
-//   LEFT JOIN profile_person_map ppm ON pr.record_id = ppm.record_id
-//   LEFT JOIN accounts a ON ppm.profile_id = a.profile_id
-//   WHERE pr.record_id = ? AND a.account_id = ?;
-// `;
-
-
-// const medical = `
-// SELECT 
-//     p.profile_id,
-//     p.medical_aid_nr,
-//     m.name AS medical_aid_name,
-//     mp.plan_name,
-//     mp.plan_code
-// FROM accounts a
-// LEFT JOIN profiles p ON a.profile_id = p.profile_id
-// LEFT JOIN medical_aids m ON p.medical_aid_id = m.medical_aid_id
-// LEFT JOIN medical_aid_plans mp ON p.plan_id = mp.plan_id
-// WHERE a.account_id = ?;
-// `;
 
 const inv = `
 SELECT

@@ -3,12 +3,7 @@ const queries = require('./queries/profileQueries');
 
 
 const Profile = {
-
-    // COUNT(DISTINCT a.account_id) AS total_accounts,
-    // COUNT(DISTINCT ppm.record_id) AS total_dependents,
-    // COUNT(DISTINCT i.invoice_id) AS total_invoices
-
-  allProfiles: async () => {
+  listProfiles: async () => {
       try {
         const [results] = await db.query(queries.allProfiles);
         return results;
@@ -17,7 +12,7 @@ const Profile = {
       }
     },
 
-  oneProfile: async (profileId) => {
+  getProfile: async (profileId) => {
     try {
       const [dependentsResults] = await db.query(queries.dependents, [profileId]);
       const [accountsResults] = await db.query(queries.acc, [profileId]);

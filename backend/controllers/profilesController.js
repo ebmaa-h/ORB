@@ -1,9 +1,9 @@
 const Profile = require('../models/profileModel');
 
 const profileController = {
-  getProfiles: async (req, res) => {
+  listProfiles: async (req, res) => {
     try {
-      const profiles = await Profile.allProfiles();
+      const profiles = await Profile.listProfiles();
       if (!profiles || profiles.length === 0) {
         console.log('No profiles found.');
         return res.status(404).json({ message: 'No profiles found' });
@@ -20,7 +20,7 @@ const profileController = {
     }
   },
 
-  getProfile: async (req, res) => {
+  viewProfile: async (req, res) => {
     const profileId = req.params.profileId;
 
     if (!profileId) {
@@ -28,7 +28,7 @@ const profileController = {
     }
 
     try {
-      const profileData = await Profile.oneProfile(profileId);
+      const profileData = await Profile.getProfile(profileId);
       if (!profileData) {
         return res.status(404).json({ message: 'Profile not found' });
       }

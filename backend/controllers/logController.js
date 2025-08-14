@@ -1,7 +1,7 @@
 const Log = require('../models/logModel');
 
 const logController = {
-  addLog: async (req, res) => {
+  createLog: async (req, res) => {
     try {
       const { userId, action, table, id, changes } = req.body;
 
@@ -18,7 +18,7 @@ const logController = {
     }
   },
   
-  getLogs: async (req, res) => {
+  listLogs: async (req, res) => {
     try {
       const { targetTable, targetId } = req.params;
   
@@ -26,7 +26,7 @@ const logController = {
         return res.status(400).json({ message: 'Missing required parameters' });
       }
   
-      const logs = await Log.getLogs(targetTable, targetId);
+      const logs = await Log.listLogs(targetTable, targetId);
       res.status(200).json(logs);
     } catch (error) {
       console.error('Error fetching logs:', error);

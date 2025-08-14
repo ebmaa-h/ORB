@@ -27,7 +27,7 @@ export default function NotesAndLogs({ tableName, id, refreshTrigger }) {
           type: 'note',
           id: `note-${note.note_id}`,
           created_at: note.created_at,
-          user_name: note.user_name,
+          email: note.email,
           content: note.note,
         }));
 
@@ -39,7 +39,7 @@ export default function NotesAndLogs({ tableName, id, refreshTrigger }) {
           target_table: log.target_table,
           target_id: log.target_id,
           created_at: log.timestamp,
-          user_name: log.user_name,
+          email: log.email,
           content: formatLogContent(log),
         }));
 
@@ -81,22 +81,22 @@ export default function NotesAndLogs({ tableName, id, refreshTrigger }) {
   
     if (action === 'create') {
       const readableTable = friendlyTableNames[tableName] || tableName;
-      return `${log.user_name} created ${readableTable} #${targetId}.`;
+      return `${log.email} created ${readableTable} #${targetId}.`;
     }
   
     if (action === 'delete') {
       const readableTable = friendlyTableNames[tableName] || tableName;
-      return `${log.user_name} deleted ${readableTable} #${targetId}.`;
+      return `${log.email} deleted ${readableTable} #${targetId}.`;
     }
   
     if (action === 'update') {
-      if (!log.changes) return `${log.user_name} made an update`;
+      if (!log.changes) return `${log.email} made an update`;
   
       let parsedChanges = {};
       try {
         parsedChanges = JSON.parse(log.changes);
       } catch (e) {
-        return `${log.user_name} made an update (invalid change log format)`;
+        return `${log.email} made an update (invalid change log format)`;
       }
   
       const parts = Object.entries(parsedChanges).map(
@@ -104,10 +104,10 @@ export default function NotesAndLogs({ tableName, id, refreshTrigger }) {
           `changed ${columnNames[field] || field} from ${oldVal ?? 'none'} to ${newVal ?? '-'}`
       );
   
-      return `${log.user_name} ${parts.join(' | ')}`;
+      return `${log.email} ${parts.join(' | ')}`;
     }
   
-    return `${log.user_name} performed unknown action "${action}"`;
+    return `${log.email} performed unknown action "${action}"`;
   };
   
 
@@ -127,7 +127,7 @@ export default function NotesAndLogs({ tableName, id, refreshTrigger }) {
         type: 'note',
         id: `note-${addedNote.note_id}`,
         created_at: addedNote.created_at,
-        user_name: addedNote.user_name,
+        email: addedNote.email,
         content: `${addedNote.note}`,
       };
 
@@ -172,7 +172,7 @@ export default function NotesAndLogs({ tableName, id, refreshTrigger }) {
               </p>
               <p className={` ${item.type === 'log' ? 'text-gray-700 italic' : ''}`}>
                 {item.type === 'note'
-                  ? `${item.user_name} - ${item.content}`
+                  ? `${item.email} - ${item.content}`
                   : item.content}
               </p>
             </div>

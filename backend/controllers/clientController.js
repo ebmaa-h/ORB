@@ -3,7 +3,7 @@ const Log = require('../models/logModel');
 
 const clientController = {
 
-  getClientInvoices: async (req, res) => {
+  listInvoices: async (req, res) => {
 
     const clientId = req.params.clientId;
     if (!clientId) {
@@ -11,7 +11,7 @@ const clientController = {
     }
 
     try {
-      const invoices = await Client.invoices(clientId);
+      const invoices = await Client.listInvoices(clientId);
 
       if (!invoices || invoices.length === 0) {
         // console.log('No invoices found.');
@@ -44,32 +44,20 @@ const clientController = {
     }
   },
 
-  // CIf accountId is set, create a new invoice
-  // if invoiceId is set, view old invoice
-  getClientInvoice: async (req, res) => {
-    const { invoiceId, accountId } = req.params;
+  viewInvoice: async (req, res) => {
+    const { invoiceId } = req.params;
 
-    if (!invoiceId && !accountId) {
-      return res.status(400).json({ message: 'Invoice ID or Account ID is required' });
+    if (!invoiceId) {
+      return res.status(400).json({ message: 'Invoice ID is required' });
     }
-  
+
     try {
-      const invoiceData = await Client.invoice(invoiceId || null, accountId || null);
-  
+      const invoiceData = await Client.getInvoice(invoiceId, null);
+
       if (!invoiceData) {
-        console.log('Invoice not found.');
         return res.status(404).json({ message: 'Invoice not found' });
       }
 
-      // Log invoice created.
-      if (accountId) {
-        const userId = req.query.userId;
-        if (userId) {
-          Log.addLog(userId, 'create', 'invoices', invoiceData.invoiceId, '');
-        }
-      }
-      
-  
       return res.status(200).json({
         message: 'Invoice retrieval successful',
         invoice: {
@@ -82,9 +70,45 @@ const clientController = {
           medical: invoiceData.medical || {},
         },
       });
-  
     } catch (err) {
       console.error('Error finding invoice:', err);
+      return res.status(500).json({ message: 'Internal server error', error: err.message });
+    }
+  },
+
+  createInvoice: async (req, res) => {
+    const { accountId } = req.params;
+    const userId = req.query.userId;
+
+    if (!accountId) {
+      return res.status(400).json({ message: 'Account ID is required' });
+    }
+
+    try {
+      const invoiceData = await Client.createInvoice(null, accountId);
+
+      if (!invoiceData) {
+        return res.status(404).json({ message: 'Could not create invoice' });
+      }
+
+      if (userId) {
+        Log.addLog(userId, 'create', 'invoices', invoiceData.invoiceId, '');
+      }
+
+      return res.status(200).json({
+        message: 'Invoice created successfully',
+        invoice: {
+          invoiceId: invoiceData.invoiceId,
+          details: invoiceData.invoice,
+          member: invoiceData.member || {},
+          patient: invoiceData.patient || {},
+          client: invoiceData.client || {},
+          refClient: invoiceData.refClient || [],
+          medical: invoiceData.medical || {},
+        },
+      });
+    } catch (err) {
+      console.error('Error creating invoice:', err);
       return res.status(500).json({ message: 'Internal server error', error: err.message });
     }
   },
@@ -113,7 +137,7 @@ const clientController = {
   },
 
     // Get accounts by client ID
-  getClientAccounts: async (req, res) => {
+  listAccounts: async (req, res) => {
     const clientId = req.params.clientId;
 
     if (!clientId) {
@@ -140,7 +164,7 @@ const clientController = {
   },
 
   // Get partial account details
-  getClientAccount: async (req, res) => {
+  viewAccount: async (req, res) => {
     const accountId = req.params.accountId;
 
     if (!accountId) {

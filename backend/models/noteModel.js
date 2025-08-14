@@ -2,7 +2,7 @@ const db = require('../config/db');
 const queries = require('./queries/noteQueries');
 
 const Note = {
-  fetchNotes: async (targetTable, targetId) => {
+  listNotes: async (targetTable, targetId) => {
     try {
       const [results] = await db.query(queries.fetchNotes, [targetTable, targetId]);
       return results;

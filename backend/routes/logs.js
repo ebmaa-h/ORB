@@ -2,10 +2,10 @@ const express = require('express');
 const router = express.Router();
 const logController = require('../controllers/logController.js');
 
-// Consolidated GET route
-router.get('/:targetTable/:targetId', logController.getLogs);
+// Get all table specified logs
+router.get('/:targetTable/:targetId', logController.listLogs);
 
-// Consolidated POST route
-router.post('/add', logController.addLog);
+// Create new log
+router.post('/', logController.createLog);
 
 module.exports = router;

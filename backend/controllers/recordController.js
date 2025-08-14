@@ -1,9 +1,9 @@
 const Record = require('../models/recordModel.js');
 
 const recordController = {
-  getRecords: async (req, res) => {
+  listRecords: async (req, res) => {
     try {
-      const records = await Record.allRecords();
+      const records = await Record.listRecords();
       if (!records || records.length === 0) {
         console.log('No records found.');
         return res.status(404).json({ message: 'No records found' });
@@ -20,7 +20,7 @@ const recordController = {
     }
   },
 
-  getRecord: async (req, res) => {
+  viewRecord: async (req, res) => {
     const recordId = req.params.id;
 
     if (!recordId) {
@@ -28,7 +28,7 @@ const recordController = {
     }
 
     try {
-      const record = await Record.getRecordDetails(recordId);
+      const record = await Record.getRecord(recordId);
       if (!record) {
         return res.status(404).json({ message: 'Record not found' });
       }

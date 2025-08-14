@@ -2,8 +2,7 @@ const db = require('../config/db');
 const queries = require('./queries/recordQueries')
 
 const Record = {
-  // Retrieve all records
-  allRecords: async () => {
+  listRecords: async () => {
 
     try {
       const [results] = await db.query(queries.allRecords);
@@ -14,8 +13,7 @@ const Record = {
     }
   },
 
-  getRecordDetails: async (recordId) => {
-
+  getRecord: async (recordId) => {
     try {
       const [recordDetails] = await db.query(queries.recordDetails, [recordId]);
       if (!recordDetails.length) return null;

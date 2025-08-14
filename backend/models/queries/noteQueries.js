@@ -2,7 +2,7 @@ const fetchNotes = `
   SELECT 
     n.note_id, 
     n.user_id, 
-    u.first AS user_name, 
+    u.email, 
     n.note, 
     n.created_at
   FROM notes n
@@ -20,7 +20,7 @@ const fetchSingleNote = `
   SELECT 
     n.note_id, 
     n.user_id, 
-    u.first AS user_name, 
+    u.email, 
     n.note, 
     n.created_at
   FROM notes n
