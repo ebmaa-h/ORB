@@ -1,20 +1,133 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useContext } from "react";
+import axiosClient from '../config/axiosClient';
+import { UserContext } from "../context/UserContext";
+import ENDPOINTS from "../config/apiEndpoints";
 
-export default function Workflow({ userRole }) {
-  // Default tab based on user role
-  const [currTab, setCurrTab] = useState("");
+export default function Workflow() {
+  const { user } = useContext(UserContext);
+  const [batches, setBatches] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
 
-  //get current workflow data
+  const departments = ["Reception", "Admittance", "Billing", "All"];
 
-  // will receive
-  // mmm set up batch in db
+  // Default tab based on role
+  const getDefaultTab = () => {
+    if (user?.role?.toLowerCase().includes("reception")) return "Reception";
+    if (user?.role?.toLowerCase().includes("admittance")) return "Admittance";
+    if (user?.role?.toLowerCase().includes("billing")) return "Billing";
+    return "All";
+  };
 
+  const [activeTab, setActiveTab] = useState(getDefaultTab);
+
+  // Fetch workflow data
+  useEffect(() => {
+    const fetchWorkflow = async () => {
+      try {
+        setLoading(true);
+        const response = await axiosClient.get(ENDPOINTS.workflow);
+
+        setBatches(response.data || []);
+      } catch (err) {
+        console.error(err);
+        setError("Failed to fetch workflow");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    if (user) fetchWorkflow();
+  }, [user]);
+
+  // Filter by department tab
+  const filterByTab = (tab) => {
+    if (tab === "All") return batches;
+    return batches.filter((b) => b.current_department === tab);
+  };
+
+  const columns = [
+    "Batch ID",
+    "Department",
+    "Client",
+    "Date Received",
+    "Batch Size",
+    "Pending",
+  ];
 
   return (
-    <div className="container-row">
+    <div className="container-col">
+      {/* Tabs */}
+      <div className="flex mb-4">
+        {departments.map((dep) => (
+          <button
+            key={dep}
+            onClick={() => setActiveTab(dep)}
+            className={`p-2 border-y border-gray-blue-100 ${
+              activeTab === dep ? "text-gray-dark font-bold" : "text-gray-dark"
+            }`}
+          >
+            {dep}
+          </button>
+        ))}
+      </div>
 
-
-
+      {/* Content */}
+      {loading ? (
+        <p>Loading...</p>
+      ) : error ? (
+        <p className="text-red-500">{error}</p>
+      ) : (
+        <table className="table-auto w-full border-collapse border-y border-gray-blue-100 text-gray-dark">
+          <thead>
+            <tr>
+              {columns.map((col, idx) => (
+                <th key={idx} className="p-2">
+                  {col}
+                </th>
+              ))}
+            </tr>
+          </thead>
+          <tbody>
+            {filterByTab(activeTab).length > 0 ? (
+              filterByTab(activeTab).map((batch) => (
+                <tr
+                  key={batch.id}
+                  className="cursor-pointer hover:bg-gray-blue-100"
+                >
+                  <td className="border-y border-gray-blue-100 p-2 text-center">
+                    {batch.id}
+                  </td>
+                  <td className="border-y border-gray-blue-100 p-2 text-center">
+                    {batch.current_department}
+                  </td>
+                  <td className="border-y border-gray-blue-100 p-2 text-center">
+                    {batch.client}
+                  </td>
+                  <td className="border-y border-gray-blue-100 p-2 text-center">
+                    {batch.date_received}
+                  </td>
+                  <td className="border-y border-gray-blue-100 p-2 text-center">
+                    {batch.batch_size}
+                  </td>
+                  <td className="border-y border-gray-blue-100 p-2 text-center">
+                    {batch.pending ? "Yes" : "No"}
+                  </td>
+                </tr>
+              ))
+            ) : (
+              <tr>
+                <td
+                  className="border border-gray-blue-100 p-2 text-center"
+                  colSpan={columns.length}
+                >
+                  No data found.
+                </td>
+              </tr>
+            )}
+          </tbody>
+        </table>
+      )}
     </div>
   );
 }

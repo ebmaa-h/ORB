@@ -9,6 +9,7 @@ const ENDPOINTS = {
   logout : `${API_URL}/auth/logout`,
   auth : `${API_URL}/auth/me`, 
   googleAuth : `https://accounts.google.com/o/oauth2/v2/auth`, 
+  workflow : `${API_URL}/batches`, 
 
   clientInvoices: (clientId) => `${API_URL}/clients/${clientId}/invoices`,
   clientInvoice: (clientId, invoiceId) => `${API_URL}/clients/${clientId}/invoices/${invoiceId}`, 

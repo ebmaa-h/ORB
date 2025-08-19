@@ -11,6 +11,8 @@ const recordRoutes = require('./routes/records.js');
 const noteRoutes = require('./routes/notes.js');
 const logRoutes = require('./routes/logs.js');
 const userRoutes = require('./routes/user.js')
+const batchRoutes = require('./routes/batches.js')
+
 const session = require('express-session');
 const passport = require('passport');
 
@@ -90,6 +92,8 @@ app.use('/records', recordRoutes);
 app.use('/notes', noteRoutes);
 app.use('/logs', logRoutes);
 app.use('/users', userRoutes);
+
+app.use('/batches', batchRoutes);
 
 // app.use('/users', userRoutes);
 // app.use('/accounts', accRoutes);

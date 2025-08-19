@@ -31,8 +31,8 @@ CREATE TABLE user_client_access (
     user_client_access_id INT AUTO_INCREMENT PRIMARY KEY,
     user_id INT,
     client_id INT,
-    FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE SET NULL,
-    FOREIGN KEY (client_id) REFERENCES clients(client_id) ON DELETE SET NULL
+    FOREIGN KEY (user_id) REFERENCES users(user_id),
+    FOREIGN KEY (client_id) REFERENCES clients(client_id)
 );
 
 -- Create features table
@@ -46,8 +46,8 @@ CREATE TABLE user_feature_access (
     user_feature_access_id INT AUTO_INCREMENT PRIMARY KEY,
     user_id INT,
     feature_id INT,
-    FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE SET NULL,
-    FOREIGN KEY (feature_id) REFERENCES features(feature_id) ON DELETE SET NULL
+    FOREIGN KEY (user_id) REFERENCES users(user_id),
+    FOREIGN KEY (feature_id) REFERENCES features(feature_id)
 );
 
 -- client_features inc or client_feature_access
@@ -58,12 +58,11 @@ CREATE TABLE logs (
     action ENUM('create', 'update', 'delete') NOT NULL,
     target_table VARCHAR(255) NOT NULL,
     target_id INT NOT NULL,
-    changes JSON, -- Merged old + new values here
+    changes JSON, 
     timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     
-    FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE SET NULL
+    FOREIGN KEY (user_id) REFERENCES users(user_id)
 );
-
 
 
 CREATE TABLE notes (
@@ -73,7 +72,7 @@ CREATE TABLE notes (
     target_table VARCHAR(255),
     target_id INT,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE SET NULL
+    FOREIGN KEY (user_id) REFERENCES users(user_id)
 );
 
 CREATE TABLE clients_logs (
@@ -85,7 +84,7 @@ CREATE TABLE clients_logs (
     target_table VARCHAR(255),
     target_id INT,
     timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (client_id) REFERENCES clients(client_id) ON DELETE SET NULL
+    FOREIGN KEY (client_id) REFERENCES clients(client_id)
 );
 
 CREATE TABLE ref_clients_list (
@@ -99,8 +98,8 @@ CREATE TABLE ref_clients (
     ref_client_id INT AUTO_INCREMENT PRIMARY KEY,
     ref_client_list_id INT,
     client_id INT,
-    FOREIGN KEY (client_id) REFERENCES clients(client_id) ON DELETE SET NULL,
-    FOREIGN KEY (ref_client_list_id) REFERENCES ref_clients_list(ref_client_list_id) ON DELETE SET NULL
+    FOREIGN KEY (client_id) REFERENCES clients(client_id),
+    FOREIGN KEY (ref_client_list_id) REFERENCES ref_clients_list(ref_client_list_id)
 );
 
 CREATE TABLE service_centers_list (
@@ -113,8 +112,8 @@ CREATE TABLE service_centers (
     service_center_id INT AUTO_INCREMENT PRIMARY KEY,
     service_center_list_id INT,
     client_id INT,
-    FOREIGN KEY (client_id) REFERENCES clients(client_id) ON DELETE SET NULL,
-    FOREIGN KEY (service_center_list_id) REFERENCES service_centers_list(service_center_list_id) ON DELETE SET NULL
+    FOREIGN KEY (client_id) REFERENCES clients(client_id),
+    FOREIGN KEY (service_center_list_id) REFERENCES service_centers_list(service_center_list_id)
 );
 
 CREATE TABLE employers (
@@ -136,7 +135,7 @@ CREATE TABLE medical_aid_plans (
     medical_aid_id INT,
     plan_name VARCHAR(255),
     plan_code VARCHAR(255),
-    FOREIGN KEY (medical_aid_id) REFERENCES medical_aids(medical_aid_id) ON DELETE SET NULL
+    FOREIGN KEY (medical_aid_id) REFERENCES medical_aids(medical_aid_id)
 );
 
 CREATE TABLE profiles (
@@ -148,8 +147,8 @@ CREATE TABLE profiles (
     balance DECIMAL(10, 2) DEFAULT 0.00,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    FOREIGN KEY (medical_aid_id) REFERENCES medical_aids(medical_aid_id) ON DELETE SET NULL,
-    FOREIGN KEY (plan_id) REFERENCES medical_aid_plans(plan_id) ON DELETE SET NULL
+    FOREIGN KEY (medical_aid_id) REFERENCES medical_aids(medical_aid_id),
+    FOREIGN KEY (plan_id) REFERENCES medical_aid_plans(plan_id)
 );
 
 CREATE TABLE person_records (
@@ -170,14 +169,14 @@ CREATE TABLE person_contact_numbers (
     record_id INT NOT NULL,
     num_type ENUM('Cell', 'Tell', 'Work', 'Other') DEFAULT 'Other',
     num VARCHAR(255) NOT NULL,
-    FOREIGN KEY (record_id) REFERENCES person_records(record_id) ON DELETE CASCADE
+    FOREIGN KEY (record_id) REFERENCES person_records(record_id) 
 );
 
 CREATE TABLE person_emails (
     email_id INT AUTO_INCREMENT PRIMARY KEY,
     record_id INT NOT NULL,
     email VARCHAR(255) NOT NULL,
-    FOREIGN KEY (record_id) REFERENCES person_records(record_id) ON DELETE CASCADE
+    FOREIGN KEY (record_id) REFERENCES person_records(record_id) 
 );
 
 CREATE TABLE person_addresses (
@@ -186,7 +185,7 @@ CREATE TABLE person_addresses (
     address_type ENUM('Postal', 'Street', 'Other') DEFAULT 'Other',
     is_domicilium BOOLEAN DEFAULT FALSE,
     address VARCHAR(255) NOT NULL,
-    FOREIGN KEY (record_id) REFERENCES person_records(record_id) ON DELETE CASCADE
+    FOREIGN KEY (record_id) REFERENCES person_records(record_id) 
 );
 
 -- Create profile_person_map table
@@ -198,8 +197,8 @@ CREATE TABLE profile_person_map (
     dependent_nr INT,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    FOREIGN KEY (profile_id) REFERENCES profiles(profile_id) ON DELETE SET NULL,
-    FOREIGN KEY (record_id) REFERENCES person_records(record_id) ON DELETE SET NULL
+    FOREIGN KEY (profile_id) REFERENCES profiles(profile_id),
+    FOREIGN KEY (record_id) REFERENCES person_records(record_id)
 );
 
 -- Create accounts table
@@ -209,16 +208,43 @@ CREATE TABLE accounts (
     client_id INT,
     main_member_id INT NULL,
     patient_id INT NULL,
-    FOREIGN KEY (client_id) REFERENCES clients(client_id) ON DELETE SET NULL,
-    FOREIGN KEY (profile_id) REFERENCES profiles(profile_id) ON DELETE SET NULL,
-    FOREIGN KEY (main_member_id) REFERENCES person_records(record_id) ON DELETE SET NULL,
-    FOREIGN KEY (patient_id) REFERENCES person_records(record_id) ON DELETE SET NULL
+    FOREIGN KEY (client_id) REFERENCES clients(client_id),
+    FOREIGN KEY (profile_id) REFERENCES profiles(profile_id),
+    FOREIGN KEY (main_member_id) REFERENCES person_records(record_id),
+    FOREIGN KEY (patient_id) REFERENCES person_records(record_id)
+);
+
+-- Create batches table
+CREATE TABLE batches (
+    batch_id INT AUTO_INCREMENT PRIMARY KEY,
+    current_department ENUM('Reception', 'Admittance', 'Billing') DEFAULT 'Reception',
+    pending BOOLEAN DEFAULT 1,
+    status BOOLEAN,
+    created_by INT,
+    admitted_by INT,
+    billed_by INT,
+    batch_size INT,
+    client_id INT,
+    date_received DATE,
+    method_received VARCHAR(255),
+    bank_statements BOOLEAN,
+    added_on_workflow BOOLEAN,
+    total_urgent_foreign INT,
+    cc_availability VARCHAR(255),
+    corrections BOOLEAN,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    FOREIGN KEY (client_id) REFERENCES clients(client_id),
+    FOREIGN KEY (created_by) REFERENCES users(user_id),
+    FOREIGN KEY (admitted_by) REFERENCES users(user_id),
+    FOREIGN KEY (billed_by) REFERENCES users(user_id)
 );
 
 -- Create invoices table
 CREATE TABLE invoices (
     invoice_id INT AUTO_INCREMENT PRIMARY KEY,
     account_id INT,
+    batch_id INT,
     date_of_service DATE,
     status ENUM('Processing', 'Billed', 'Archived') DEFAULT 'Processing',
     ref_client_id INT NULL,
@@ -227,21 +253,22 @@ CREATE TABLE invoices (
     auth_nr VARCHAR(255),
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    FOREIGN KEY (account_id) REFERENCES accounts(account_id) ON DELETE SET NULL,
-    FOREIGN KEY (ref_client_id) REFERENCES ref_clients(ref_client_id) ON DELETE SET NULL
+    FOREIGN KEY (batch_id) REFERENCES batches(batch_id),
+    FOREIGN KEY (account_id) REFERENCES accounts(account_id),
+    FOREIGN KEY (ref_client_id) REFERENCES ref_clients(ref_client_id)
 );
 
 
 
 -- Inserting sample data for users
-INSERT INTO users (email, role, active)
+INSERT INTO users (email, role)
 VALUES 
-('henri@ebmaa.co.za', 'Admin', 'active'),
--- ('andrea@ebmaa.co.za', 'Manager'),
--- ('nicolene@ebmaa.co.za', 'Manager'),
--- ('francois@ebmaa.co.za', 'Manager'),
--- ('alet@ebmaa.co.za', 'Manager'),
--- ('ilze@ebmaa.co.za', 'Manager');
+('henri@ebmaa.co.za', 'Admin'),
+('andrea@ebmaa.co.za', 'Manager'),
+('nicolene@ebmaa.co.za', 'Manager'),
+('francois@ebmaa.co.za', 'Manager'),
+('alet@ebmaa.co.za', 'Manager'),
+('ilze@ebmaa.co.za', 'Manager');
 
 
 -- Inserting sample data for clients
