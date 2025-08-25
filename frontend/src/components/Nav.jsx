@@ -8,7 +8,6 @@ import { FEATURES } from "../config/featureConfig";
 
 export default function Nav() {
   const { user } = useContext(UserContext);
-  const { clientId, setClientId } = useContext(ClientContext);
   const location = useLocation();
   const [menuOpen, setMenuOpen] = useState(false);
   const menuRef = useRef(null);
@@ -23,36 +22,14 @@ export default function Nav() {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
   
-  // Check page cateogory 
-  const currentCategory = getCategoryByRoute(location.pathname);
 
-  // Check if path ends with ID 
-  const isOnSpecificPage = /\/(accounts|invoices)\/\d+/.test(location.pathname);
   
   return (
     <div className="bg-white shadow flex justify-between items-center flex-row h-[60px]">
       <div className='flex flex-row gap-8 ml-4'>
 
-        {currentCategory == 'clients'&&
-          <select
-            className={`cursor-pointer border rounded border-gray-300 px-2 hover:border-ebmaa-purple transition duration-300 w-[200px] h-[30px]`}
-            value={clientId || ""}
-            disabled={isOnSpecificPage}
-            onChange={(e) => {
-              const selectedClientId = e.target.value;
-              setClientId(selectedClientId);
-              }}
-              >
-            <option>Select Client</option>
-            {user.client_access.map((client, i) => (
-              <option key={i} className='hover:bg-ebmaa-purple' value={client.client_id}>
-                {client.client_name}
-              </option>
-            ))}
-          </select>
-        }
         <div className="flex gap-4">
-          {getUserFeaturesByCategory(user, currentCategory).map(({ name, label, path }) => (
+          {getUserFeaturesByCategory(user).map(({ name, label, path }) => (
             // <Link key={name} text={label} link={path} />
             <Link key={name} to={path} className="link-class">{label}</Link>
 
@@ -66,24 +43,7 @@ export default function Nav() {
           <button
             className="link-class"
             onClick={() => setMenuOpen(!menuOpen)}
-          >
-            {(() => {
-              const path = location.pathname;
-              if (
-                path.includes('/accounts') ||
-                path.includes('/invoices') ||
-                path.includes('/crq') ||
-                path.includes('/reports')
-              ) {
-                return 'Clients';
-              }
-              if (path.includes('/records')) return 'Records';
-              if (path.includes('/profiles')) return 'Profiles';
-              if (path.includes('/notes')) return 'Notes';
-              if (path.includes('/logs')) return 'Logs';
-              if (path.includes('/workflow')) return 'Workflow';
-              return 'More';
-            })()}
+          > orb
             <span className="ml-1">▾</span>
           </button>
 

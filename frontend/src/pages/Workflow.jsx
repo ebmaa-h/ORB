@@ -57,14 +57,14 @@ export default function Workflow() {
 
   return (
     <div className="container-col">
-      {/* Tabs */}
-      <div className="flex mb-4">
+      {/* Tabs */}  
+    <div className="flex w-full mb-4">
         {departments.map((dep) => (
           <button
             key={dep}
             onClick={() => setActiveTab(dep)}
-            className={`p-2 border-y border-gray-blue-100 ${
-              activeTab === dep ? "text-gray-dark font-bold" : "text-gray-dark"
+            className={`flex-1 p-2 border-x border-gray-blue-100 ${
+              activeTab === dep ? "text-gray-dark font-bold bg-gray-100" : "text-gray-dark"
             }`}
           >
             {dep}
