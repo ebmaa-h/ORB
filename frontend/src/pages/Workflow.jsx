@@ -1,7 +1,8 @@
 import React, { useState, useEffect, useContext } from "react";
-import axiosClient from '../config/axiosClient';
+import axiosClient from "../config/axiosClient";
 import { UserContext } from "../context/UserContext";
 import ENDPOINTS from "../config/apiEndpoints";
+import { NewBatch } from "../components";
 
 export default function Workflow() {
   const { user } = useContext(UserContext);
@@ -11,15 +12,7 @@ export default function Workflow() {
 
   const departments = ["Reception", "Admittance", "Billing", "All"];
 
-  // Default tab based on role
-  const getDefaultTab = () => {
-    if (user?.role?.toLowerCase().includes("reception")) return "Reception";
-    if (user?.role?.toLowerCase().includes("admittance")) return "Admittance";
-    if (user?.role?.toLowerCase().includes("billing")) return "Billing";
-    return "All";
-  };
-
-  const [activeTab, setActiveTab] = useState(getDefaultTab);
+  const [activeTab, setActiveTab] = useState("Reception");
 
   // Fetch workflow data
   useEffect(() => {
@@ -27,7 +20,6 @@ export default function Workflow() {
       try {
         setLoading(true);
         const response = await axiosClient.get(ENDPOINTS.workflow);
-
         setBatches(response.data || []);
       } catch (err) {
         console.error(err);
@@ -57,20 +49,23 @@ export default function Workflow() {
 
   return (
     <div className="container-col">
-      {/* Tabs */}  
-    <div className="flex w-full mb-4">
+      {/* Tabs */}
+      <div className="flex w-full mb-4">
         {departments.map((dep) => (
           <button
             key={dep}
             onClick={() => setActiveTab(dep)}
             className={`flex-1 p-2 border-x border-gray-blue-100 ${
-              activeTab === dep ? "text-gray-dark font-bold bg-gray-100" : "text-gray-dark"
+              activeTab === dep
+                ? "text-gray-dark font-bold bg-gray-100"
+                : "text-gray-dark"
             }`}
           >
             {dep}
           </button>
         ))}
       </div>
+
 
       {/* Content */}
       {loading ? (
@@ -115,6 +110,7 @@ export default function Workflow() {
                   </td>
                 </tr>
               ))
+              
             ) : (
               <tr>
                 <td
@@ -128,6 +124,12 @@ export default function Workflow() {
           </tbody>
         </table>
       )}
+      {activeTab === "Reception" && (
+        <div className="mb-4 self-end">
+          <NewBatch onBatchAdded={(newBatch) => setBatches([...batches, newBatch])} />
+        </div>
+      )}
+
     </div>
   );
 }
