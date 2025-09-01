@@ -1,14 +1,37 @@
 
-DROP TABLE IF EXISTS person_contact_numbers,person_emails, person_numbers, invoices, accounts, profiles, medical_aid_plans, medical_aids, employers, service_centers, service_centers_list, ref_clients, ref_clients_list, clients_logs, logs, user_feature, user_feature_access, user_client_access, addresses, features, clients, users, person_addresses, person_records, notes, profile_person_map;
+DROP TABLE IF EXISTS person_contact_numbers,person_emails, person_numbers, invoices, accounts, profiles, medical_aid_plans, medical_aids, employers, service_centers, service_centers_list, ref_clients, ref_clients_list, clients_logs, logs, user_permission, user_permission_access, user_client_access, addresses, permissions, clients, users, person_addresses, person_records, notes, profile_person_map;
 
 -- Create users table
 CREATE TABLE users (
     user_id INT AUTO_INCREMENT PRIMARY KEY,
     email VARCHAR(255) NOT NULL UNIQUE,
-    role ENUM('Reception','Admittance', 'Billing', 'Credit Controller', 'Finance/Recon', 'Filing', 'Manager', 'Admin') DEFAULT 'Reception',
+    role ENUM('reception', 'admittance-manager', 'admittance-clerk'),
     active BOOLEAN DEFAULT 1,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+);
+
+CREATE TABLE role_permissions (
+    role ENUM('reception', 'admittance-manager', 'admittance-clerk'),
+    permission_id INT,
+    PRIMARY KEY (role, permission_id),
+    FOREIGN KEY (permission_id) REFERENCES permissions(permission_id)
+);
+
+-- Create permissions table
+CREATE TABLE permissions (
+    permission_id INT AUTO_INCREMENT PRIMARY KEY,
+    permission_name VARCHAR(255)
+);
+
+-- Create user_permission_access, (add/remove specific permissions)
+CREATE TABLE user_permissions (
+    user_permission_id INT AUTO_INCREMENT PRIMARY KEY,
+    user_id INT,
+    permission_id INT,
+    type ENUM('grant','revoke') NOT NULL,
+    FOREIGN KEY (user_id) REFERENCES users(user_id),
+    FOREIGN KEY (permission_id) REFERENCES permissions(permission_id)
 );
 
 -- Create clients table
@@ -35,22 +58,8 @@ CREATE TABLE user_client_access (
     FOREIGN KEY (client_id) REFERENCES clients(client_id)
 );
 
--- Create features table
-CREATE TABLE features (
-    feature_id INT AUTO_INCREMENT PRIMARY KEY,
-    feature_name VARCHAR(255)
-);
 
--- Create user_feature_access 
-CREATE TABLE user_feature_access (
-    user_feature_access_id INT AUTO_INCREMENT PRIMARY KEY,
-    user_id INT,
-    feature_id INT,
-    FOREIGN KEY (user_id) REFERENCES users(user_id),
-    FOREIGN KEY (feature_id) REFERENCES features(feature_id)
-);
-
--- client_features inc or client_feature_access
+-- client_permissions inc or client_permission_access
 
 CREATE TABLE logs (
     log_id INT AUTO_INCREMENT PRIMARY KEY,
@@ -217,7 +226,8 @@ CREATE TABLE accounts (
 -- Create batches table
 CREATE TABLE batches (
     batch_id INT AUTO_INCREMENT PRIMARY KEY,
-    current_department ENUM('Reception', 'Admittance', 'Billing') DEFAULT 'Reception',
+    current_department ENUM('reception', 'admittance', 'billing') DEFAULT 'reception',
+    current_stage ENUM('inbox','current','outbox') DEFAULT 'current',
     pending BOOLEAN DEFAULT 1,
     status BOOLEAN,
     created_by INT,
@@ -228,7 +238,7 @@ CREATE TABLE batches (
     date_received DATE,
     method_received VARCHAR(255),
     bank_statements BOOLEAN,
-    added_on_workflow BOOLEAN,
+    added_on_drive BOOLEAN,
     total_urgent_foreign INT,
     cc_availability VARCHAR(255),
     corrections BOOLEAN,
@@ -245,6 +255,7 @@ CREATE TABLE invoices (
     invoice_id INT AUTO_INCREMENT PRIMARY KEY,
     account_id INT,
     batch_id INT,
+    nr_in_batch INT,
     date_of_service DATE,
     status ENUM('Processing', 'Billed', 'Archived') DEFAULT 'Processing',
     ref_client_id INT NULL,
@@ -425,8 +436,8 @@ VALUES
 (5, 3, 2, 3);
 
 
--- Inserting sample data for features
-INSERT INTO features (feature_name)
+-- Inserting sample data for permissions
+INSERT INTO permissions (permission_name)
 VALUES 
 ('accounts'),
 ('invoices'),
@@ -434,8 +445,8 @@ VALUES
 ('profiles'),
 ('clients');
 
--- Inserting sample data for user features
-INSERT INTO user_feature_access (user_id, feature_id)
+-- Inserting sample data for user permissions
+INSERT INTO user_permissions (user_id, permission_id)
 VALUES 
 (1, 1),
 (1, 2),

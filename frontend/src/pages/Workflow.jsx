@@ -40,11 +40,10 @@ export default function Workflow() {
 
   const columns = [
     "Batch ID",
-    "Department",
     "Client",
     "Date Received",
     "Batch Size",
-    "Pending",
+    "Foreign"
   ];
 
   return (
