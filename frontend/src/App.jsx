@@ -5,7 +5,7 @@ import { BrowserRouter as Router, Route, Routes, Navigate } from 'react-router-d
 
 import { Logout, NotFound } from './components/index'
 import { UserContext } from './context/UserContext';
-import { Login, Workflow, ProtectedLayout, Profiles, Profile, ClientAccount, ClientInvoice, ClientAccounts, ClientInvoices, Records, Record, UserAccess } from './pages/index';
+import { Login, Workflow, ProtectedLayout} from './pages/index';
 
 function App() {
   const { user, loading  } = useContext(UserContext);
@@ -20,17 +20,6 @@ function App() {
         {/* Protected routes */}
         <Route element={<ProtectedLayout />}>
           <Route path="/workflow" element={<Workflow />} />
-          <Route path="/profiles" element={<Profiles />} />
-          <Route path="/profiles/:profileId" element={<Profile />} />
-          <Route path="/accounts" element={<ClientAccounts />} />
-          <Route path="/accounts/:accountId" element={<ClientAccount />} />
-          <Route path="/invoices" element={<ClientInvoices />} />
-          <Route path="/invoices/:invoiceId" element={<ClientInvoice />} />
-          <Route path="/invoices/new/:accountId" element={<ClientInvoice />} />
-          <Route path="/records" element={<Records />} />
-          <Route path="/records/:recordId" element={<Record />} />
-          
-          <Route path="/users/access" element={<UserAccess />} />
         </Route>
 
         {/* Catch-all // Not found*/}

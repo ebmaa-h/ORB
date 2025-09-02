@@ -1,37 +1,46 @@
 
-DROP TABLE IF EXISTS person_contact_numbers,person_emails, person_numbers, invoices, accounts, profiles, medical_aid_plans, medical_aids, employers, service_centers, service_centers_list, ref_clients, ref_clients_list, clients_logs, logs, user_permission, user_permission_access, user_client_access, addresses, permissions, clients, users, person_addresses, person_records, notes, profile_person_map;
+DROP TABLE IF EXISTS person_contact_numbers,person_emails;
+
+-- Roles (templates / grouped permissions)
+CREATE TABLE roles (
+  role_id INT AUTO_INCREMENT PRIMARY KEY,
+  role_name VARCHAR(64) NOT NULL UNIQUE
+);
 
 -- Create users table
 CREATE TABLE users (
-    user_id INT AUTO_INCREMENT PRIMARY KEY,
-    email VARCHAR(255) NOT NULL UNIQUE,
-    role ENUM('reception', 'admittance-manager', 'admittance-clerk'),
-    active BOOLEAN DEFAULT 1,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+  user_id INT AUTO_INCREMENT PRIMARY KEY,
+  email VARCHAR(255) NOT NULL UNIQUE,
+  role_id INT NULL,
+  active BOOLEAN DEFAULT 1,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  FOREIGN KEY (role_id) REFERENCES roles(role_id)
 );
 
-CREATE TABLE role_permissions (
-    role ENUM('reception', 'admittance-manager', 'admittance-clerk'),
-    permission_id INT,
-    PRIMARY KEY (role, permission_id),
-    FOREIGN KEY (permission_id) REFERENCES permissions(permission_id)
-);
-
--- Create permissions table
+-- Permissions (capabilities)
 CREATE TABLE permissions (
-    permission_id INT AUTO_INCREMENT PRIMARY KEY,
-    permission_name VARCHAR(255)
+  permission_id INT AUTO_INCREMENT PRIMARY KEY,
+  permission_name VARCHAR(255) NOT NULL UNIQUE  -- e.g. 'admittance_accept_batches'
 );
 
--- Create user_permission_access, (add/remove specific permissions)
-CREATE TABLE user_permissions (
-    user_permission_id INT AUTO_INCREMENT PRIMARY KEY,
-    user_id INT,
-    permission_id INT,
-    type ENUM('grant','revoke') NOT NULL,
-    FOREIGN KEY (user_id) REFERENCES users(user_id),
-    FOREIGN KEY (permission_id) REFERENCES permissions(permission_id)
+-- Default permissions per role (baseline)
+CREATE TABLE role_permissions (
+  role_id INT NOT NULL,
+  permission_id INT NOT NULL,
+  PRIMARY KEY (role_id, permission_id),
+  FOREIGN KEY (role_id) REFERENCES roles(role_id),
+  FOREIGN KEY (permission_id) REFERENCES permissions(permission_id)
+);
+
+-- User-specific overrides (add/remove)
+CREATE TABLE user_permission_overrides (
+  user_id INT NOT NULL,
+  permission_id INT NOT NULL,
+  effect ENUM('grant','revoke') NOT NULL,
+  PRIMARY KEY (user_id, permission_id),
+  FOREIGN KEY (user_id) REFERENCES users(user_id),
+  FOREIGN KEY (permission_id) REFERENCES permissions(permission_id)
 );
 
 -- Create clients table
@@ -272,14 +281,14 @@ CREATE TABLE invoices (
 
 
 -- Inserting sample data for users
-INSERT INTO users (email, role)
+INSERT INTO users (email)
 VALUES 
-('henri@ebmaa.co.za', 'Admin'),
-('andrea@ebmaa.co.za', 'Manager'),
-('nicolene@ebmaa.co.za', 'Manager'),
-('francois@ebmaa.co.za', 'Manager'),
-('alet@ebmaa.co.za', 'Manager'),
-('ilze@ebmaa.co.za', 'Manager');
+('henri@ebmaa.co.za'),
+('andrea@ebmaa.co.za'),
+('nicolene@ebmaa.co.za'),
+('francois@ebmaa.co.za'),
+('alet@ebmaa.co.za'),
+('ilze@ebmaa.co.za');
 
 
 -- Inserting sample data for clients
@@ -439,45 +448,22 @@ VALUES
 -- Inserting sample data for permissions
 INSERT INTO permissions (permission_name)
 VALUES 
-('accounts'),
-('invoices'),
-('records'),
-('profiles'),
-('clients');
+('admittance-admit-batch'),
+('admittance-accept-batch'),
+('reception-add-batch'),
+('reception-complete-batch');
 
--- Inserting sample data for user permissions
-INSERT INTO user_permissions (user_id, permission_id)
+-- Inserting sample data for permissions
+INSERT INTO roles (role_name)
 VALUES 
-(1, 1),
-(1, 2),
-(1, 3),
-(1, 4),
-(1, 5),
-(2, 1),
-(2, 2),
-(2, 3),
-(2, 4),
-(2, 5),
-(3, 1),
-(3, 2),
-(3, 3),
-(3, 4),
-(3, 5),
-(4, 1),
-(4, 2),
-(4, 3),
-(4, 4),
-(4, 5),
-(5, 1),
-(5, 2),
-(5, 3),
-(5, 4),
-(5, 5),
-(6, 1),
-(6, 2),
-(6, 3),
-(6, 4),
-(6, 5);
+('admittance-manager'),
+('admittance'),
+('reception'),
+('billing-manager'),
+('billing');
+
+
+
 
 -- Inserting sample data for service centers
 INSERT INTO service_centers_list (service_center_name, service_center_type)

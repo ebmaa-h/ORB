@@ -5,12 +5,8 @@ require('./config/passport');
 const express = require('express');
 const cors = require('cors');
 const authRoutes = require('./routes/auth.js');
-const clientRoutes = require('./routes/client.js');
-const profRoutes = require('./routes/profiles.js');
-const recordRoutes = require('./routes/records.js');
 const noteRoutes = require('./routes/notes.js');
 const logRoutes = require('./routes/logs.js');
-const userRoutes = require('./routes/user.js')
 const batchRoutes = require('./routes/batches.js')
 
 const session = require('express-session');
@@ -82,22 +78,12 @@ app.use((req, res, next) => {
   next();
 });
 
-
-
 // Routes
 app.use('/auth', authRoutes);
-app.use('/clients', clientRoutes);
-app.use('/profiles', profRoutes);
-app.use('/records', recordRoutes);
 app.use('/notes', noteRoutes);
 app.use('/logs', logRoutes);
-app.use('/users', userRoutes);
 
 app.use('/batches', batchRoutes);
-
-// app.use('/users', userRoutes);
-// app.use('/accounts', accRoutes);
-// app.use('/invoices', invRoutes);
 
 // Error Handling Middleware
 app.use((err, req, res, next) => {

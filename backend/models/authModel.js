@@ -1,9 +1,9 @@
 const db = require('../config/db');
-const queries = require('./queries/authQueries.js')
+const queries = require('./queries/authQueries.js');
 
 const Auth = {
 
-  // For session get user_id
+  // Find user by email (login)
   findByEmail: async (email) => {
     try {
       const [results] = await db.query(queries.login, [email]);
@@ -21,23 +21,25 @@ const Auth = {
     }
   },
 
-  // For context get all user data 
+  // Get full user data for session/context
   findById: async (id) => {
     try {
       const [results] = await db.query(queries.sessionId, [id]);
       const user = results[0];
 
       if (!user) {
-        console.log(`User with ${id} not found.`);
+        console.log(`User with ID ${id} not found.`);
         return null;
       }
 
-       const [[features], [clientAccess]] = await Promise.all([
-        db.query(queries.features, [user.user_id]),
+      // Fetch role-based permissions + user overrides + client access
+      const [[permissions], [clientAccess]] = await Promise.all([
+        db.query(queries.getUserPermissions, [user.user_id, user.user_id]), // Pass two times
         db.query(queries.clientAccess, [user.user_id])
       ]);
 
-      user.features = features;
+
+      user.permissions = permissions.map(p => p.permission_name);
       user.client_access = clientAccess;
 
       return user;
@@ -47,6 +49,6 @@ const Auth = {
     }
   },
 
-}
+  };
 
 module.exports = Auth;

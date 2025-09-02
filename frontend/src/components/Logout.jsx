@@ -1,13 +1,11 @@
 import { useContext, useState, useEffect } from 'react';
 import { UserContext } from '../context/UserContext';
-import { ClientContext } from '../context/ClientContext';
 import { useNavigate } from 'react-router-dom';
 import axiosClient from '../config/axiosClient';
 import ENDPOINTS from '../config/apiEndpoints';
 
 export default function Logout() {
   const { user, setUser } = useContext(UserContext);
-  const { setClientId } = useContext(ClientContext);
   const navigate = useNavigate();
   const [loggedOut, setLoggedOut] = useState(false);
 
@@ -19,14 +17,12 @@ export default function Logout() {
         if (response.status === 200) {
           setUser(null);
           console.log('User Cleared & Session Cleared')
-          setClientId(null);
           console.log('Logged out');
           setLoggedOut(true);
         }
       } catch (error) {
         console.error('Logout error:', error);
         setUser(null);
-        setClientId(null);
         navigate('/');
       }
     };

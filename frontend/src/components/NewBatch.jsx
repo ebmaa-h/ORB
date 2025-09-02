@@ -2,11 +2,9 @@ import React, { useState, useContext } from "react";
 import axiosClient from "../config/axiosClient";
 import { UserContext } from "../context/UserContext";
 import ENDPOINTS from "../config/apiEndpoints";
-import { Popup } from "../components";
 
 export default function NewBatch({ onBatchAdded }) {
   const { user } = useContext(UserContext);
-  const [isOpen, setIsOpen] = useState(false);
   const [formData, setFormData] = useState({
     pending: true,
     status: false,
@@ -55,9 +53,8 @@ export default function NewBatch({ onBatchAdded }) {
         Add new
       </button>
 
-      <Popup isOpen={isOpen} onClose={() => setIsOpen(false)}>
         <h2 className="text-lg font-bold mb-4">Add New Batch</h2>
-        <form onSubmit={handleSubmit} className="flex flex-col gap-4 text-gray-dark">
+        <form onSubmit={handleSubmit} className="flex flex-row gap-4 text-gray-dark">
           <input
             type="number"
             name="batch_size"
@@ -134,7 +131,6 @@ export default function NewBatch({ onBatchAdded }) {
             Save
           </button>
         </form>
-      </Popup>
     </div>
   );
 }
