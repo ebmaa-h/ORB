@@ -45,7 +45,7 @@ export default function NotFound() {
 
   return (
     <div className="flex justify-center items-center min-h-screen bg-gray-300">
-      <div className="min-w-[300px] min-h-[110px] bg-white shadow flex flex-col justify-evenly items-center rounded-lg px-6 py-4">
+      <div className="min-w-[300px] min-h-[110px] bg-white border border-gray-blue-100 rounded flex flex-col justify-evenly items-center px-6 py-4">
         <div className="flex gap-3 flex-col text-center">
           <p className="text-gray-900">{message}</p>
           <button

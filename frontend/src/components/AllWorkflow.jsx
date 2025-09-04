@@ -1,9 +1,13 @@
-import React from 'react'
+import { useEffect } from 'react'
 
-export default function AllWorkflow() {
+export default function AllWorkflow({ batches }) {
+  useEffect(() => {
+    console.log("All batches:", batches);
+  }, [batches]);
+
   return (
     <div>
-      all batches tab
+      all tab
     </div>
   )
 }

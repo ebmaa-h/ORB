@@ -10,7 +10,7 @@ export default function LoginBox() {
 
   return (
     <div className="flex justify-center items-center min-h-screen bg-gray-300">
-      <div className="min-w-[300px] min-h-[300px] bg-white shadow flex flex-col justify-evenly items-center rounded-lg">
+      <div className="min-w-[300px] min-h-[300px] bg-white border border-gray-blue-100 rounded flex flex-col justify-evenly items-center">
         <img className='max-w-[190px] h-auto translate-x-[-15px]' src="/ebmaa-orb-logo.svg" alt="logo" />
         <button
           onClick={handleGoogleLogin}
