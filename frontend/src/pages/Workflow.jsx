@@ -1,14 +1,9 @@
-import React, { useState, useEffect, useContext } from "react";
-import axiosClient from "../config/axiosClient";
-import ENDPOINTS from "../config/apiEndpoints";
+import React, { useState, useContext } from "react";
 import { UserContext } from "../context/UserContext";
 import { ReceptionWorkflow, AllWorkflow } from "../components";
 
 export default function Workflow() {
   const { user } = useContext(UserContext);
-  const [batches, setBatches] = useState([]);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
 
   // Map permissions to tabs + components
   const workflowTabs = [
@@ -24,31 +19,6 @@ export default function Workflow() {
   const [activeTab, setActiveTab] = useState(
     availableTabs.length > 0 ? availableTabs[0].label : null
   );
-
-  // Fetch workflow data
-  useEffect(() => {
-    const fetchWorkflow = async () => {
-      try {
-        setLoading(true);
-        const response = await axiosClient.get(ENDPOINTS.workflow);
-        setBatches(response.data || []);
-      } catch (err) {
-        console.error(err);
-        setError("Failed to fetch workflow");
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    if (user) fetchWorkflow();
-
-    // Poll every 60s
-    const interval = setInterval(() => {
-      if (user) fetchWorkflow();
-    }, 60000);
-
-    return () => clearInterval(interval);
-  }, [user]);
 
   return (
     <div className="container-col">
@@ -70,17 +40,13 @@ export default function Workflow() {
       </div>
 
       {/* Content */}
-      <div className="p-4 border border-gray-blue-100 rounded">
-        {loading ? (
-          <p>Loading...</p>
-        ) : error ? (
-          <p className="text-red-500">{error}</p>
-        ) : (
-          (() => {
-            const ActiveComponent = availableTabs.find((tab) => tab.label === activeTab)?.component;
-            return ActiveComponent ? <ActiveComponent batches={batches} /> : <p>No workflow available.</p>;
-          })()
-        )}
+      <div className="rounded">
+        {(() => {
+          const ActiveComponent = availableTabs.find(
+            (tab) => tab.label === activeTab
+          )?.component;
+          return ActiveComponent ? <ActiveComponent /> : <p>No workflow available.</p>;
+        })()}
       </div>
     </div>
   );
