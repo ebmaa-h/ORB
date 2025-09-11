@@ -3,7 +3,7 @@ const router = express.Router();
 const noteController = require('../controllers/noteController.js');
 
 // Get all table specified notes
-router.get('/:targetTable/:targetId', noteController.listLogs);
+router.get('/:targetTable/:targetId', noteController.listNotes);
 
 // Create new note
 router.post('/:targetTable/:targetId', noteController.createNote);

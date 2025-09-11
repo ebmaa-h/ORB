@@ -2,13 +2,13 @@ const Note = require('../models/noteModel.js');
 
 const noteController = {
   // Get all notes
-  listLogs: async (req, res) => {
+  listNotes: async (req, res) => {
     const { targetTable, targetId } = req.params;
 
     try {
-      if (!['accounts', 'invoices'].includes(targetTable)) {
-        return res.status(404).json({ message: 'Invalid target table specified' });
-      }
+      // if (!['accounts', 'invoices'].includes(targetTable)) {
+      //   return res.status(404).json({ message: 'Invalid target table specified' });
+      // }
   
       const notes = await Note.listNotes(targetTable, targetId);
   
@@ -28,9 +28,9 @@ const noteController = {
     const { targetTable, targetId } = req.params;
     const { userId, note } = req.body;
 
-    if (!['accounts', 'invoices'].includes(targetTable)) {
-      return res.status(400).json({ message: 'Invalid target table specified' });
-    }
+    // if (!['accounts', 'invoices'].includes(targetTable)) {
+    //   return res.status(400).json({ message: 'Invalid target table specified' });
+    // }
     if (!targetId || !userId || !note) {
       return res.status(400).json({ message: 'Missing required fields' });
     }

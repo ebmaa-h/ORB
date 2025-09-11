@@ -1,6 +1,6 @@
-import React, { useState, useContext } from "react";
-import axiosClient from "../config/axiosClient";
+import React, { useState, useContext, useRef, useEffect } from "react";
 import { UserContext } from "../context/UserContext";
+import axiosClient from "../config/axiosClient";
 import ENDPOINTS from "../config/apiEndpoints";
 
 export default function NewBatch({ onBatchAdded }) {
@@ -16,11 +16,22 @@ export default function NewBatch({ onBatchAdded }) {
     date_received: "",
     method_received: "",
     bank_statements: false,
-    added_on_workflow: true,
+    added_on_drive: true,
     total_urgent_foreign: "",
     cc_availability: "",
     corrections: false,
   });
+
+  const [open, setOpen] = useState(false);
+
+  // Ref for auto focus
+  const firstFieldRef = useRef(null);
+
+  useEffect(() => {
+    if (open && firstFieldRef.current) {
+      firstFieldRef.current.focus();
+    }
+  }, [open]);
 
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
@@ -35,7 +46,19 @@ export default function NewBatch({ onBatchAdded }) {
     try {
       const response = await axiosClient.post(ENDPOINTS.addBatch, formData);
       if (response.data) {
-        onBatchAdded?.(response.data); // update workflow if parent passes callback
+        onBatchAdded?.(response.data);
+        setFormData((prev) => ({
+          ...prev,
+          batch_size: "",
+          client_id: "",
+          date_received: "",
+          method_received: "",
+          bank_statements: false,
+          corrections: false,
+          total_urgent_foreign: "",
+          cc_availability: "",
+        }));
+        setOpen(false); // close form after submit
       }
     } catch (error) {
       console.error("Failed to add batch:", error);
@@ -44,7 +67,11 @@ export default function NewBatch({ onBatchAdded }) {
 
   return (
     <div className="container-col">
-
+      {!open ? (
+        <button onClick={() => setOpen(true)} className="btn-class w-fit">
+          New Batch
+        </button>
+      ) : (
         <div className="mt-4">
           <h3 className="font-bold mb-4">Add New Batch</h3>
           <form
@@ -52,6 +79,7 @@ export default function NewBatch({ onBatchAdded }) {
             className="flex flex-row flex-wrap gap-4 text-gray-dark"
           >
             <input
+              ref={firstFieldRef}
               type="number"
               name="batch_size"
               placeholder="Batch Size"
@@ -121,16 +149,20 @@ export default function NewBatch({ onBatchAdded }) {
             />
 
             <div className="flex gap-2 self-center">
-              <button
-                type="submit"
-                className="btn-class min-w-[100px] mt-2"
-              >
+              <button type="submit" className="btn-class min-w-[100px] mt-2">
                 Add
+              </button>
+              <button
+                type="button"
+                onClick={() => setOpen(false)}
+                className="btn-class min-w-[100px] mt-2 bg-gray-300 text-gray-dark"
+              >
+                Close
               </button>
             </div>
           </form>
         </div>
- 
+      )}
     </div>
   );
 }

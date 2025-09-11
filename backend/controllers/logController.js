@@ -27,6 +27,7 @@ const logController = {
       }
   
       const logs = await Log.listLogs(targetTable, targetId);
+
       res.status(200).json(logs);
     } catch (error) {
       console.error('Error fetching logs:', error);

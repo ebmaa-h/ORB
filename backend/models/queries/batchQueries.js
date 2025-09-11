@@ -24,6 +24,26 @@ const GET_ALL_BATCHES = `
   ORDER BY b.created_at DESC
 `;
 
+const CREATE_BATCH = `
+  INSERT INTO batches (
+    pending,
+    status,
+    created_by,
+    admitted_by,
+    billed_by,
+    batch_size,
+    client_id,
+    date_received,
+    method_received,
+    bank_statements,
+    added_on_drive,
+    total_urgent_foreign,
+    cc_availability,
+    corrections
+  ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+`;
+
 module.exports = {
-  GET_ALL_BATCHES
+  GET_ALL_BATCHES,
+  CREATE_BATCH
 };

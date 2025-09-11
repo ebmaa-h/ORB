@@ -48,6 +48,8 @@ export default function NotesAndLogs({ tableName, id, refreshTrigger }) {
           (a, b) => new Date(a.created_at) - new Date(b.created_at)
         );
 
+ 
+
         setItems(combined);
       } catch (error) {
         console.error("Error fetching notes/logs:", error);
@@ -113,7 +115,7 @@ export default function NotesAndLogs({ tableName, id, refreshTrigger }) {
 
   const handleAddNote = async () => {
     if (!newNote.trim()) return;
-
+    
     setLoading(true);
     try {
       const res = await axiosClient.post(
@@ -123,6 +125,8 @@ export default function NotesAndLogs({ tableName, id, refreshTrigger }) {
       );
       const addedNote = res.data.note;
 
+    // console.log('addedNote, ', addedNote)
+
       const formatted = {
         type: 'note',
         id: `note-${addedNote.note_id}`,
@@ -130,6 +134,8 @@ export default function NotesAndLogs({ tableName, id, refreshTrigger }) {
         email: addedNote.email,
         content: `${addedNote.note}`,
       };
+
+      // console.log('formatted, ', formatted)
 
       setItems((prev) => [...prev, formatted].sort((a, b) =>
         new Date(a.created_at) - new Date(b.created_at)
