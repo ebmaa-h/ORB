@@ -7,5 +7,6 @@ const router = express.Router();
 // Get all batches (with auth middleware if needed)
 router.get('/', bc.batches);
 router.post('/', bc.createBatch);
+router.get('/reception', bc.receptionBatches);
 
 module.exports = router;

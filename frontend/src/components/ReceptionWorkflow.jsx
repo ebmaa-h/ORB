@@ -14,8 +14,7 @@ export default function ReceptionWorkflow() {
   const fetchReceptionBatches = async () => {
     try {
       setLoading(true);
-      // const response = await axiosClient.get(ENDPOINTS.workflow); //receptionWorkflow
-      const response = []; //receptionWorkflow
+      const response = await axiosClient.get(ENDPOINTS.receptionWorkflow); //receptionWorkflow
       setBatches(response.data || []);
     } catch (err) {
       console.error("Error fetching reception batches:", err);

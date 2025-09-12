@@ -5,10 +5,11 @@ import ENDPOINTS from "../config/apiEndpoints";
 
 export default function NewBatch({ onBatchAdded }) {
   const { user } = useContext(UserContext);
+
   const [formData, setFormData] = useState({
     pending: true,
     status: false,
-    created_by: user?.id || null,
+    created_by: user.user_id || null,
     admitted_by: null,
     billed_by: null,
     batch_size: "",
