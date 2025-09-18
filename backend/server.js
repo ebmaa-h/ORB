@@ -1,19 +1,28 @@
 require('dotenv').config();
 require('./config/passport');
 
-// Require necessary modules
 const express = require('express');
+const http = require('http');              // 🔑 needed for sockets
+const { Server } = require('socket.io');   // 🔑 socket.io server
 const cors = require('cors');
 const authRoutes = require('./routes/auth.js');
 const noteRoutes = require('./routes/notes.js');
 const logRoutes = require('./routes/logs.js');
-const batchRoutes = require('./routes/batches.js')
+const batchRoutes = require('./routes/batches.js');
 
 const session = require('express-session');
 const passport = require('passport');
 
 // Express app
 const app = express();
+const server = http.createServer(app); // 👈 wrap express
+const io = new Server(server, {
+  cors: {
+    origin: ['http://localhost:5173', 'http://167.99.196.172', 'http://orb.ebmaa.co.za'],
+    methods: ['GET', 'POST', 'OPTIONS', 'PATCH', 'PUT'],
+    credentials: true,
+  },
+});
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
@@ -34,30 +43,18 @@ app.use(passport.initialize());
 app.use(passport.session());  // Triggers deserializeUser automatically
 
 app.use(cors({
-  origin: ['http://localhost:5173', 'http://167.99.196.172', 'http://orb.ebmaa.co.za'], // Local dev and production
+  origin: ['http://localhost:5173', 'http://167.99.196.172', 'http://orb.ebmaa.co.za'],
   methods: ['GET', 'POST', 'OPTIONS', 'PATCH', 'PUT'],
   credentials: true,
 }));
 
-// Middleware to parse JSON
-app.use(express.json());
-
-// Output all requests (logging middleware)
+// Logging middleware
 app.use((req, res, next) => {
   console.log(`A ${req.method} request has been made from ${req.path}`);
   next();
 });
 
-// // Debug
-// app.use((req, res, next) => {
-//   console.log('🧠 Session data:', req.session);
-//   console.log('👤 req.user:', req.user);
-//   next();
-// });
-
-
-// Check if session is valid and user is deserialized ? i think
-// 
+// Session / user check
 app.use((req, res, next) => {
   const safePaths = [
     '/auth/google',
@@ -82,7 +79,6 @@ app.use((req, res, next) => {
 app.use('/auth', authRoutes);
 app.use('/notes', noteRoutes);
 app.use('/logs', logRoutes);
-
 app.use('/batches', batchRoutes);
 
 // Error Handling Middleware
@@ -91,8 +87,30 @@ app.use((err, req, res, next) => {
   res.status(500).json({ message: "An internal error occurred." });
 });
 
+// --- SOCKET.IO ---
+io.on('connection', (socket) => {
+  console.log(`🔌 New client connected: ${socket.id}`);
+
+  // Example: join workflow room
+  socket.on('joinRoom', (room) => {
+    socket.join(room);
+    console.log(`📌 ${socket.id} joined room: ${room}`);
+  });
+
+  // Example: new batch created
+  socket.on('newBatch', (data) => {
+    console.log(`📦 New batch from ${socket.id}`, data);
+    // broadcast to everyone in "reception"
+    io.to('reception').emit('batchCreated', data);
+  });
+
+  socket.on('disconnect', () => {
+    console.log(`❌ Client disconnected: ${socket.id}`);
+  });
+});
+
 // Listen for requests
 const PORT = process.env.PORT;
-app.listen(PORT, () => {
-  console.log(`Server is listening on port ${PORT}...`);
+server.listen(PORT, () => {  // 👈 use server, not app
+  console.log(`🚀 Server is listening on port ${PORT}...`);
 });

@@ -1,14 +1,14 @@
-import { useState, useContext } from "react";
+import React, { useState, useContext } from "react";
 import { UserContext } from "../context/UserContext";
 import { ReceptionWorkflow, AllWorkflow } from "../components";
-import socket from "../config/socket";
 
-export default function Workflow() {
+export default function WorkflowForeign() {
   const { user } = useContext(UserContext);
 
   // Map permissions to tabs + components
   const workflowTabs = [
     { perm: "reception-workflow", label: "Reception", component: ReceptionWorkflow },
+    { perm: "all-workflow", label: "All", component: AllWorkflow },
   ];
 
   // Only include tabs user has permission for
