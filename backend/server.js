@@ -10,6 +10,8 @@ const noteRoutes = require('./routes/notes.js');
 const logRoutes = require('./routes/logs.js');
 const batchRoutes = require('./routes/batches.js');
 
+const registerSockets = require("./sockets/index");
+
 const session = require('express-session');
 const passport = require('passport');
 
@@ -87,27 +89,8 @@ app.use((err, req, res, next) => {
   res.status(500).json({ message: "An internal error occurred." });
 });
 
-// --- SOCKET.IO ---
-io.on('connection', (socket) => {
-  console.log(`🔌 New client connected: ${socket.id}`);
-
-  // Example: join workflow room
-  socket.on('joinRoom', (room) => {
-    socket.join(room);
-    console.log(`📌 ${socket.id} joined room: ${room}`);
-  });
-
-  // Example: new batch created
-  socket.on('newBatch', (data) => {
-    console.log(`📦 New batch from ${socket.id}`, data);
-    // broadcast to everyone in "reception"
-    io.to('reception').emit('batchCreated', data);
-  });
-
-  socket.on('disconnect', () => {
-    console.log(`❌ Client disconnected: ${socket.id}`);
-  });
-});
+// --- socket.io ---
+registerSockets(io);
 
 // Listen for requests
 const PORT = process.env.PORT;

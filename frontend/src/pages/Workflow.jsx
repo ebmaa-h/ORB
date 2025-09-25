@@ -1,17 +1,16 @@
-import { useState, useContext } from "react";
+import { useState, useContext, useEffect } from "react";
 import { UserContext } from "../context/UserContext";
-import { ReceptionWorkflow, AllWorkflow } from "../components";
+import { ReceptionWorkflow } from "../components";
 import socket from "../config/socket";
 
 export default function Workflow() {
   const { user } = useContext(UserContext);
 
-  // Map permissions to tabs + components
   const workflowTabs = [
     { perm: "reception-workflow", label: "Reception", component: ReceptionWorkflow },
+    // add more later
   ];
 
-  // Only include tabs user has permission for
   const availableTabs = workflowTabs.filter((tab) =>
     user?.permissions?.includes(tab.perm)
   );
@@ -19,6 +18,34 @@ export default function Workflow() {
   const [activeTab, setActiveTab] = useState(
     availableTabs.length > 0 ? availableTabs[0].label : null
   );
+
+  const [batches, setBatches] = useState([]);
+
+  // --- SOCKET CONNECTION ---
+  useEffect(() => {
+    if (!user) return;
+
+    // connect
+    socket.connect();
+
+    // join all rooms user has permission for
+    availableTabs.forEach((tab) => {
+      const roomName = `${tab.perm}`; 
+      socket.emit("joinRoom", roomName); 
+    });
+
+
+    // listen for batches
+    socket.on("batchCreated", (newBatch) => {
+      setBatches((prev) => [...prev, newBatch]); // append
+    });
+
+    // cleanup on unmount
+    return () => {
+      socket.off("batchCreated");
+      socket.disconnect();
+    };
+  }, [user]);
 
   return (
     <div className="container-col">
@@ -45,7 +72,11 @@ export default function Workflow() {
           const ActiveComponent = availableTabs.find(
             (tab) => tab.label === activeTab
           )?.component;
-          return ActiveComponent ? <ActiveComponent /> : <p>No workflow available.</p>;
+          return ActiveComponent ? (
+            <ActiveComponent batches={batches} />
+          ) : (
+            <p>No workflow available.</p>
+          );
         })()}
       </div>
     </div>

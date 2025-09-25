@@ -70,13 +70,6 @@ CREATE TABLE user_client_access (
 
 -- client_permissions inc or client_permission_access
 
-CREATE TABLE workflows (
-    workflow_id INT AUTO_INCREMENT PRIMARY KEY,
-    name VARCHAR(255) NOT NULL, 
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-);
-
-
 CREATE TABLE logs (
     log_id INT AUTO_INCREMENT PRIMARY KEY,
     user_id INT,

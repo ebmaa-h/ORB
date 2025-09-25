@@ -2,12 +2,13 @@ import React, { useState, useContext, useRef, useEffect } from "react";
 import { UserContext } from "../context/UserContext";
 import axiosClient from "../config/axiosClient";
 import ENDPOINTS from "../config/apiEndpoints";
+import socket from "../config/socket"; // ✅ import socket instance
 
 export default function NewBatch({ onBatchAdded }) {
   const { user } = useContext(UserContext);
 
   const [formData, setFormData] = useState({
-    pending: true,
+    // pending: true,
     status: false,
     created_by: user.user_id || null,
     admitted_by: null,
@@ -24,6 +25,8 @@ export default function NewBatch({ onBatchAdded }) {
   });
 
   const [open, setOpen] = useState(false);
+
+
 
   // Ref for auto focus
   const firstFieldRef = useRef(null);
@@ -46,8 +49,15 @@ export default function NewBatch({ onBatchAdded }) {
     e.preventDefault();
     try {
       const response = await axiosClient.post(ENDPOINTS.addBatch, formData);
+
       if (response.data) {
+        // ✅ 1) Call local callback (optional UI updates)
         onBatchAdded?.(response.data);
+
+        // ✅ 2) Emit to socket so all clients in the room see it
+        socket.emit("newBatch", response.data);
+
+        // ✅ 3) Reset form
         setFormData((prev) => ({
           ...prev,
           batch_size: "",
@@ -59,6 +69,7 @@ export default function NewBatch({ onBatchAdded }) {
           total_urgent_foreign: "",
           cc_availability: "",
         }));
+
         setOpen(false); // close form after submit
       }
     } catch (error) {
