@@ -1,7 +1,7 @@
 import { useState, useContext, useEffect } from "react";
 import { UserContext } from "../context/UserContext";
 import { ReceptionWorkflow } from "../components";
-import socket from "../config/socket";
+import socket from "../utils/socket";
 
 export default function Workflow() {
   const { user } = useContext(UserContext);

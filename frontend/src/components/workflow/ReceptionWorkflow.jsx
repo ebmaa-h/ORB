@@ -1,7 +1,10 @@
 /* eslint-disable react/prop-types */
 import React from "react";
+import NewBatch from "./NewBatch";
 
-function BatchTable({ title, batches }) {
+// 👇 Memoized table — only re-renders if props change
+const BatchTable = React.memo(function BatchTable({ title, batches }) {
+  console.log(`🧠 Rendering ${title} table`);
   return (
     <div className="container-col w-[50%]">
       <h3 className="font-bold mb-2">{title}</h3>
@@ -40,10 +43,10 @@ function BatchTable({ title, batches }) {
       )}
     </div>
   );
-}
+});
 
-export default function BatchLists({ batches }) {
-  // Split batches into categories
+export default function ReceptionWorkflow({ batches }) {
+  // categorize batches
   const filingBatches = batches.filter(
     (b) => b.current_department === "filling"
   );
@@ -54,11 +57,20 @@ export default function BatchLists({ batches }) {
 
   return (
     <div className="flex flex-col gap-4">
+      {/* 👇 Create new batch */}
+      <NewBatch />
+
+      {/* 👇 Batches organized by category */}
       <div className="flex flex-row gap-4">
         <BatchTable title="Filing" batches={filingBatches} />
         <BatchTable title="Outbox" batches={outboxBatches} />
       </div>
+
       <BatchTable title="In Progress" batches={inProgressBatches} />
+
+      {/* 👇 future notes/logs section */}
+      {/* <Notes /> */}
+      {/* <Logs /> */}
     </div>
   );
 }

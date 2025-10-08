@@ -1,6 +1,6 @@
 import { createContext, useState, useEffect } from 'react';
-import axiosClient from '../config/axiosClient';
-import ENDPOINTS from '../config/apiEndpoints';
+import axiosClient from '../utils/axiosClient';
+import ENDPOINTS from '../utils/apiEndpoints';
 import { useNavigate } from 'react-router-dom';
 
 export const UserContext = createContext();

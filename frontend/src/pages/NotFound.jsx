@@ -1,8 +1,8 @@
 import { useContext, useEffect, useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { UserContext } from '../context/UserContext';
-import ENDPOINTS from '../config/apiEndpoints';
-import axiosClient from '../config/axiosClient';
+import ENDPOINTS from '../utils/apiEndpoints';
+import axiosClient from '../utils/axiosClient';
 
 export default function NotFound() {
   const { user, setUser } = useContext(UserContext);

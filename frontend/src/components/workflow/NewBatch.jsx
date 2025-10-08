@@ -27,7 +27,6 @@ export default function NewBatch({ onBatchAdded }) {
   const [open, setOpen] = useState(false);
 
 
-
   // Ref for auto focus
   const firstFieldRef = useRef(null);
 

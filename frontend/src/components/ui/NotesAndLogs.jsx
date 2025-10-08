@@ -1,6 +1,6 @@
 import { useEffect, useState, useContext } from 'react';
-import axiosClient from '../config/axiosClient';
-import ENDPOINTS from '../config/apiEndpoints';
+import axiosClient from '../utils/axiosClient';
+import ENDPOINTS from '../utils/apiEndpoints';
 import { UserContext } from '../context/UserContext';
 import { SearchBar } from '../components';
 
