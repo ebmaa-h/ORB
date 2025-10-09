@@ -1,7 +1,4 @@
-// batchQueries.js
-
-// future, get all batches
-// get all billing batch etc. etc.
+// Queries related to the reception department
 
 const GET_RECEPTION_BATCHES = `
   SELECT * FROM batches 

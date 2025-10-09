@@ -2,7 +2,7 @@
 import React from "react";
 import NewBatch from "./NewBatch";
 
-// 👇 Memoized table — only re-renders if props change
+// Memoized table, only re-renders if props change
 const BatchTable = React.memo(function BatchTable({ title, batches }) {
   console.log(`🧠 Rendering ${title} table`);
   return (
@@ -68,9 +68,7 @@ export default function ReceptionWorkflow({ batches }) {
 
       <BatchTable title="In Progress" batches={inProgressBatches} />
 
-      {/* 👇 future notes/logs section */}
-      {/* <Notes /> */}
-      {/* <Logs /> */}
+      {/* Notes & Logs */}
     </div>
   );
 }
