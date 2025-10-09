@@ -1,8 +1,9 @@
 import { useEffect, useState, useContext } from 'react';
-import axiosClient from '../utils/axiosClient';
-import ENDPOINTS from '../utils/apiEndpoints';
-import { UserContext } from '../context/UserContext';
-import { SearchBar } from '../components';
+import axiosClient from '../../utils/axiosClient';
+import ENDPOINTS from '../../utils/apiEndpoints';
+import { UserContext } from '../../context/UserContext';
+import { SearchBar } from '../../components';
+import socket from '../../utils/socket';
 
 export default function NotesAndLogs({ tableName, id, refreshTrigger }) {
   const { user } = useContext(UserContext);
@@ -12,56 +13,56 @@ export default function NotesAndLogs({ tableName, id, refreshTrigger }) {
   const [showLogs, setShowLogs] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
 
-  useEffect(() => {
-    const fetchNotesAndLogs = async () => {
-      setLoading(true);
-      try {
-        const [notesRes, logsRes] = await Promise.all([
-          axiosClient.get(ENDPOINTS.fetchNotes(tableName, id)),
-          axiosClient.get(ENDPOINTS.fetchLogs(tableName, id)),
-        ]);
+  // useEffect(() => {
+  //   const fetchNotesAndLogs = async () => {
+  //     setLoading(true);
+  //     try {
+  //       const [notesRes, logsRes] = await Promise.all([
+  //         axiosClient.get(ENDPOINTS.fetchNotes(tableName, id)),
+  //         axiosClient.get(ENDPOINTS.fetchLogs(tableName, id)),
+  //       ]);
 
-        // console.log(logsRes)
+  //       // console.log(logsRes)
 
-        const formattedNotes = notesRes.data.notes.map(note => ({
-          type: 'note',
-          id: `note-${note.note_id}`,
-          created_at: note.created_at,
-          email: note.email,
-          content: note.note,
-        }));
+  //       const formattedNotes = notesRes.data.notes.map(note => ({
+  //         type: 'note',
+  //         id: `note-${note.note_id}`,
+  //         created_at: note.created_at,
+  //         email: note.email,
+  //         content: note.note,
+  //       }));
 
-        // console.log(logsRes)
-        const formattedLogs = logsRes.data.map(log => ({
-          type: 'log',
-          id: `log-${log.log_id}`,
-          action: log.action,
-          target_table: log.target_table,
-          target_id: log.target_id,
-          created_at: log.timestamp,
-          email: log.email,
-          content: formatLogContent(log),
-        }));
+  //       // console.log(logsRes)
+  //       const formattedLogs = logsRes.data.map(log => ({
+  //         type: 'log',
+  //         id: `log-${log.log_id}`,
+  //         action: log.action,
+  //         target_table: log.target_table,
+  //         target_id: log.target_id,
+  //         created_at: log.timestamp,
+  //         email: log.email,
+  //         content: formatLogContent(log),
+  //       }));
 
-        // Combine notes and logs then sort by date
-        const combined = [...formattedNotes, ...formattedLogs].sort(
-          (a, b) => new Date(a.created_at) - new Date(b.created_at)
-        );
+  //       // Combine notes and logs then sort by date
+  //       const combined = [...formattedNotes, ...formattedLogs].sort(
+  //         (a, b) => new Date(a.created_at) - new Date(b.created_at)
+  //       );
 
  
 
-        setItems(combined);
-      } catch (error) {
-        console.error("Error fetching notes/logs:", error);
-      } finally {
-        setLoading(false);
-      }
-    };
+  //       setItems(combined);
+  //     } catch (error) {
+  //       console.error("Error fetching notes/logs:", error);
+  //     } finally {
+  //       setLoading(false);
+  //     }
+  //   };
 
-    if (id) {
-      fetchNotesAndLogs();
-    }
-  }, [tableName, id, refreshTrigger]);
+  //   if (id) {
+  //     fetchNotesAndLogs();
+  //   }
+  // }, [tableName, id, refreshTrigger]);
 
   const columnNames = {
     file_nr: 'File Nr',
@@ -113,6 +114,8 @@ export default function NotesAndLogs({ tableName, id, refreshTrigger }) {
   };
   
 
+
+
   const handleAddNote = async () => {
     if (!newNote.trim()) return;
     
@@ -125,7 +128,12 @@ export default function NotesAndLogs({ tableName, id, refreshTrigger }) {
       );
       const addedNote = res.data.note;
 
-    // console.log('addedNote, ', addedNote)
+      // emit to socket room
+      socket.emit("addReceptionNote", {
+        targetId: id,
+        userId: user.user_id,
+        note: newNote
+      });
 
       const formatted = {
         type: 'note',
@@ -134,8 +142,6 @@ export default function NotesAndLogs({ tableName, id, refreshTrigger }) {
         email: addedNote.email,
         content: `${addedNote.note}`,
       };
-
-      // console.log('formatted, ', formatted)
 
       setItems((prev) => [...prev, formatted].sort((a, b) =>
         new Date(a.created_at) - new Date(b.created_at)
@@ -146,6 +152,7 @@ export default function NotesAndLogs({ tableName, id, refreshTrigger }) {
     }
     setLoading(false);
   };
+
 
   const filteredHistory = items.filter((item) =>
     Object.values(item).join(' ').toLowerCase().includes(searchTerm.toLowerCase())

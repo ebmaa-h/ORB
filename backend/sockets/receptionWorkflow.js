@@ -11,8 +11,8 @@ module.exports = function receptionWorkflow(io, socket) {
   // Create new batch
   socket.on("newBatch", async (data) => {
     try {
-      const newBatch = await receptionController.createBatch({ body: data });
-      io.to("reception-workflow").emit("batchCreated", newBatch.batch);
+     io.to("reception-workflow").emit("batchCreated", data); 
+     console.log("📦 New batch broadcast:", data.batch_id);
     } catch (err) {
       console.error("❌ Error in newBatch socket event:", err);
     }

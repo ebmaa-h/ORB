@@ -14,11 +14,7 @@ const Batch = {
 
   create: async (data) => {
     const {
-      pending,
-      status,
       created_by,
-      admitted_by,
-      billed_by,
       batch_size,
       client_id,
       date_received,
@@ -31,11 +27,7 @@ const Batch = {
     } = data;
 
     const [result] = await db.query(queries.CREATE_BATCH, [
-      pending,
-      status,
       created_by,
-      admitted_by,
-      billed_by,
       batch_size,
       client_id,
       date_received,

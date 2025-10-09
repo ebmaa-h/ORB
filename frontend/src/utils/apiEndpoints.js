@@ -18,19 +18,14 @@ const ENDPOINTS = {
   clientInvoice: (clientId, invoiceId) => `${API_URL}/clients/${clientId}/invoices/${invoiceId}`, 
   updateInvoice: (clientId, invoiceId) => `${API_URL}/clients/${clientId}/invoices/${invoiceId}`,
   newInvoice: (clientId, accountId) => `${API_URL}/clients/${clientId}/accounts/${accountId}/invoices`, 
-
   clientAccounts: (clientId) => `${API_URL}/clients/${clientId}/accounts`,
   clientAccount : (clientId, accountId) => `${API_URL}/clients/${clientId}/accounts/${accountId}`,
-
   profiles : `${API_URL}/profiles`,
   profileDetails : (profileId) => `${API_URL}/profiles/${profileId}`,
-
   records : `${API_URL}/records`,
   recordDetails :  (recordId) => `${API_URL}/records/${recordId}`, // good, independant records view/edit is enough.
-
   fetchNotes: (tableName, id) => `${API_URL}/notes/${tableName}/${id}`, 
   addNote: (tableName, id) => `${API_URL}/notes/${tableName}/${id}`,
-
   fetchLogs: (tableName, id) => `${API_URL}/logs/${tableName}/${id}`,
   addLog: `${API_URL}/logs`,
   // clientInfo : `${API_URL}/client/info`,

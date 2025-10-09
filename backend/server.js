@@ -6,9 +6,9 @@ const http = require('http');              // 🔑 needed for sockets
 const { Server } = require('socket.io');   // 🔑 socket.io server
 const cors = require('cors');
 const authRoutes = require('./routes/auth.js');
-const noteRoutes = require('./routes/notes.js');
-const logRoutes = require('./routes/logs.js');
-const batchRoutes = require('./routes/batches.js');
+// const noteRoutes = require('./routes/notes.js');
+// const logRoutes = require('./routes/logs.js');
+const batchRoutes = require('./routes/batch.js');
 
 const registerSockets = require("./sockets/index");
 
@@ -79,8 +79,8 @@ app.use((req, res, next) => {
 
 // Routes
 app.use('/auth', authRoutes);
-app.use('/notes', noteRoutes);
-app.use('/logs', logRoutes);
+// app.use('/notes', noteRoutes);
+// app.use('/logs', logRoutes);
 app.use('/batches', batchRoutes);
 
 // Error Handling Middleware

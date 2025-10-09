@@ -3,7 +3,8 @@ import { useContext } from 'react';
 import { BrowserRouter as Router, Route, Routes, Navigate } from 'react-router-dom';
 
 
-import { Logout, NotFound } from './components/index'
+import {NotFound } from './pages/index'
+import { Logout } from './components/index'
 import { UserContext } from './context/UserContext';
 import { Login, Workflow, ProtectedLayout} from './pages/index';
 

@@ -1,7 +1,7 @@
 import { Link, useLocation } from 'react-router-dom';
 import { useContext, useState, useRef, useEffect } from 'react';
-import { Logout } from '../components'
-import { UserContext } from '../context/UserContext';
+import { Logout } from '../../components'
+import { UserContext } from '../../context/UserContext';
 
 export default function Nav() {
   const { user } = useContext(UserContext);

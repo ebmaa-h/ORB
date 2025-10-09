@@ -1,18 +1,14 @@
 import React, { useState, useContext, useRef, useEffect } from "react";
-import { UserContext } from "../context/UserContext";
-import axiosClient from "../config/axiosClient";
-import ENDPOINTS from "../config/apiEndpoints";
-import socket from "../config/socket"; // ✅ import socket instance
+import { UserContext } from "../../context/UserContext";
+import axiosClient from "../../utils/axiosClient";
+import ENDPOINTS from "../../utils/apiEndpoints";
+import socket from "../../utils/socket"; // ✅ import socket instance
 
 export default function NewBatch({ onBatchAdded }) {
   const { user } = useContext(UserContext);
 
   const [formData, setFormData] = useState({
-    // pending: true,
-    status: false,
     created_by: user.user_id || null,
-    admitted_by: null,
-    billed_by: null,
     batch_size: "",
     client_id: "",
     date_received: "",
@@ -23,6 +19,8 @@ export default function NewBatch({ onBatchAdded }) {
     cc_availability: "",
     corrections: false,
   });
+
+  console.log(" user.user_id:", user.user_id);
 
   const [open, setOpen] = useState(false);
 
@@ -50,13 +48,10 @@ export default function NewBatch({ onBatchAdded }) {
       const response = await axiosClient.post(ENDPOINTS.addBatch, formData);
 
       if (response.data) {
-        // ✅ 1) Call local callback (optional UI updates)
-        onBatchAdded?.(response.data);
+        const newBatch = response.data;
+        onBatchAdded?.(newBatch);
+        socket.emit("newBatch", newBatch); 
 
-        // ✅ 2) Emit to socket so all clients in the room see it
-        socket.emit("newBatch", response.data);
-
-        // ✅ 3) Reset form
         setFormData((prev) => ({
           ...prev,
           batch_size: "",

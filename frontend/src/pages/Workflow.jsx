@@ -2,6 +2,8 @@ import { useState, useContext, useEffect } from "react";
 import { UserContext } from "../context/UserContext";
 import { ReceptionWorkflow } from "../components";
 import socket from "../utils/socket";
+import ENDPOINTS from '../utils/apiEndpoints';
+import axiosClient from '../utils/axiosClient';
 
 export default function Workflow() {
   const { user } = useContext(UserContext);
@@ -11,6 +13,8 @@ export default function Workflow() {
     // add more later
   ];
 
+  console.log("User permissions:", user?.permissions);
+  console.log("User permissions:", user?.permissions);
   const availableTabs = workflowTabs.filter((tab) =>
     user?.permissions?.includes(tab.perm)
   );
@@ -25,6 +29,17 @@ export default function Workflow() {
   useEffect(() => {
     if (!user) return;
 
+    const fetchInitialBatches = async () => {
+    try {
+      const res = await axiosClient.get(`${ENDPOINTS.receptionWorkflow}`); // REST API
+      setBatches(res.data);
+    } catch (err) {
+      console.error('Failed to fetch initial batches', err);
+    }
+  };
+
+  fetchInitialBatches();
+
     // connect
     socket.connect();
 
@@ -33,7 +48,6 @@ export default function Workflow() {
       const roomName = `${tab.perm}`; 
       socket.emit("joinRoom", roomName); 
     });
-
 
     // listen for batches
     socket.on("batchCreated", (newBatch) => {
@@ -73,7 +87,7 @@ export default function Workflow() {
             (tab) => tab.label === activeTab
           )?.component;
           return ActiveComponent ? (
-            <ActiveComponent batches={batches} />
+            <ActiveComponent batches={batches || []} />
           ) : (
             <p>No workflow available.</p>
           );

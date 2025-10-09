@@ -238,7 +238,6 @@ CREATE TABLE batches (
     current_department ENUM('reception', 'admittance', 'billing') DEFAULT 'reception',
     current_stage ENUM('inbox','current','outbox') DEFAULT 'current',
     pending BOOLEAN DEFAULT 1,
-    status BOOLEAN,
     created_by INT,
     admitted_by INT,
     billed_by INT,

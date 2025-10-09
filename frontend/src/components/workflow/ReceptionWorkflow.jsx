@@ -1,6 +1,7 @@
 /* eslint-disable react/prop-types */
 import React from "react";
 import NewBatch from "./NewBatch";
+// import NotesAndLogs from "./NotesAndLogs"; 
 
 // Memoized table, only re-renders if props change
 const BatchTable = React.memo(function BatchTable({ title, batches }) {
@@ -45,7 +46,7 @@ const BatchTable = React.memo(function BatchTable({ title, batches }) {
   );
 });
 
-export default function ReceptionWorkflow({ batches }) {
+export default function ReceptionWorkflow({ batches = [] }) {
   // categorize batches
   const filingBatches = batches.filter(
     (b) => b.current_department === "filling"
@@ -68,7 +69,16 @@ export default function ReceptionWorkflow({ batches }) {
 
       <BatchTable title="In Progress" batches={inProgressBatches} />
 
-      {/* Notes & Logs */}
+    {/* Notes & Logs for Reception Batches */}
+    {/* {inProgressBatches.length > 0 && (
+      <NotesAndLogs 
+        tableName="batches" 
+        id={inProgressBatches[0].batch_id} 
+        refreshTrigger={null}
+        socketRoom="reception-workflow" 
+      />
+    )} */}
+
     </div>
   );
 }

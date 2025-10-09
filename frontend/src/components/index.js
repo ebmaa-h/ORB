@@ -9,4 +9,3 @@ export { default as SearchBar } from './ui/SearchBar'
 export { default as StatusToast } from './ui/StatusToast'
 
 export { default as ReceptionWorkflow } from './workflow/ReceptionWorkflow'
-export { default as AdmittanceWorkflow } from './workflow/AdmittanceWorkflow'

@@ -1,7 +1,34 @@
 const Note = require('../models/noteModel');
 const Log = require('../models/logModel');
+const Batch = require('../models/batchModel');
 
 const receptionController = {
+
+  createBatch: async (req, res) => {
+    console.log("🧩 Received in createBatch:", req.body);
+    console.log("🧩 req.body:", req?.body);
+    try {
+      const newBatch = await Batch.create(req.body);
+      res.status(201).json({ message: "Batch created successfully", batch: newBatch });
+    } catch (err) {
+      console.error('❌ Error creating new batch:', err);
+      if (res) res.status(500).json({ error: 'Failed to create batch' });
+      else throw err;
+    }
+  },
+
+  // reception department batches
+  receptionBatches: async (req, res) => {
+    try {
+      const results = await Batch.getReceptionBatches();
+      res.json(results);
+    } catch (err) {
+      console.error("Error fetching batches:", err);
+      res.status(500).json({ error: "Failed to fetch batches" });
+    }
+  },
+
+
   getNotes: async (reqOrData, res) => {
     try {
       const targetId = reqOrData.params ? reqOrData.params.targetId : reqOrData.targetId;

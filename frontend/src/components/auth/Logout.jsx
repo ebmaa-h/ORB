@@ -1,8 +1,8 @@
 import { useContext, useState, useEffect } from 'react';
-import { UserContext } from '../context/UserContext';
+import { UserContext } from '../../context/UserContext';
 import { useNavigate } from 'react-router-dom';
-import axiosClient from '../config/axiosClient';
-import ENDPOINTS from '../config/apiEndpoints';
+import axiosClient from '../../utils/axiosClient';
+import ENDPOINTS from '../../utils/apiEndpoints';
 
 export default function Logout() {
   const { user, setUser } = useContext(UserContext);
