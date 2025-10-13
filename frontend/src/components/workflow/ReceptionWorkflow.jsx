@@ -66,18 +66,7 @@ export default function ReceptionWorkflow({ batches = [] }) {
         <BatchTable title="Filing" batches={filingBatches} />
         <BatchTable title="Outbox" batches={outboxBatches} />
       </div>
-
       <BatchTable title="In Progress" batches={inProgressBatches} />
-
-    {/* Notes & Logs for Reception Batches */}
-    {/* {inProgressBatches.length > 0 && (
-      <NotesAndLogs 
-        tableName="batches" 
-        id={inProgressBatches[0].batch_id} 
-        refreshTrigger={null}
-        socketRoom="reception-workflow" 
-      />
-    )} */}
 
     </div>
   );
