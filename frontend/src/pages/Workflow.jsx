@@ -1,97 +1,58 @@
+// src/pages/Workflow.jsx
 import { useState, useContext, useEffect } from "react";
 import { UserContext } from "../context/UserContext";
-import { ReceptionWorkflow } from "../components";
 import socket from "../utils/socket";
-import ENDPOINTS from '../utils/apiEndpoints';
-import axiosClient from '../utils/axiosClient';
+import ENDPOINTS from "../utils/apiEndpoints";
+import axiosClient from "../utils/axiosClient";
+import WorkflowEngine from "../components/Workflow/WorkflowEngine";
 
 export default function Workflow() {
   const { user } = useContext(UserContext);
 
-  const workflowTabs = [
-    { perm: "reception-workflow", label: "Reception", component: ReceptionWorkflow },
-    // add more later
+  // compute available departments from user's permissions (optional)
+  // Here we map some permissions to departments; adapt as needed
+  const departmentPermissions = [
+
+    { perm: "no-workflow", label: "none" },
+    /* just a test, landing when no department is assigned 
+    -> a waiting room for when management is still adding permissions of new employee
+    */
+    { perm: "reception-workflow", label: "reception" },
+    { perm: "admittance-workflow", label: "admittance" },
+    { perm: "billing-workflow", label: "billing" },
   ];
 
-  console.log("User permissions:", user?.permissions);
-  console.log("User permissions:", user?.permissions);
-  const availableTabs = workflowTabs.filter((tab) =>
-    user?.permissions?.includes(tab.perm)
-  );
+  const availableDepts = departmentPermissions.filter((d) =>
+    user?.permissions?.includes(d.perm)
+  ).map(d => d.label);
+  console.log(availableDepts.length)
 
-  const [activeTab, setActiveTab] = useState(
-    availableTabs.length > 0 ? availableTabs[0].label : null
-  );
+  const defaultDept = availableDepts.length ? availableDepts[0] : "reception";
+  const [activeDept, setActiveDept] = useState(defaultDept);
 
-  const [batches, setBatches] = useState([]);
-
-  // --- SOCKET CONNECTION ---
   useEffect(() => {
-    if (!user) return;
-
-    const fetchInitialBatches = async () => {
-    try {
-      const res = await axiosClient.get(`${ENDPOINTS.receptionWorkflow}`); // REST API
-      setBatches(res.data);
-    } catch (err) {
-      console.error('Failed to fetch initial batches', err);
+    // if user permissions change or activeDept is no longer available, switch
+    if (!availableDepts.includes(activeDept) && availableDepts.length) {
+      setActiveDept(availableDepts[0]);
     }
-  };
-
-  fetchInitialBatches();
-
-    // connect
-    socket.connect();
-
-    // join all rooms user has permission for
-    availableTabs.forEach((tab) => {
-      const roomName = `${tab.perm}`; 
-      socket.emit("joinRoom", roomName); 
-    });
-
-    // listen for batches
-    socket.on("batchCreated", (newBatch) => {
-      setBatches((prev) => [...prev, newBatch]); // append
-    });
-
-    // cleanup on unmount
-    return () => {
-      socket.off("batchCreated");
-      socket.disconnect();
-    };
-  }, [user]);
+  }, [availableDepts, activeDept]);
 
   return (
     <div className="container-col">
-      {/* Tabs */}
-      <div className="flex w-full mb-4">
-        {availableTabs.map((tab) => (
+      <div className="flex gap-2 mb-4">
+        {availableDepts.map((d) => (
           <button
-            key={tab.label}
-            onClick={() => setActiveTab(tab.label)}
-            className={`flex-1 p-2 border-gray-blue-100 ${
-              activeTab === tab.label
-                ? "text-gray-dark font-bold bg-gray-100"
-                : "text-gray-dark"
-            }`}
+            key={d}
+            className={`btn-class ${activeDept === d ? "font-bold bg-gray-100" : ""}`}
+            onClick={() => setActiveDept(d)}
           >
-            {tab.label}
+            {d}
           </button>
         ))}
       </div>
 
-      {/* Content */}
-      <div className="rounded">
-        {(() => {
-          const ActiveComponent = availableTabs.find(
-            (tab) => tab.label === activeTab
-          )?.component;
-          return ActiveComponent ? (
-            <ActiveComponent batches={batches || []} />
-          ) : (
-            <p>No workflow available.</p>
-          );
-        })()}
+      <div>
+        <WorkflowEngine department={activeDept} />
       </div>
     </div>
   );

@@ -1,6 +1,6 @@
 /* eslint-disable react/prop-types */
 import React from "react";
-import NewBatch from "./NewBatch";
+import NewBatch from "../NewBatch";
 // import NotesAndLogs from "./NotesAndLogs"; 
 
 // Memoized table, only re-renders if props change

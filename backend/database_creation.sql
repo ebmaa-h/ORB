@@ -265,7 +265,7 @@ CREATE TABLE invoices (
     batch_id INT,
     nr_in_batch INT,
     date_of_service DATE,
-    status ENUM('Processing', 'Billed', 'Archived') DEFAULT 'Processing',
+    status ENUM('Open','Archived') DEFAULT 'Open',
     ref_client_id INT NULL,
     file_nr VARCHAR(255) NULL,
     balance DECIMAL(10, 2) DEFAULT 0.00,
