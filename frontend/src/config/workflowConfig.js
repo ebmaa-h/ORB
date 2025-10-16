@@ -19,8 +19,13 @@ const WORKFLOW_CONFIG = {
         method: "post",
         endpointKey: "moveToAdmittance" // map to ENDPOINTS.moveToAdmittance
       },
-
     ],
+    tables: [
+      {name: "filing"},
+      {name: "current"},
+      {name: "outbox"},
+    ],
+
   },
 
   admittance: {
@@ -42,6 +47,11 @@ const WORKFLOW_CONFIG = {
         endpointKey: "moveToBilling"
       }
     ],
+    tables: [
+      {name: "inbox"},
+      {name: "current"},
+      {name: "outbox"},
+    ],
   },
 
   billing: {
@@ -62,6 +72,11 @@ const WORKFLOW_CONFIG = {
         method: "post",
         endpointKey: "archiveBatch"
       }
+    ],
+    tables: [
+      {name: "inbox"},
+      {name: "current"},
+      {name: "outbox"},
     ],
   }
 };

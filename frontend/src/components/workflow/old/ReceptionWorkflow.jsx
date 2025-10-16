@@ -51,9 +51,9 @@ export default function ReceptionWorkflow({ batches = [] }) {
   const filingBatches = batches.filter(
     (b) => b.current_department === "filling"
   );
-  const outboxBatches = batches.filter((b) => b.current_stage === "outbox");
+  const outboxBatches = batches.filter((b) => b.status === "outbox");
   const inProgressBatches = batches.filter(
-    (b) => b.current_stage === "current" && b.current_department === "reception"
+    (b) => b.status === "current" && b.current_department === "reception"
   );
 
   return (

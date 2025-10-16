@@ -22,7 +22,7 @@ export default function WorkflowEngine({ department = "none" }) {
 
   const [batches, setBatches] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [filterType, setFilterType] = useState('nornal');
+  const [filterType, setFilterType] = useState('normal');
   const [selectedBatch, setSelectedBatch] = useState(null);
 
   // Resolve endpoint string from ENDPOINTS using config.endpointKey
@@ -41,6 +41,7 @@ export default function WorkflowEngine({ department = "none" }) {
           ...b,
           type: b.total_urgent_foreign && b.total_urgent_foreign > 0 ? "foreign-urgent" : (b.type || "normal")
         }));
+
         setBatches(normalized);
       } catch (err) {
         console.error("WorkflowEngine fetch error:", err);
@@ -98,7 +99,7 @@ export default function WorkflowEngine({ department = "none" }) {
       try {
         socket.emit("leaveRoom", config.socketRoom);
       } catch (e) {}
-      // do not disconnect global socket if other parts still use it, but if you prefer:
+      // do not disconnect global socket if other parts still use it
       socket.disconnect();
     };
   // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -121,7 +122,7 @@ export default function WorkflowEngine({ department = "none" }) {
         console.error("Missing endpoint for action", action);
         return;
       }
-      // optimistic: update UI quickly for UX (optional)
+      // optimistic: update UI quickly for UX
       // call backend
       const res = await axiosClient[action.method || "post"](url, { batch_id: batch.batch_id });
       // backend is expected to emit bus events; but also update local copy if returned
@@ -173,12 +174,27 @@ export default function WorkflowEngine({ department = "none" }) {
         <div>Loading batches...</div>
       ) : (
         <>
-          <WorkflowTable
-            columns={config.columns}
-            batches={visibleBatches}
-            selectedBatch={selectedBatch}
-            onSelect={(b) => setSelectedBatch(b)}
-          />
+          {config.tables.map((table) => {
+            const tableBatches = visibleBatches.filter(
+              (b) => b.status === table.name && b.current_department === department
+            );
+
+            return (
+              <div key={table.name} className="mb-6">
+                <h3 className="text-lg font-semibold capitalize mb-2">{table.name}</h3>
+                {tableBatches.length === 0 ? (
+                  <div className="text-sm text-gray-500">No batches in {table.name}</div>
+                ) : (
+                  <WorkflowTable
+                    columns={config.columns}
+                    batches={tableBatches}
+                    selectedBatch={selectedBatch}
+                    onSelect={setSelectedBatch}
+                  />
+                )}
+              </div>
+            );
+          })}
 
           <div className="mt-4">
             <WorkflowActions

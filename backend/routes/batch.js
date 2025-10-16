@@ -8,5 +8,6 @@ const router = express.Router();
 
 router.post('/', rc.createBatch);
 router.get('/reception', rc.receptionBatches);
+// router.get('/reception', rc.receptionForeignUrgentBatches);
 
 module.exports = router;

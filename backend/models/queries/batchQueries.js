@@ -4,10 +4,18 @@
 // get all billing batch etc. etc.
 
 const GET_RECEPTION_BATCHES = `
-  SELECT * FROM batches 
-    WHERE current_department = 'reception'
-    ORDER BY date_received DESC
+      SELECT *, 'normal' AS type FROM batches 
+      WHERE current_department = 'reception'
+      ORDER BY date_received DESC
 `;
+
+
+const GET_RECEPTION_FOREIGN_URGENT_BATCHES = `
+      SELECT *, 'foreign-urgent' AS type FROM foreign_urgent_accounts
+      WHERE current_department = 'reception'
+      ORDER BY date_received DESC
+`;
+
 
 const CREATE_BATCH = `
   INSERT INTO batches (
@@ -20,5 +28,6 @@ const CREATE_BATCH = `
 
 module.exports = {
   CREATE_BATCH,
-  GET_RECEPTION_BATCHES
+  GET_RECEPTION_BATCHES,
+  GET_RECEPTION_FOREIGN_URGENT_BATCHES
 };

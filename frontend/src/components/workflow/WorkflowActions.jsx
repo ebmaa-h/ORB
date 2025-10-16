@@ -14,7 +14,7 @@ export default function WorkflowActions({ actions = [], selectedBatch = null, on
           className="btn-class min-w-[140px]"
           onClick={() => {
             if (!selectedBatch) {
-              // simple client-side guard; you might replace with toast
+              // simple client-side guard, might replace with toast
               alert("Select a batch first (click a row).");
               return;
             }

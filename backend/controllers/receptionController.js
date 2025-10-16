@@ -23,10 +23,12 @@ const receptionController = {
       const results = await Batch.getReceptionBatches();
       res.json(results);
     } catch (err) {
-      console.error("Error fetching batches:", err);
-      res.status(500).json({ error: "Failed to fetch batches" });
+      console.error("Error fetching reception batches:", err);
+      res.status(500).json({ error: "Failed to fetch reception batches" });
     }
   },
+
+
 
 
   getNotes: async (reqOrData, res) => {

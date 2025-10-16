@@ -3,9 +3,19 @@ const queries = require('./queries/batchQueries');
 
 const Batch = {
   getReceptionBatches: async () => {
-    const [results] = await db.query(queries.GET_RECEPTION_BATCHES);
-    return results;
+    // two queries at once
+    const [normalResults] = await db.query(queries.GET_RECEPTION_BATCHES);
+
+    const [foreignUrgentResults] = await db.query(queries.GET_RECEPTION_FOREIGN_URGENT_BATCHES);
+
+    // merge both lists and sort again by date
+    const merged = [...normalResults, ...foreignUrgentResults].sort((a, b) => {
+      return new Date(b.date_received) - new Date(a.date_received);
+    });
+
+    return merged;
   },
+
 
   getBillingBatches: async () => {
     const [results] = await db.query(queries.GET_BILLING_BATCHES);

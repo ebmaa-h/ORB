@@ -20,7 +20,7 @@ export default function NewBatch({ onBatchAdded }) {
     corrections: false,
   });
 
-  console.log(" user.user_id:", user.user_id);
+  // console.log(" user.user_id:", user.user_id);
 
   const [open, setOpen] = useState(false);
 

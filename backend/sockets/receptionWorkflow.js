@@ -8,6 +8,16 @@ module.exports = function receptionWorkflow(io, socket) {
     console.log(`📌 ${socket.id} joined reception`);
   });
 
+  socket.on("newForeignUrgentBatch", async (data) => {
+  try {
+    io.to("reception-workflow").emit("foreignUrgentBatchCreated", data);
+    console.log("🌍 New foreign/urgent batch broadcast:", data.foreign_urgent_batch_id);
+  } catch (err) {
+    console.error("❌ Error in newForeignUrgentBatch socket event:", err);
+  }
+});
+
+
   // Create new batch
   socket.on("newBatch", async (data) => {
     try {

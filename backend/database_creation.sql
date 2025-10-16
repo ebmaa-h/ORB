@@ -236,7 +236,7 @@ CREATE TABLE accounts (
 CREATE TABLE batches (
     batch_id INT AUTO_INCREMENT PRIMARY KEY,
     current_department ENUM('reception', 'admittance', 'billing') DEFAULT 'reception',
-    current_stage ENUM('inbox','current','outbox') DEFAULT 'current',
+    status ENUM('inbox','current','outbox', 'filing', 'archived') DEFAULT 'current',
     pending BOOLEAN DEFAULT 1,
     created_by INT,
     admitted_by INT,
@@ -252,6 +252,32 @@ CREATE TABLE batches (
     corrections BOOLEAN,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    FOREIGN KEY (client_id) REFERENCES clients(client_id),
+    FOREIGN KEY (created_by) REFERENCES users(user_id),
+    FOREIGN KEY (admitted_by) REFERENCES users(user_id),
+    FOREIGN KEY (billed_by) REFERENCES users(user_id)
+);
+
+-- Create foreign/urgent table -> essentially batches
+CREATE TABLE foreign_urgent_accounts (
+    foreign_urgent_batch_id INT AUTO_INCREMENT PRIMARY KEY,
+    batch_id INT, 
+    current_department ENUM('reception', 'admittance', 'billing') DEFAULT 'reception',
+    status ENUM('inbox','current','outbox', 'filing', 'archived') DEFAULT 'current',
+    pending BOOLEAN DEFAULT 1,
+    created_by INT,
+    admitted_by INT,
+    billed_by INT,
+    client_id INT,
+    date_received DATE,
+    method_received VARCHAR(255),
+    bank_statements BOOLEAN,
+    added_on_drive BOOLEAN,
+    cc_availability VARCHAR(255),
+    corrections BOOLEAN,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    FOREIGN KEY (batch_id) REFERENCES batches(batch_id),
     FOREIGN KEY (client_id) REFERENCES clients(client_id),
     FOREIGN KEY (created_by) REFERENCES users(user_id),
     FOREIGN KEY (admitted_by) REFERENCES users(user_id),
