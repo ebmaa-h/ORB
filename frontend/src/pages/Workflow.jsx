@@ -16,6 +16,7 @@ export default function Workflow() {
     { perm: "no-workflow", label: "none" },
     /* just a test, landing when no department is assigned 
     -> a waiting room for when management is still adding permissions of new employee
+    -> or employees whose permissions are tempt disabled, meaning user has access to nothing
     */
     { perm: "reception-workflow", label: "reception" },
     { perm: "admittance-workflow", label: "admittance" },
@@ -27,7 +28,7 @@ export default function Workflow() {
   ).map(d => d.label);
   console.log(availableDepts.length)
 
-  const defaultDept = availableDepts.length ? availableDepts[0] : "reception";
+  const defaultDept = availableDepts.length ? availableDepts[0] : "none";
   const [activeDept, setActiveDept] = useState(defaultDept);
 
   useEffect(() => {

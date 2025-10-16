@@ -1,12 +1,19 @@
-// src/components/Workflow/WorkflowTable.jsx
 import React from "react";
+import { useEffect } from "react";
 
-const Row = ({ batch, columns, onSelect }) => (
-  <tr className="border-b border-gray-blue-100 hover:bg-gray-50 cursor-pointer" onClick={() => onSelect(batch)}>
+const Row = ({ batch, columns, onSelect, isSelected }) => (
+  <tr
+    className={`border-b border-gray-blue-100 cursor-pointer hover:bg-gray-50 ${
+      isSelected ? "bg-gray-200" : ""
+    }`}
+    onClick={() => onSelect(batch)}
+  >
+
+
     {columns.map((col) => {
       const raw = batch[col.name];
       const value = col.formatter ? col.formatter(raw, batch) : raw;
-      // special: client name composition
+
       if (col.name === "client_name") {
         return (
           <td key={col.name} className="px-2 py-1">
@@ -15,6 +22,7 @@ const Row = ({ batch, columns, onSelect }) => (
           </td>
         );
       }
+
       return (
         <td key={col.name} className="px-2 py-1">
           {value ?? ""}
@@ -22,12 +30,18 @@ const Row = ({ batch, columns, onSelect }) => (
       );
     })}
   </tr>
-);
+  );
 
-const WorkflowTable = React.memo(function WorkflowTable({ columns = [], batches = [], onSelect = () => {} }) {
+  const WorkflowTable = React.memo(function WorkflowTable({
+    columns = [],
+    batches = [],
+    selectedBatch = null,
+    onSelect = () => {},
+  }) {
+
   if (!Array.isArray(batches)) batches = [];
 
-  return (
+    return (
     <div className="overflow-x-auto rounded border border-gray-blue-100 p-2">
       {batches.length === 0 ? (
         <p className="text-sm text-gray-500">No batches</p>
@@ -42,7 +56,13 @@ const WorkflowTable = React.memo(function WorkflowTable({ columns = [], batches 
           </thead>
           <tbody>
             {batches.map((batch) => (
-              <Row key={batch.batch_id} batch={batch} columns={columns} onSelect={onSelect} />
+              <Row
+                key={batch.batch_id}
+                batch={batch}
+                columns={columns}
+                onSelect={onSelect}
+                isSelected={selectedBatch?.batch_id === batch.batch_id}
+              />
             ))}
           </tbody>
         </table>

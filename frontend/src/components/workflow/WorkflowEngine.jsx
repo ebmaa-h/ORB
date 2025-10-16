@@ -14,7 +14,7 @@ import { NewBatch } from "../index";
  *  - department (string) e.g. "reception"
  *  - initialFilter (optional) 'all'|'normal'|'urgent'|'foreign'
  */
-export default function WorkflowEngine({ department = "reception", initialFilter = "all" }) {
+export default function WorkflowEngine({ department = "none" }) {
   const { user } = useContext(UserContext);
   const config = WORKFLOW_CONFIG[department];
 
@@ -22,7 +22,7 @@ export default function WorkflowEngine({ department = "reception", initialFilter
 
   const [batches, setBatches] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [filterType, setFilterType] = useState(initialFilter);
+  const [filterType, setFilterType] = useState('nornal');
   const [selectedBatch, setSelectedBatch] = useState(null);
 
   // Resolve endpoint string from ENDPOINTS using config.endpointKey
@@ -39,7 +39,7 @@ export default function WorkflowEngine({ department = "reception", initialFilter
         // normalize: attach `type` if not provided (assume normal)
         const normalized = (res.data || []).map((b) => ({
           ...b,
-          type: b.total_urgent_foreign && b.total_urgent_foreign > 0 ? "mixed" : (b.type || "normal")
+          type: b.total_urgent_foreign && b.total_urgent_foreign > 0 ? "foreign-urgent" : (b.type || "normal")
         }));
         setBatches(normalized);
       } catch (err) {
@@ -106,10 +106,11 @@ export default function WorkflowEngine({ department = "reception", initialFilter
 
   // visible batches after filter
   const visibleBatches = useMemo(() => {
-    if (!filterType || filterType === "all") return batches;
-    if (filterType === "mixed") return batches.filter((b) => b.type === "mixed");
-    return batches.filter((b) => b.type === filterType);
+    if (filterType === "normal") return batches.filter(b => b.type === "normal");
+    if (filterType === "foreign") return batches.filter(b => b.type === "foreign-urgent");
+    return batches; // fallback
   }, [batches, filterType]);
+
 
   // action executor: config.actions define endpointKey + method
   const executeAction = async (action, batch) => {
@@ -132,6 +133,24 @@ export default function WorkflowEngine({ department = "reception", initialFilter
       console.error("Action failed:", action, err);
     }
   };
+
+
+  // Keep selectedBatch in sync if batch list changes
+  useEffect(() => {
+    if (!selectedBatch) return;
+
+    // find the batch in the current batches (or visibleBatches)
+    const updated = batches.find(b => b.batch_id === selectedBatch.batch_id);
+
+    if (!updated) {
+      // batch deleted or moved out of this department
+      setSelectedBatch(null);
+    } else if (updated !== selectedBatch) {
+      // object reference changed, re-sync
+      setSelectedBatch(updated);
+    }
+  }, [batches, selectedBatch]);
+
 
   return (
     <div className="container-col">
@@ -157,6 +176,7 @@ export default function WorkflowEngine({ department = "reception", initialFilter
           <WorkflowTable
             columns={config.columns}
             batches={visibleBatches}
+            selectedBatch={selectedBatch}
             onSelect={(b) => setSelectedBatch(b)}
           />
 
