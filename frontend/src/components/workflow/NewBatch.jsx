@@ -1,8 +1,9 @@
+// src/components/NewBatch.jsx
 import React, { useState, useContext, useRef, useEffect } from "react";
 import { UserContext } from "../../context/UserContext";
 import axiosClient from "../../utils/axiosClient";
 import ENDPOINTS from "../../utils/apiEndpoints";
-import socket from "../../utils/socket"; // ✅ import socket instance
+import socket from "../../utils/socket";
 
 export default function NewBatch({ onBatchAdded }) {
   const { user } = useContext(UserContext);
@@ -18,14 +19,10 @@ export default function NewBatch({ onBatchAdded }) {
     total_urgent_foreign: "",
     cc_availability: "",
     corrections: false,
+    foreign_urgents: [], // Array for dynamic foreign/urgent rows
   });
 
-  // console.log(" user.user_id:", user.user_id);
-
   const [open, setOpen] = useState(false);
-
-
-  // Ref for auto focus
   const firstFieldRef = useRef(null);
 
   useEffect(() => {
@@ -42,16 +39,54 @@ export default function NewBatch({ onBatchAdded }) {
     }));
   };
 
+  // Handle changes to total_urgent_foreign: dynamically adjust foreign_urgents array
+  const handleTotalUrgentChange = (e) => {
+    const num = parseInt(e.target.value, 10) || 0;
+    setFormData((prev) => {
+      let newForeignUrgents = [...prev.foreign_urgents];
+      if (num > newForeignUrgents.length) {
+        // Add empty objects if increasing
+        const toAdd = num - newForeignUrgents.length;
+        for (let i = 0; i < toAdd; i++) {
+          newForeignUrgents.push({ patient_name: "", medical_aid_nr: "" });
+        }
+      } else if (num < newForeignUrgents.length) {
+        // Slice if decreasing
+        newForeignUrgents = newForeignUrgents.slice(0, num);
+      }
+      return {
+        ...prev,
+        total_urgent_foreign: num.toString(), // Store as string for input consistency
+        foreign_urgents: newForeignUrgents,
+      };
+    });
+  };
+
+  // Handle changes in individual foreign/urgent rows
+  const handleForeignUrgentChange = (index, e) => {
+    const { name, value } = e.target;
+    setFormData((prev) => {
+      const updated = [...prev.foreign_urgents];
+      updated[index] = {
+        ...updated[index],
+        [name]: value,
+      };
+      return { ...prev, foreign_urgents: updated };
+    });
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
+    const total = parseInt(formData.total_urgent_foreign, 10) || 0;
+    if (total !== formData.foreign_urgents.length) {
+      alert("Mismatch between total urgent/foreign and entered details. Please check.");
+      return;
+    }
     try {
       const response = await axiosClient.post(ENDPOINTS.addBatch, formData);
-
       if (response.data) {
-        const newBatch = response.data;
-        onBatchAdded?.(newBatch);
-        socket.emit("newBatch", newBatch); 
-
+        const createdBatch = response.data.batch;
+        onBatchAdded?.(createdBatch);
         setFormData((prev) => ({
           ...prev,
           batch_size: "",
@@ -62,9 +97,9 @@ export default function NewBatch({ onBatchAdded }) {
           corrections: false,
           total_urgent_foreign: "",
           cc_availability: "",
+          foreign_urgents: [],
         }));
-
-        setOpen(false); // close form after submit
+        setOpen(false);
       }
     } catch (error) {
       console.error("Failed to add batch:", error);
@@ -142,7 +177,7 @@ export default function NewBatch({ onBatchAdded }) {
               name="total_urgent_foreign"
               placeholder="Total Urgent Foreign"
               value={formData.total_urgent_foreign}
-              onChange={handleChange}
+              onChange={handleTotalUrgentChange}
               className="border p-2 rounded"
             />
             <input
@@ -154,14 +189,39 @@ export default function NewBatch({ onBatchAdded }) {
               className="border p-2 rounded"
             />
 
-            <div className="flex gap-2 self-center">
-              <button type="submit" className="btn-class min-w-[100px] mt-2">
+            {/* Dynamic foreign/urgent rows */}
+            {formData.foreign_urgents.map((fu, index) => (
+              <div key={index} className="flex flex-row flex-wrap gap-4 w-full mt-4 border-t pt-4 items-center">
+                <h4 className="font-semibold">{index + 1}</h4>
+                <input
+                  type="text"
+                  name="patient_name"
+                  placeholder="Patient Name"
+                  value={fu.patient_name}
+                  onChange={(e) => handleForeignUrgentChange(index, e)}
+                  className="border p-2 rounded"
+                  required
+                />
+                <input
+                  type="text"
+                  name="medical_aid_nr"
+                  placeholder="Medical Aid Number"
+                  value={fu.medical_aid_nr}
+                  onChange={(e) => handleForeignUrgentChange(index, e)}
+                  className="border p-2 rounded"
+                  required
+                />
+              </div>
+            ))}
+
+            <div className="flex gap-2 self-center w-full mt-4">
+              <button type="submit" className="btn-class min-w-[100px]">
                 Add
               </button>
               <button
                 type="button"
                 onClick={() => setOpen(false)}
-                className="btn-class min-w-[100px] mt-2 bg-gray-300 text-gray-dark"
+                className="btn-class min-w-[100px] bg-gray-300 text-gray-dark"
               >
                 Close
               </button>

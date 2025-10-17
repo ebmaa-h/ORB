@@ -1,7 +1,7 @@
 
 DROP TABLE IF EXISTS person_contact_numbers,person_emails;
 
--- Roles (templates / grouped permissions)
+-- Roles (template names)
 CREATE TABLE roles (
   role_id INT AUTO_INCREMENT PRIMARY KEY,
   role_name VARCHAR(64) NOT NULL UNIQUE
@@ -18,13 +18,13 @@ CREATE TABLE users (
   FOREIGN KEY (role_id) REFERENCES roles(role_id)
 );
 
--- Permissions (capabilities)
+-- Actual list of permissions
 CREATE TABLE permissions (
   permission_id INT AUTO_INCREMENT PRIMARY KEY,
-  permission_name VARCHAR(255) NOT NULL UNIQUE  -- e.g. 'admittance_accept_batches'
+  permission_name VARCHAR(255) NOT NULL UNIQUE 
 );
 
--- Default permissions per role (baseline)
+-- Template / Role link
 CREATE TABLE role_permissions (
   role_id INT NOT NULL,
   permission_id INT NOT NULL,
@@ -33,7 +33,7 @@ CREATE TABLE role_permissions (
   FOREIGN KEY (permission_id) REFERENCES permissions(permission_id)
 );
 
--- User-specific overrides (add/remove)
+-- Permission overides for templates
 CREATE TABLE user_permission_overrides (
   user_id INT NOT NULL,
   permission_id INT NOT NULL,
@@ -235,53 +235,83 @@ CREATE TABLE accounts (
 -- Create batches table
 CREATE TABLE batches (
     batch_id INT AUTO_INCREMENT PRIMARY KEY,
+    client_id INT,
+    batch_size INT,
+    method_received ENUM('email', 'driver', 'courier', 'doctor', 'fax', 'collect', 'relative', 'other'),
+    bank_statements BOOLEAN DEFAULT FALSE,
+    synaps BOOLEAN,
+    total_urgent_foreign INT,
+    cc_availability VARCHAR(255),
     current_department ENUM('reception', 'admittance', 'billing') DEFAULT 'reception',
     status ENUM('inbox','current','outbox', 'filing', 'archived') DEFAULT 'current',
-    pending BOOLEAN DEFAULT 1,
+    batch_total DECIMAL(10,2) DEFAULT 0.00,
+    date_received DATE,
+    date_completed DATE,
     created_by INT,
     admitted_by INT,
     billed_by INT,
-    batch_size INT,
-    client_id INT,
-    date_received DATE,
-    method_received VARCHAR(255),
-    bank_statements BOOLEAN,
-    added_on_drive BOOLEAN,
-    total_urgent_foreign INT,
-    cc_availability VARCHAR(255),
-    corrections BOOLEAN,
+    completed_by INT,
+    date_checked DATE,
+    checked_by INT,
+    errors TEXT,
+    billing_emailed_by INT,
+    file_renamed_by INT,
+    file_checked_by INT,
+    filed_by INT,
+    notes TEXT,
+    billing_email_sent_by INT,
+    added_on_drive BOOLEAN DEFAULT FALSE,
+    corrections BOOLEAN DEFAULT FALSE, 
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     FOREIGN KEY (client_id) REFERENCES clients(client_id),
     FOREIGN KEY (created_by) REFERENCES users(user_id),
     FOREIGN KEY (admitted_by) REFERENCES users(user_id),
     FOREIGN KEY (billed_by) REFERENCES users(user_id)
+    FOREIGN KEY (completed_by) REFERENCES users(user_id)
+    FOREIGN KEY (checked_by) REFERENCES users(user_id)
+    FOREIGN KEY (billing_emailed_by) REFERENCES users(user_id)
+    FOREIGN KEY (file_renamed_by) REFERENCES users(user_id)
+    FOREIGN KEY (file_checked_by) REFERENCES users(user_id)
+    FOREIGN KEY (filed_by) REFERENCES users(user_id)
+    FOREIGN KEY (billing_email_sent_by) REFERENCES users(user_id)
 );
 
 -- Create foreign/urgent table -> essentially batches
 CREATE TABLE foreign_urgent_accounts (
-    foreign_urgent_batch_id INT AUTO_INCREMENT PRIMARY KEY,
     batch_id INT, 
+    foreign_urgent_batch_id INT AUTO_INCREMENT PRIMARY KEY,
+    -- client id get from batches
+    patient_name VARCHAR(255),
+    medical_aid_nr VARCHAR(50),
     current_department ENUM('reception', 'admittance', 'billing') DEFAULT 'reception',
     status ENUM('inbox','current','outbox', 'filing', 'archived') DEFAULT 'current',
-    pending BOOLEAN DEFAULT 1,
+    -- get date received from batches
     created_by INT,
     admitted_by INT,
     billed_by INT,
-    client_id INT,
-    date_received DATE,
-    method_received VARCHAR(255),
-    bank_statements BOOLEAN,
-    added_on_drive BOOLEAN,
-    cc_availability VARCHAR(255),
-    corrections BOOLEAN,
+    completed_by INT,
+    date_checked DATE,
+    checked_by INT,
+    errors TEXT,
+    file_renamed BOOLEAN DEFAULT FALSE,
+    file_renamed_by INT,
+    file_checked BOOLEAN DEFAULT FALSE,
+    file_checked_by INT,
+    filed_by INT,
+    notes TEXT,
+    FULID VARCHAR(255),
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     FOREIGN KEY (batch_id) REFERENCES batches(batch_id),
     FOREIGN KEY (client_id) REFERENCES clients(client_id),
     FOREIGN KEY (created_by) REFERENCES users(user_id),
-    FOREIGN KEY (admitted_by) REFERENCES users(user_id),
     FOREIGN KEY (billed_by) REFERENCES users(user_id)
+    FOREIGN KEY (completed_by) REFERENCES users(user_id),
+    FOREIGN KEY (checked_by) REFERENCES users(user_id),
+    FOREIGN KEY (file_renamed_by) REFERENCES users(user_id),
+    FOREIGN KEY (file_checked_by) REFERENCES users(user_id),
+    FOREIGN KEY (filed_by) REFERENCES users(user_id),
 );
 
 -- Create invoices table
@@ -302,8 +332,6 @@ CREATE TABLE invoices (
     FOREIGN KEY (account_id) REFERENCES accounts(account_id),
     FOREIGN KEY (ref_client_id) REFERENCES ref_clients(ref_client_id)
 );
-
-
 
 -- Inserting sample data for users
 INSERT INTO users (email)
@@ -482,10 +510,10 @@ VALUES
 INSERT INTO roles (role_name)
 VALUES 
 ('admittance-manager'),
-('admittance'),
+('admittance-clerk'),
 ('reception'),
 ('billing-manager'),
-('billing');
+('biller');
 
 
 

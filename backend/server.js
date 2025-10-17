@@ -3,11 +3,8 @@ require('./config/passport');
 
 const express = require('express');
 const http = require('http');              // 🔑 needed for sockets
-const { Server } = require('socket.io');   // 🔑 socket.io server
 const cors = require('cors');
 const authRoutes = require('./routes/auth.js');
-// const noteRoutes = require('./routes/notes.js');
-// const logRoutes = require('./routes/logs.js');
 const batchRoutes = require('./routes/batch.js');
 
 const registerSockets = require("./sockets/index");
@@ -17,14 +14,11 @@ const passport = require('passport');
 
 // Express app
 const app = express();
-const server = http.createServer(app); // 👈 wrap express
-const io = new Server(server, {
-  cors: {
-    origin: ['http://localhost:5173', 'http://167.99.196.172', 'http://orb.ebmaa.co.za'],
-    methods: ['GET', 'POST', 'OPTIONS', 'PATCH', 'PUT'],
-    credentials: true,
-  },
-});
+const { init } = require("./sockets/socket");
+
+const server = http.createServer(app); 
+const io = init(server); 
+registerSockets(io);
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));

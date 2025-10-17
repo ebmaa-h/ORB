@@ -5,19 +5,31 @@ const WORKFLOW_CONFIG = {
     endpointKey: "receptionWorkflow", // will be resolved against ENDPOINTS
 
     columns: [
-      {name: "batch_id", label: "Batch ID"},
-      {name: "client_name", label: "Client"},
-      {name: "batch_size", label: "Size"},
-      {name: "created_by_email", label: "Created By"},
-      {name: "date_received", label: "Date", formatter: (v) => new Date(v).toLocaleDateString()},
-      {name: "type", label: "Type"}, // "normal"|"urgent & foreign"
+      { name: 'batch_id', label: 'Batch ID' },
+      { name: 'client_id', label: 'Client ID' },
+      { name: 'date_received', label: 'Date Received', formatter: (val) => new Date(val).toLocaleDateString() },
+      { name: 'method_received', label: 'Method Received' },
+    ],
+    foreignUrgentColumns: [
+      { name: 'batch_id', label: 'Batch ID' },
+      { name: 'client_id', label: 'Client ID' },
+      { name: 'date_received', label: 'Date Received', formatter: (val) => new Date(val).toLocaleDateString() },
+      { name: 'method_received', label: 'Method Received' },
+      { name: 'patient_name', label: 'Patient Name' },
+      { name: 'medical_aid_nr', label: 'Medical Aid Number' },
     ],
     actions: [
       {
-        name: "sendToAdmittance",
+        name: "sentToAdmittance",
         label: "Send to Admittance",
         method: "post",
-        endpointKey: "moveToAdmittance" // map to ENDPOINTS.moveToAdmittance
+        endpointKey: "moveToAdmittance" 
+      },
+      {
+        name: "sentToBilling",
+        label: "Send to Billing",
+        method: "post",
+        endpointKey: "moveToBilling" 
       },
     ],
     tables: [
@@ -25,60 +37,7 @@ const WORKFLOW_CONFIG = {
       {name: "current"},
       {name: "outbox"},
     ],
-
   },
-
-  admittance: {
-    socketRoom: "admittance",
-    endpointKey: "admittanceWorkflow",
-    columns: [
-      {name: "batch_id", label: "Batch ID"},
-      {name: "client_name", label: "Client"},
-      {name: "batch_size", label: "Size"},
-      {name: "created_by_email", label: "Created By"},
-      {name: "date_received", label: "Date", formatter: (v) => new Date(v).toLocaleDateString()},
-      {name: "type", label: "Type"},
-    ],
-    actions: [
-      {
-        name: "sendToBilling",
-        label: "Send to Billing",
-        method: "post",
-        endpointKey: "moveToBilling"
-      }
-    ],
-    tables: [
-      {name: "inbox"},
-      {name: "current"},
-      {name: "outbox"},
-    ],
-  },
-
-  billing: {
-    socketRoom: "billing",
-    endpointKey: "billingWorkflow",
-    columns: [
-      {name: "batch_id", label: "Batch ID"},
-      {name: "client_name", label: "Client"},
-      {name: "batch_size", label: "Size"},
-      {name: "created_by_email", label: "Created By"},
-      {name: "date_received", label: "Date", formatter: (v) => new Date(v).toLocaleDateString()},
-      {name: "status", label: "Status"},
-    ],
-    actions: [
-      {
-        name: "archiveBatch",
-        label: "Archive",
-        method: "post",
-        endpointKey: "archiveBatch"
-      }
-    ],
-    tables: [
-      {name: "inbox"},
-      {name: "current"},
-      {name: "outbox"},
-    ],
-  }
 };
 
 export default WORKFLOW_CONFIG;

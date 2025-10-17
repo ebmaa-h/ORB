@@ -1,23 +1,63 @@
+const { getIO } = require("../sockets/socket.js");
 const Note = require('../models/noteModel');
 const Log = require('../models/logModel');
 const Batch = require('../models/batchModel');
 
 const receptionController = {
-
   createBatch: async (req, res) => {
     console.log("🧩 Received in createBatch:", req.body);
-    console.log("🧩 req.body:", req?.body);
     try {
-      const newBatch = await Batch.create(req.body);
-      res.status(201).json({ message: "Batch created successfully", batch: newBatch });
+      const { foreign_urgents, ...mainData } = req.body;
+      // Create main batch
+      const newBatch = await Batch.create(mainData);
+      const io = getIO();
+      io.to("reception").emit("batchCreated", {
+        ...newBatch,
+        current_department: newBatch.current_department || 'reception',
+        status: newBatch.status || 'current',
+      });
+
+      // Create foreign/urgent if present
+      const createdForeignUrgents = [];
+      if (Array.isArray(foreign_urgents) && foreign_urgents.length > 0) {
+        for (const fu of foreign_urgents) {
+          const fuData = {
+            batch_id: newBatch.batch_id,
+            patient_name: fu.patient_name,
+            medical_aid_nr: fu.medical_aid_nr,
+          };
+          const newFu = await Batch.createForeignUrgent(fuData);
+          // Align with GET_RECEPTION_FOREIGN_URGENT_BATCHES
+          const newFuWithInherited = {
+            batch_id: newFu.foreign_urgent_batch_id, // Use foreign_urgent_batch_id as batch_id
+            parent_batch_id: newFu.batch_id, // Parent batch ID
+            patient_name: newFu.patient_name,
+            medical_aid_nr: newFu.medical_aid_nr,
+            current_department: newFu.current_department || 'reception',
+            status: newFu.status || 'current',
+            created_by: mainData.created_by,
+            client_id: mainData.client_id,
+            date_received: mainData.date_received || new Date().toISOString(),
+            created_at: newFu.created_at || new Date().toISOString(),
+            updated_at: newFu.updated_at || new Date().toISOString(),
+          };
+          createdForeignUrgents.push(newFuWithInherited);
+          console.log('📤 Emitting batchCreated for foreignUrgent:', newFuWithInherited);
+          io.to("reception").emit("batchCreated", newFuWithInherited);
+        }
+      }
+
+      res.status(201).json({
+        message: "Batch created successfully",
+        batch: newBatch,
+        foreign_urgents: createdForeignUrgents,
+      });
     } catch (err) {
       console.error('❌ Error creating new batch:', err);
-      if (res) res.status(500).json({ error: 'Failed to create batch' });
-      else throw err;
+      res.status(500).json({ error: 'Failed to create batch' });
     }
   },
 
-  // reception department batches
   receptionBatches: async (req, res) => {
     try {
       const results = await Batch.getReceptionBatches();
@@ -28,14 +68,10 @@ const receptionController = {
     }
   },
 
-
-
-
   getNotes: async (reqOrData, res) => {
     try {
       const targetId = reqOrData.params ? reqOrData.params.targetId : reqOrData.targetId;
       const notes = await Note.listNotes('batches', targetId);
-
       if (res) {
         res.json(notes);
       } else {
@@ -52,14 +88,12 @@ const receptionController = {
     try {
       const targetId = reqOrData.params ? reqOrData.params.targetId : reqOrData.targetId;
       const { userId, note } = reqOrData.body || reqOrData;
-
       const newNote = await Note.createNote({
         target_table: 'batches',
         target_id: targetId,
         user_id: userId,
         note,
       });
-
       if (res) {
         res.status(201).json(newNote);
       } else {
@@ -76,7 +110,6 @@ const receptionController = {
     try {
       const { userId, action, changes, targetId } = reqOrData.body || reqOrData;
       const log = await Log.createLog(userId, action, 'batches', targetId, changes);
-
       if (res) {
         res.status(201).json({ message: 'Log added successfully' });
       } else {
