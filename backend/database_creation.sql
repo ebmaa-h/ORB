@@ -262,6 +262,10 @@ CREATE TABLE batches (
     billing_email_sent_by INT,
     added_on_drive BOOLEAN DEFAULT FALSE,
     corrections BOOLEAN DEFAULT FALSE, 
+
+    is_pure_foreign_urgent BOOLEAN DEFAULT FALSE, 
+
+
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     FOREIGN KEY (client_id) REFERENCES clients(client_id),

@@ -14,16 +14,16 @@ function App() {
 
   return (
       <Routes>
-        {/* Login/logout routes */}
+        {/* login/logout routes */}
         <Route path="/" element={user ? <Navigate to="/workflow" /> : <Login />} />
         <Route path="/logout" element={<Logout />} />
 
-        {/* Protected routes */}
+        {/* protected routes */}
         <Route element={<ProtectedLayout />}>
           <Route path="/workflow" element={<Workflow />} />
         </Route>
 
-        {/* Catch-all // Not found*/}
+        {/* catch all // Not found*/}
         <Route path="/not-found" element={<NotFound />} />
         <Route path="*" element={<Navigate to="/not-found" />} />
 

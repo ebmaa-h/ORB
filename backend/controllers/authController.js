@@ -17,7 +17,7 @@ const authController = {
   },
 
   getMe: async (req, res) => {
-    // After de-serialize
+    // after de-serialize
     if (!req.user) {
       console.log('❌ 🔒3/3 route hit: /auth/me — req.user NOT present');
       return res.status(401).json({ message: 'Not authenticated' });

@@ -8,13 +8,20 @@ const receptionController = {
     console.log("🧩 Received in createBatch:", req.body);
     try {
       const { foreign_urgents, ...mainData } = req.body;
-      // Create main batch
+      
+      // validate total_urgent_foreign <= batch_size
+      if (Number(mainData.total_urgent_foreign || 0) > Number(mainData.batch_size || 0)) {
+        throw new Error('total_urgent_foreign cannot exceed batch_size');
+      }
+
+      // create main batch (dummy if pure foreign/urgent)
       const newBatch = await Batch.create(mainData);
       const io = getIO();
       io.to("reception").emit("batchCreated", {
         ...newBatch,
         current_department: newBatch.current_department || 'reception',
         status: newBatch.status || 'current',
+        is_pure_foreign_urgent: newBatch.is_pure_foreign_urgent || false,
       });
 
       // Create foreign/urgent if present
@@ -27,10 +34,9 @@ const receptionController = {
             medical_aid_nr: fu.medical_aid_nr,
           };
           const newFu = await Batch.createForeignUrgent(fuData);
-          // Align with GET_RECEPTION_FOREIGN_URGENT_BATCHES
           const newFuWithInherited = {
-            batch_id: newFu.foreign_urgent_batch_id, // Use foreign_urgent_batch_id as batch_id
-            parent_batch_id: newFu.batch_id, // Parent batch ID
+            batch_id: newFu.batch_id,
+            parent_batch_id: newFu.parent_batch_id,
             patient_name: newFu.patient_name,
             medical_aid_nr: newFu.medical_aid_nr,
             current_department: newFu.current_department || 'reception',
@@ -40,6 +46,7 @@ const receptionController = {
             date_received: mainData.date_received || new Date().toISOString(),
             created_at: newFu.created_at || new Date().toISOString(),
             updated_at: newFu.updated_at || new Date().toISOString(),
+            is_pure_foreign_urgent: newBatch.is_pure_foreign_urgent || false,
           };
           createdForeignUrgents.push(newFuWithInherited);
           console.log('📤 Emitting batchCreated for foreignUrgent:', newFuWithInherited);
@@ -53,8 +60,8 @@ const receptionController = {
         foreign_urgents: createdForeignUrgents,
       });
     } catch (err) {
-      console.error('❌ Error creating new batch:', err);
-      res.status(500).json({ error: 'Failed to create batch' });
+      console.error('❌ Error creating new batch:', err.message);
+      res.status(400).json({ error: err.message });
     }
   },
 

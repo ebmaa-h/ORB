@@ -11,6 +11,8 @@ const ENDPOINTS = {
   googleAuth : `https://accounts.google.com/o/oauth2/v2/auth`, 
   workflow : `${API_URL}/batches`, 
   receptionWorkflow : `${API_URL}/batches/reception`, 
+  admittanceWorkflow : `${API_URL}/batches/admittance`, 
+  billingWorkflow : `${API_URL}/batches/billing`, 
 
   addBatch : `${API_URL}/batches`, 
 

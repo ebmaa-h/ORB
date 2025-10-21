@@ -2,7 +2,7 @@ require('dotenv').config();
 require('./config/passport');
 
 const express = require('express');
-const http = require('http');              // 🔑 needed for sockets
+const http = require('http'); // for sockets
 const cors = require('cors');
 const authRoutes = require('./routes/auth.js');
 const batchRoutes = require('./routes/batch.js');
@@ -12,7 +12,7 @@ const registerSockets = require("./sockets/index");
 const session = require('express-session');
 const passport = require('passport');
 
-// Express app
+// express app
 const app = express();
 const { init } = require("./sockets/socket");
 
@@ -23,7 +23,7 @@ registerSockets(io);
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// Configure session middleware
+// configure session middleware
 app.use(session({
   secret: process.env.SESSION_SECRET,
   resave: false,
@@ -34,9 +34,9 @@ app.use(session({
   },
 }));
 
-// Initialize Passport and session
+// initialize Passport and session
 app.use(passport.initialize());
-app.use(passport.session());  // Triggers deserializeUser automatically
+app.use(passport.session());  // triggers deserializeUser automatically
 
 app.use(cors({
   origin: ['http://localhost:5173', 'http://167.99.196.172', 'http://orb.ebmaa.co.za'],
@@ -44,13 +44,13 @@ app.use(cors({
   credentials: true,
 }));
 
-// Logging middleware
+// logging middleware
 app.use((req, res, next) => {
   console.log(`A ${req.method} request has been made from ${req.path}`);
   next();
 });
 
-// Session / user check
+// session / user check
 app.use((req, res, next) => {
   const safePaths = [
     '/auth/google',
@@ -71,22 +71,22 @@ app.use((req, res, next) => {
   next();
 });
 
-// Routes
+// routes
 app.use('/auth', authRoutes);
 // app.use('/notes', noteRoutes);
 // app.use('/logs', logRoutes);
 app.use('/batches', batchRoutes);
 
-// Error Handling Middleware
+// error Handling Middleware
 app.use((err, req, res, next) => {
   console.error(err.stack);
   res.status(500).json({ message: "An internal error occurred." });
 });
 
-// --- socket.io ---
+// socket.io 
 registerSockets(io);
 
-// Listen for requests
+// listen for requests
 const PORT = process.env.PORT;
 server.listen(PORT, () => {  // 👈 use server, not app
   console.log(`🚀 Server is listening on port ${PORT}...`);

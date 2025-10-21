@@ -7,7 +7,7 @@
     @apply border-b border-white py-1 px-2 hover:border-ebmaa-purple transition duration-300; 
   }
   .btn-class {
-    @apply border rounded border-gray-blue-100 py-1 px-2 hover:border-ebmaa-purple transition duration-300; 
+    @apply border rounded border-gray-blue-200 py-1 px-2 hover:border-ebmaa-purple transition duration-300; 
   }
   .active-link {
     @apply border-ebmaa-purple border-b;
@@ -17,11 +17,19 @@
     @apply flex flex-col gap-6 p-4 mt-4 bg-white shadow rounded w-full;
   } */
   .container-col {
-    @apply flex flex-col gap-6 p-4 mt-4 bg-white border border-gray-blue-100 rounded w-full;
+    @apply flex flex-col gap-2 p-4 mt-4 bg-white border border-gray-blue-200 rounded w-full;
+  }
+  .container-col-outer {
+    @apply flex flex-col gap-2 p-4 mt-4 bg-white border-b border-gray-blue-100 rounded w-full;
   }
 
+
+
   .container-row {
-    @apply flex flex-row gap-6 p-4 my-4 bg-white border border-gray-blue-100 rounded w-full;
+    @apply flex flex-row gap-2 p-4 my-4 bg-white border border-gray-blue-200 rounded w-full;
+  }
+  .container-row-outer {
+    @apply flex flex-row gap-2 p-4 my-4 bg-white border-b border-gray-blue-100 rounded w-full items-center;
   }
 }
  /* text-sm text-center min-w-[100px] rounded hover:border hover:border-ebmaa-purple */

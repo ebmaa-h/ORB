@@ -12,9 +12,9 @@ const BatchTable = React.memo(function BatchTable({ title, batches }) {
       {batches.length === 0 ? (
         <p className="text-sm text-gray-500">No batches</p>
       ) : (
-        <table className="table-auto w-full border-collapse border-y border-gray-blue-100 text-gray-dark text-sm">
+        <table className="table-auto w-full border-collapse border-y border-gray-blue-200 text-gray-dark text-sm">
           <thead>
-            <tr className="text-left border-b border-gray-blue-100">
+            <tr className="text-left border-b border-gray-blue-200">
               <th className="px-2 py-1">Batch ID</th>
               <th className="px-2 py-1">Client</th>
               <th className="px-2 py-1">Size</th>

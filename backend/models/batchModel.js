@@ -1,4 +1,3 @@
-// batchModel.js
 const db = require('../config/db');
 const queries = require('./queries/batchQueries');
 
@@ -6,14 +5,10 @@ const Batch = {
   getReceptionBatches: async () => {
     const [normalResults] = await db.query(queries.GET_RECEPTION_BATCHES);
     const [foreignUrgentResults] = await db.query(queries.GET_RECEPTION_FOREIGN_URGENT_BATCHES);
-    // const merged = [...normalResults, ...foreignUrgentResults].sort((a, b) => {
-    //   return new Date(b.date_received || b.created_at) - new Date(a.date_received || a.created_at);
-    // });
-  return {
-    normal: normalResults,
-    foreignUrgent: foreignUrgentResults,
-  };
-
+    return {
+      normal: normalResults,
+      foreignUrgent: foreignUrgentResults,
+    };
   },
 
   getBillingBatches: async () => {
@@ -35,6 +30,8 @@ const Batch = {
       corrections,
     } = data;
 
+    const is_pure_foreign_urgent = Number(batch_size) === Number(total_urgent_foreign || 0);
+
     const [result] = await db.query(queries.CREATE_BATCH, [
       created_by,
       batch_size,
@@ -46,9 +43,16 @@ const Batch = {
       total_urgent_foreign,
       cc_availability,
       corrections,
+      is_pure_foreign_urgent,
     ]);
 
-    return { batch_id: result.insertId, ...data, current_department: 'reception', status: 'current', };
+    return { 
+      batch_id: result.insertId, 
+      ...data, 
+      current_department: 'reception', 
+      status: 'current',
+      is_pure_foreign_urgent,
+    };
   },
 
   createForeignUrgent: async (data) => {
@@ -61,8 +65,8 @@ const Batch = {
     ]);
 
     return { 
-      foreign_urgent_batch_id: result.insertId, 
-      batch_id, 
+      batch_id: result.insertId, 
+      parent_batch_id: batch_id, 
       patient_name, 
       medical_aid_nr, 
       current_department: 'reception',

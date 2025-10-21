@@ -21,6 +21,7 @@ export default {
       'orange': '#ff7849',
       'green': '#13ce66',
       'yellow': '#ffc82c',
+
       "gray-900": "#b3b3b3",
       "gray-800": "#bfbfbf",
       "gray-700": "#cccccc",
@@ -30,7 +31,16 @@ export default {
       "gray-300": "#ebebeb",
       "gray-200": "#f2f2f2",
       "gray-100": "#f7f7f7",
+
       "gray-blue-100": "#e9edf0",
+      "gray-blue-200": "#cfd8df",
+      "gray-blue-300": "#b4c2ce",
+      "gray-blue-400": "#99acbd",
+      "gray-blue-500": "#7e97ad",
+      "gray-blue-600": "#637f95",
+      "gray-blue-700": "#4a667a",
+      "gray-blue-800": "#324c5f",
+      
       "green-500": "#4BB543",
       "red-500": "#FC100D",
       "gray-dark": "#273444",

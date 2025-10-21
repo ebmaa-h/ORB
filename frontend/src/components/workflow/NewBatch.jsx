@@ -19,7 +19,7 @@ export default function NewBatch({ onBatchAdded }) {
     total_urgent_foreign: "",
     cc_availability: "",
     corrections: false,
-    foreign_urgents: [], // Array for dynamic foreign/urgent rows
+    foreign_urgents: [],
   });
 
   const [open, setOpen] = useState(false);
@@ -39,30 +39,30 @@ export default function NewBatch({ onBatchAdded }) {
     }));
   };
 
-  // Handle changes to total_urgent_foreign: dynamically adjust foreign_urgents array
+  // handle changes in total_urgent_foreign to adjust fu rows
   const handleTotalUrgentChange = (e) => {
     const num = parseInt(e.target.value, 10) || 0;
     setFormData((prev) => {
       let newForeignUrgents = [...prev.foreign_urgents];
       if (num > newForeignUrgents.length) {
-        // Add empty objects if increasing
+        // add empty objects if increasing
         const toAdd = num - newForeignUrgents.length;
         for (let i = 0; i < toAdd; i++) {
           newForeignUrgents.push({ patient_name: "", medical_aid_nr: "" });
         }
       } else if (num < newForeignUrgents.length) {
-        // Slice if decreasing
+        // slice if decreasing
         newForeignUrgents = newForeignUrgents.slice(0, num);
       }
       return {
         ...prev,
-        total_urgent_foreign: num.toString(), // Store as string for input consistency
+        total_urgent_foreign: num.toString(), // consistancy
         foreign_urgents: newForeignUrgents,
       };
     });
   };
 
-  // Handle changes in individual foreign/urgent rows
+  // handle changes in fu rows
   const handleForeignUrgentChange = (index, e) => {
     const { name, value } = e.target;
     setFormData((prev) => {
@@ -109,7 +109,7 @@ export default function NewBatch({ onBatchAdded }) {
   return (
     <div className="container-col">
       {!open ? (
-        <button onClick={() => setOpen(true)} className="btn-class w-fit">
+        <button onClick={() => setOpen(true)} className="btn-class w-fit border-none p-0">
           New Batch
         </button>
       ) : (
@@ -189,9 +189,9 @@ export default function NewBatch({ onBatchAdded }) {
               className="border p-2 rounded"
             />
 
-            {/* Dynamic foreign/urgent rows */}
+            {/* dynamic fu rows */}
             {formData.foreign_urgents.map((fu, index) => (
-              <div key={index} className="flex flex-row flex-wrap gap-4 w-full mt-4 border-t pt-4 items-center">
+              <div key={index} className="container-row place-items-center m-0">
                 <h4 className="font-semibold">{index + 1}</h4>
                 <input
                   type="text"
