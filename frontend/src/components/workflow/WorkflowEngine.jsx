@@ -120,7 +120,7 @@ export default function WorkflowEngine({ department = "none" }) {
       ? batches.filter(b => b.current_department === department)
       : fuBatches.filter(b => b.current_department === department);
 
-    // apply
+    // apply search
     const searchLower = searchTerm.toLowerCase();
     const searchedBatches = filtered.filter((batch) => {
       if (filterType === "normal") {
@@ -171,7 +171,7 @@ export default function WorkflowEngine({ department = "none" }) {
     }
   };
 
-  // sync / selected batch
+  // sync selected batch
   useEffect(() => {
     if (!selectedBatch) return;
     const updated = [...batches, ...fuBatches].find(b => b.batch_id === selectedBatch.batch_id);
@@ -180,9 +180,10 @@ export default function WorkflowEngine({ department = "none" }) {
   }, [batches, fuBatches, selectedBatch]);
 
   return (
-    <div className="container-col-outer">
-      <div className="flex items-center gap-4 mb-4">
-        <div className="flex gap-2">
+    <div className="">
+      <div className="container-row-outer justify-between w-full">
+        <div className="flex gap-2 items-center">
+          <h2 className="text-lg font-semibold text-black mr-2">{department.charAt(0).toUpperCase() + department.slice(1)}</h2>
           {config.tables.map((table) => (
             <button
               key={table.name}
@@ -192,10 +193,20 @@ export default function WorkflowEngine({ department = "none" }) {
               {table.name.charAt(0).toUpperCase() + table.name.slice(1)}
             </button>
           ))}
-
+          {department === "reception" && (
+            <button
+              className={`btn-class ${activeStatus === "newBatch" ? "font-bold bg-gray-100" : ""}`}
+              onClick={() => setActiveStatus("newBatch")}
+            >
+              Add Batch
+            </button>
+          )}
         </div>
-        <h2 className="text-lg font-semibold mx-auto">{department.charAt(0).toUpperCase() + department.slice(1)}</h2>
+
         <div className="flex gap-2">
+          <div className="flex gap-2">
+            <SearchBar searchTerm={searchTerm} setSearchTerm={setSearchTerm} classes="max-w-md" />
+          </div>
           <button
             className={`btn-class ${filterType === "normal" ? "font-bold bg-gray-100" : ""}`}
             onClick={() => setFilterType("normal")}
@@ -214,34 +225,24 @@ export default function WorkflowEngine({ department = "none" }) {
       {loading ? (
         <div>Loading batches...</div>
       ) : (
-        <>
-          <div className="mb-4">
-            {/* <h3 className="text-lg font-semibold capitalize mb-2">
-              {filterType === "normal" ? "Normal" : "Foreign & Urgent"} - {activeStatus.charAt(0).toUpperCase() + activeStatus.slice(1)}
-            </h3> */}
-            
-            <div>
-              <SearchBar searchTerm={searchTerm} setSearchTerm={setSearchTerm} classes="max-w-md mb-4" />
-            </div>
-            <WorkflowTable
-              columns={tableColumns}
-              batches={visibleBatches.filter(b => b.status === activeStatus && b.current_department === department)}
-              selectedBatch={selectedBatch}
-              onSelect={setSelectedBatch}
-            />
-          </div>
-          <div className="mt-4">
-            <WorkflowActions
-              actions={config.actions}
-              onExecute={(action, batch) => executeAction(action, batch)}
-              selectedBatch={selectedBatch}
-            />
-          </div>
-        </>
-      )}
-      {department === "reception" && (
-        <div className="rounded-md mb-4">
-          <NewBatch />
+        <div className="container-col-outer gap-4">
+          {activeStatus === "newBatch" && department === "reception" ? (
+            <NewBatch setActiveStatus={setActiveStatus} />
+          ) : (
+            <>
+              <WorkflowTable
+                columns={tableColumns}
+                batches={visibleBatches.filter(b => b.status === activeStatus && b.current_department === department)}
+                selectedBatch={selectedBatch}
+                onSelect={setSelectedBatch}
+              />
+              <WorkflowActions
+                actions={config.actions}
+                onExecute={(action, batch) => executeAction(action, batch)}
+                selectedBatch={selectedBatch}
+              />
+            </>
+          )}
         </div>
       )}
     </div>

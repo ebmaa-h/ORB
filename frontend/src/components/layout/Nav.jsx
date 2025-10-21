@@ -64,15 +64,15 @@ export default function Nav() {
             </div>
           )}
         </div>
-        <Link
-          to="/tools"
-          className="text-gray-dark hover:text-ebmaa-purple transition-colors duration-500"
-        >
-          Tools
-        </Link>
       </div>
       {/* right */}
       <div className="flex gap-6">
+        {/* <Link
+          to="/settings"
+          className="text-gray-dark hover:text-ebmaa-purple transition-colors duration-500"
+        >
+          Settings
+        </Link> */}
         <Link
           to="/logout"
           className="text-gray-dark hover:text-red transition-colors duration-500"
