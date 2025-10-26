@@ -1,9 +1,3 @@
-// batchQueries.js
-// const GET_RECEPTION_BATCHES = `
-//       SELECT * FROM batches 
-//       WHERE current_department = 'reception'
-//       ORDER BY date_received DESC
-// `;
 
 const GET_RECEPTION_BATCHES = `
   SELECT 

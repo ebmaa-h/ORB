@@ -161,8 +161,6 @@ export default function NotesAndLogs({ tableName, id, refreshTrigger }) {
   return (
     <div className="container-col">
       <div className='flex flex-row items-center justify-start gap-6'>
-        <h3 className="font-bold">History</h3>
-
           <label className='flex gap-2 items-center text-gray-800'>
             {/* Toggling logs visibility */}
             <input

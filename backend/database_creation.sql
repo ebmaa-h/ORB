@@ -243,7 +243,7 @@ CREATE TABLE batches (
     total_urgent_foreign INT,
     cc_availability VARCHAR(255),
     current_department ENUM('reception', 'admittance', 'billing') DEFAULT 'reception',
-    status ENUM('inbox','current','outbox', 'filing', 'archived') DEFAULT 'current',
+    status ENUM('current','outbox', 'filing', 'archived') DEFAULT 'current',
     batch_total DECIMAL(10,2) DEFAULT 0.00,
     date_received DATE,
     date_completed DATE,

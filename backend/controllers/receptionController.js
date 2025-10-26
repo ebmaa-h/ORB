@@ -14,7 +14,7 @@ const receptionController = {
         throw new Error('total_urgent_foreign cannot exceed batch_size');
       }
 
-      // create main batch (dummy if pure foreign/urgent)
+      // create main batch
       const newBatch = await Batch.create(mainData);
       const io = getIO();
       io.to("reception").emit("batchCreated", {

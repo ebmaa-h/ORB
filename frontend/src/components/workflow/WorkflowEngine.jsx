@@ -1,12 +1,12 @@
+// src/components/Workflow/WorkflowEngine.jsx
 import React, { useEffect, useState, useMemo, useContext } from "react";
 import WORKFLOW_CONFIG from "../../config/workflowConfig";
 import ENDPOINTS from "../../utils/apiEndpoints";
 import axiosClient from "../../utils/axiosClient";
 import socket from "../../utils/socket";
 import WorkflowTable from "./WorkflowTable";
-import WorkflowActions from "./WorkflowActions";
 import { UserContext } from "../../context/UserContext";
-import { NewBatch } from "../index";
+import { NewBatch, NotesAndLogs } from "../index";
 import SearchBar from "../ui/SearchBar";
 
 export default function WorkflowEngine({ department = "none" }) {
@@ -183,7 +183,6 @@ export default function WorkflowEngine({ department = "none" }) {
     <div className="">
       <div className="container-row-outer justify-between w-full">
         <div className="flex gap-2 items-center">
-          <h2 className="text-lg font-semibold text-black mr-2">{department.charAt(0).toUpperCase() + department.slice(1)}</h2>
           {config.tables.map((table) => (
             <button
               key={table.name}
@@ -229,20 +228,19 @@ export default function WorkflowEngine({ department = "none" }) {
           {activeStatus === "newBatch" && department === "reception" ? (
             <NewBatch setActiveStatus={setActiveStatus} />
           ) : (
-            <>
-              <WorkflowTable
-                columns={tableColumns}
-                batches={visibleBatches.filter(b => b.status === activeStatus && b.current_department === department)}
-                selectedBatch={selectedBatch}
-                onSelect={setSelectedBatch}
-              />
-              <WorkflowActions
-                actions={config.actions}
-                onExecute={(action, batch) => executeAction(action, batch)}
-                selectedBatch={selectedBatch}
-              />
-            </>
+            <WorkflowTable
+              columns={tableColumns}
+              batches={visibleBatches.filter(b => b.status === activeStatus && b.current_department === department)}
+              selectedBatch={selectedBatch}
+              onSelect={setSelectedBatch}
+              mainActions={config.mainActions || []}
+              actions={config.actions || []}
+              onExecute={executeAction}
+              filterType={filterType}
+              department={department}
+            />
           )}
+          <NotesAndLogs />
         </div>
       )}
     </div>

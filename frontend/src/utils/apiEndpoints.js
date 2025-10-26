@@ -14,6 +14,8 @@ const ENDPOINTS = {
   admittanceWorkflow : `${API_URL}/batches/admittance`, 
   billingWorkflow : `${API_URL}/batches/billing`, 
 
+  moveToAdmittance : `${API_URL}/batches/move-to-admittance`,
+
   addBatch : `${API_URL}/batches`, 
 
   clientInvoices: (clientId) => `${API_URL}/clients/${clientId}/invoices`,

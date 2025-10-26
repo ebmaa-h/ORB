@@ -35,7 +35,7 @@ export default function Nav() {
             className="text-gray-dark hover:text-ebmaa-purple transition-colors duration-500 flex items-center gap-1"
             onClick={() => setIsWorkflowOpen(!isWorkflowOpen)}
           >
-            Workflow
+            {activeDept.charAt(0).toUpperCase() + activeDept.slice(1)}
             <svg
               className={`w-4 h-4 transform transition-transform ${isWorkflowOpen ? "rotate-180" : ""}`}
               fill="none"
@@ -46,12 +46,12 @@ export default function Nav() {
             </svg>
           </button>
           {isWorkflowOpen && (
-            <div className="absolute top-full left-0 mt-2 w-48 bg-white border border-gray-blue-100 rounded shadow-lg z-10">
+            <div className="absolute top-full left-0 mt-2 w-48 bg-white rounded z-10 border-b border-gray-blue-200">
               {availableDepts.map((dept) => (
                 <button
                   key={dept}
-                  className={`block w-full text-left px-4 py-2 text-sm text-gray-dark hover:bg-gray-100 ${
-                    activeDept === dept ? "font-bold bg-gray-50" : ""
+                  className={`block w-full text-left px-4 py-2 text-gray-dark hover:bg-gray-200 ${
+                    activeDept === dept ? "font-bold bg-gray-200" : ""
                   }`}
                   onClick={() => {
                     setActiveDept(dept);
