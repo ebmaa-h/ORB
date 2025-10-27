@@ -1,12 +1,13 @@
 const express = require('express');
-const rc = require('../controllers/receptionController.js');
+const wc = require('../controllers/workflowController.js');
 const router = express.Router();
 // const { accessGuard } = require('../utils/accessGuard.js');
 
-router.post('/', rc.createBatch);
-router.get('/reception', rc.receptionBatches);
-router.get('/admittance', rc.receptionBatches);
-router.get('/billing', rc.receptionBatches);
-// router.get('/reception', rc.receptionForeignUrgentBatches);
+router.post('/', wc.createBatch);
+router.post('/move/:toDepartment', wc.moveBatch);
+router.post('/accept', wc.acceptBatch);
+router.post('/pullback', wc.cancelTransfer);
+router.get('/:department', wc.departmentBatches);
+// router.get('/reception', wc.receptionForeignUrgentBatches);
 
 module.exports = router;

@@ -1,4 +1,3 @@
-const receptionController = require("../controllers/receptionController");
 
 module.exports = function receptionWorkflow(io, socket) {
   console.log(`🔌 Workflow socket loaded for ${socket.id}`);

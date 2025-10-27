@@ -1,0 +1,10 @@
+      { name: "batch_id", label: "Batch ID" },
+      { name: "client_id", label: "Client ID" },
+      { name: "date_received", label: "Date Received", formatter: (val) => (val ? new Date(val).toLocaleDateString() : "") },
+      { name: "method_received", label: "Method Received" },
+    ],
+    columnsExpanded: [
+      { name: "batch_id", label: "Batch ID" },
+      { name: "client_id", label: "Client ID" },
+      { name: "batch_size", label: "Batch Size" },
+      { name: "method_received", label: "Method Received" },

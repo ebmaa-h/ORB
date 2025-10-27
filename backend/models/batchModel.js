@@ -2,18 +2,17 @@ const db = require('../config/db');
 const queries = require('./queries/batchQueries');
 
 const Batch = {
-  getReceptionBatches: async () => {
-    const [normalResults] = await db.query(queries.GET_RECEPTION_BATCHES);
-    const [foreignUrgentResults] = await db.query(queries.GET_RECEPTION_FOREIGN_URGENT_BATCHES);
-    return {
-      normal: normalResults,
-      foreignUrgent: foreignUrgentResults,
-    };
-  },
+  getDepartmentBatches: async (department) => {
+    const [mainNormal] = await db.query(queries.WF_SELECT_BATCHES_MAIN_BY_DEPT, [department]);
+    const [mainFU] = await db.query(queries.WF_SELECT_FU_MAIN_BY_DEPT, [department]);
 
-  getBillingBatches: async () => {
-    const [results] = await db.query(queries.GET_BILLING_BATCHES);
-    return results;
+    const [outboxNormal] = await db.query(queries.WF_SELECT_BATCHES_OUTBOX_BY_DEPT, [department]);
+    const [outboxFU] = await db.query(queries.WF_SELECT_FU_OUTBOX_BY_DEPT, [department]);
+
+    return {
+      normal: [...mainNormal, ...outboxNormal],
+      foreignUrgent: [...mainFU, ...outboxFU],
+    };
   },
 
   create: async (data) => {
@@ -73,6 +72,73 @@ const Batch = {
       status: 'current',
     };
   },
+
+  getBatchById: async (batch_id) => {
+    const [rows] = await db.query(queries.GET_BATCH_BY_ID, [batch_id]);
+    return rows[0] || null;
+  },
+
+  getForeignUrgentById: async (batch_id) => {
+    const [rows] = await db.query(queries.GET_FU_BY_ID, [batch_id]);
+    return rows[0] || null;
+  },
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  // workflows helpers
+  upsertWorkflowMain: async ({ entity_type, entity_id, department, status, created_by = null }) => {
+    await db.query(queries.WF_UPSERT_MAIN, [entity_type, entity_id, department, status, created_by]);
+  },
+
+  upsertWorkflowOutbox: async ({ entity_type, entity_id, department, created_by = null }) => {
+    await db.query(queries.WF_UPSERT_OUTBOX, [entity_type, entity_id, department, created_by]);
+  },
+
+  deleteWorkflowOutbox: async ({ entity_type, entity_id }) => {
+    await db.query(queries.WF_DELETE_OUTBOX, [entity_type, entity_id]);
+  },
+
+  getWorkflowMainByEntity: async ({ entity_type, entity_id }) => {
+    const [rows] = await db.query(queries.WF_GET_MAIN_BY_ENTITY, [entity_type, entity_id]);
+    return rows[0] || null;
+  },
+
+  getWorkflowOutboxByEntity: async ({ entity_type, entity_id }) => {
+    const [rows] = await db.query(queries.WF_GET_OUTBOX_BY_ENTITY, [entity_type, entity_id]);
+    return rows[0] || null;
+  },
+
+  markAdmitted: async ({ entity_type, entity_id, user_id }) => {
+    if (!user_id) return;
+    if (entity_type === 'fu') {
+      await db.query(queries.UPDATE_FU_ADMITTED_BY, [user_id, entity_id]);
+    } else {
+      await db.query(queries.UPDATE_BATCH_ADMITTED_BY, [user_id, entity_id]);
+    }
+  },
+
+  markBilled: async ({ entity_type, entity_id, user_id }) => {
+    if (!user_id) return;
+    if (entity_type === 'fu') {
+      await db.query(queries.UPDATE_FU_BILLED_BY, [user_id, entity_id]);
+    } else {
+      await db.query(queries.UPDATE_BATCH_BILLED_BY, [user_id, entity_id]);
+    }
+  },
 };
 
 module.exports = Batch;
+
+

@@ -1,5 +1,5 @@
 // src/components/Workflow/WorkflowEngine.jsx
-import React, { useEffect, useState, useMemo, useContext } from "react";
+import React, { useEffect, useState, useMemo, useContext, useCallback } from "react";
 import WORKFLOW_CONFIG from "../../config/workflowConfig";
 import ENDPOINTS from "../../utils/apiEndpoints";
 import axiosClient from "../../utils/axiosClient";
@@ -51,6 +51,36 @@ export default function WorkflowEngine({ department = "none" }) {
     };
   }, [department, endpoint]);
 
+  const applyBatchUpdate = useCallback((updated) => {
+    if (!updated || !updated.batch_id) return;
+    const isFU = !!updated.parent_batch_id;
+    const appliesToDept = updated.current_department === department;
+
+    if (isFU) {
+      setFuBatches((prev) => {
+        const exists = prev.some((b) => b.batch_id === updated.batch_id);
+        if (!appliesToDept) {
+          return prev.filter((b) => b.batch_id !== updated.batch_id);
+        }
+        if (exists) {
+          return prev.map((b) => (b.batch_id === updated.batch_id ? { ...b, ...updated } : b));
+        }
+        return [...prev, updated];
+      });
+    } else {
+      setBatches((prev) => {
+        const exists = prev.some((b) => b.batch_id === updated.batch_id);
+        if (!appliesToDept) {
+          return prev.filter((b) => b.batch_id !== updated.batch_id);
+        }
+        if (exists) {
+          return prev.map((b) => (b.batch_id === updated.batch_id ? { ...b, ...updated } : b));
+        }
+        return [...prev, updated];
+      });
+    }
+  }, [department]);
+
   // web sockets
   useEffect(() => {
     if (!socket.connected) {
@@ -95,12 +125,19 @@ export default function WorkflowEngine({ department = "none" }) {
 
     socket.on("batchCreated", handleCreated);
 
+    const handleUpdated = (updated) => {
+      applyBatchUpdate(updated);
+    };
+
+    socket.on("batchUpdated", handleUpdated);
+
     socket.on("test", (data) => {
       console.log('🔔 Test event received:', data);
     });
 
     return () => {
       socket.off("batchCreated", handleCreated);
+      socket.off("batchUpdated", handleUpdated);
       socket.off("test");
       try {
         socket.emit("leaveRoom", department);
@@ -144,6 +181,20 @@ export default function WorkflowEngine({ department = "none" }) {
     return { visibleBatches: searchedBatches, tableColumns: columns };
   }, [batches, fuBatches, filterType, config, department, searchTerm]);
 
+  const mainActionsForTable = useMemo(() => {
+    if (!config) return [];
+    if (activeStatus === "inbox") return config.inboxActions || [];
+    if (activeStatus === "outbox") return config.outboxActions || [];
+    if (activeStatus === "filing" && config.filingActions) return config.filingActions;
+    return config.expandedActionsMain || config.mainActions || [];
+  }, [activeStatus, config]);
+
+  const dropdownActionsForTable = useMemo(() => {
+    if (!config) return [];
+    if (activeStatus === "inbox" || activeStatus === "outbox") return [];
+    return config.expandedActions || config.actions || [];
+  }, [activeStatus, config]);
+
   // actions
   const executeAction = async (action, batch) => {
     try {
@@ -153,18 +204,26 @@ export default function WorkflowEngine({ department = "none" }) {
       }
       const url = ENDPOINTS[action.endpointKey];
       if (!url) return console.error("Missing endpoint for action", action);
-      const res = await axiosClient[action.method || "post"](url, { batch_id: batch.batch_id });
+      const payload = { batch_id: batch.batch_id, is_fu: !!batch.parent_batch_id, user_id: user?.user_id };
+      if (action.target_status) payload.target_status = action.target_status;
+      if (action.endpointKey === 'acceptBatch') {
+        payload.to_department = department;
+      }
+      const res = await axiosClient[action.method || "post"](url, payload);
       if (res?.data) {
         console.log(`Action response for ${action.name}:`, res.data);
-        if (batch.parent_batch_id) {
-          setFuBatches((prev) =>
-            prev.map(b => (b.batch_id === res.data.batch_id ? { ...b, ...res.data } : b))
-          );
-        } else {
-          setBatches((prev) =>
-            prev.map(b => (b.batch_id === res.data.batch_id ? { ...b, ...res.data } : b))
-          );
-        }
+        const applyCandidates = (payload) => {
+          if (!payload) return;
+          if (Array.isArray(payload)) {
+            payload.forEach(applyBatchUpdate);
+            return;
+          }
+          if (payload.batch_id) applyBatchUpdate(payload);
+          if (payload.inbox?.batch_id) applyBatchUpdate(payload.inbox);
+          if (payload.outbox?.batch_id) applyBatchUpdate(payload.outbox);
+          if (payload.filing?.batch_id) applyBatchUpdate(payload.filing);
+        };
+        applyCandidates(res.data);
       }
     } catch (err) {
       console.error(`Action failed for ${action.name}:`, err);
@@ -233,8 +292,8 @@ export default function WorkflowEngine({ department = "none" }) {
               batches={visibleBatches.filter(b => b.status === activeStatus && b.current_department === department)}
               selectedBatch={selectedBatch}
               onSelect={setSelectedBatch}
-              mainActions={config.mainActions || []}
-              actions={config.actions || []}
+              mainActions={mainActionsForTable}
+              actions={dropdownActionsForTable}
               onExecute={executeAction}
               filterType={filterType}
               department={department}
@@ -246,3 +305,4 @@ export default function WorkflowEngine({ department = "none" }) {
     </div>
   );
 }
+

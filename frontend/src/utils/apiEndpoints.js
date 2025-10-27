@@ -14,7 +14,13 @@ const ENDPOINTS = {
   admittanceWorkflow : `${API_URL}/batches/admittance`, 
   billingWorkflow : `${API_URL}/batches/billing`, 
 
-  moveToAdmittance : `${API_URL}/batches/move-to-admittance`,
+  // workflow actions
+  moveToReception: `${API_URL}/batches/move/reception`,
+  moveToAdmittance: `${API_URL}/batches/move/admittance`,
+  moveToBilling: `${API_URL}/batches/move/billing`,
+  moveToFiling: `${API_URL}/batches/move/filing`,
+  acceptBatch: `${API_URL}/batches/accept`,
+  pullbackBatch: `${API_URL}/batches/pullback`,
 
   addBatch : `${API_URL}/batches`, 
 

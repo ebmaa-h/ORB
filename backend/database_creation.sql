@@ -243,7 +243,7 @@ CREATE TABLE batches (
     total_urgent_foreign INT,
     cc_availability VARCHAR(255),
     current_department ENUM('reception', 'admittance', 'billing') DEFAULT 'reception',
-    status ENUM('current','outbox', 'filing', 'archived') DEFAULT 'current',
+    status ENUM('inbox','current','filing', 'archived') DEFAULT 'current',
     batch_total DECIMAL(10,2) DEFAULT 0.00,
     date_received DATE,
     date_completed DATE,
@@ -316,6 +316,23 @@ CREATE TABLE foreign_urgent_accounts (
     FOREIGN KEY (file_renamed_by) REFERENCES users(user_id),
     FOREIGN KEY (file_checked_by) REFERENCES users(user_id),
     FOREIGN KEY (filed_by) REFERENCES users(user_id),
+);
+
+-- Workflows: tracks where an item is within the workflow, including temp outbox shadows
+CREATE TABLE workflows (
+  workflow_id INT AUTO_INCREMENT PRIMARY KEY,
+  entity_type ENUM('batch','fu') NOT NULL,
+  entity_id INT NOT NULL,
+  department ENUM('reception','admittance','billing') NOT NULL,
+  status ENUM('inbox','current','outbox','filing') NOT NULL,
+  outbox_temp BOOLEAN NOT NULL DEFAULT 0,
+  created_by INT NULL,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  UNIQUE KEY uniq_entity_main (entity_type, entity_id, outbox_temp),
+  INDEX idx_dept_box (department, status, outbox_temp),
+  INDEX idx_entity (entity_type, entity_id),
+  FOREIGN KEY (created_by) REFERENCES users(user_id)
 );
 
 -- Create invoices table
