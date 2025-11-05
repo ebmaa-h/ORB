@@ -24,14 +24,29 @@ registerSockets(io);
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
+// after creating app:
+app.set('trust proxy', 1);  // trust first proxy if behind a proxy (for production Nginx)
+
 // configure session middleware
+// app.use(session({
+//   secret: process.env.SESSION_SECRET,
+//   resave: false,
+//   saveUninitialized: false,
+//   cookie: {
+//     httpOnly: true,
+//     maxAge: 30600000, // 8.5 hours
+//   },
+// }));
+
 app.use(session({
   secret: process.env.SESSION_SECRET,
   resave: false,
   saveUninitialized: false,
   cookie: {
     httpOnly: true,
-    maxAge: 30600000, // 8.5 hours
+    maxAge: 30600000,
+    secure: !!process.env.USE_HTTPS,   // set USE_HTTPS=1 in env when on TLS
+    sameSite: 'lax'
   },
 }));
 
@@ -40,7 +55,12 @@ app.use(passport.initialize());
 app.use(passport.session());  // triggers deserializeUser automatically
 
 app.use(cors({
-  origin: ['http://localhost:5173', 'http://167.99.196.172', 'http://orb.ebmaa.co.za'],
+  origin: [
+    'http://localhost:5173',
+    'http://167.99.196.172',
+    'http://orb.ebmaa.co.za',
+    'https://orb.ebmaa.co.za'   // if using TLS
+  ],
   methods: ['GET', 'POST', 'OPTIONS', 'PATCH', 'PUT'],
   credentials: true,
 }));

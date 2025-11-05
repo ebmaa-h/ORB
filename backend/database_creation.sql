@@ -1,5 +1,35 @@
+SET FOREIGN_KEY_CHECKS = 0;
 
-DROP TABLE IF EXISTS person_contact_numbers,person_emails;
+DROP TABLE IF EXISTS invoices;
+DROP TABLE IF EXISTS workflows;
+DROP TABLE IF EXISTS foreign_urgent_accounts;
+DROP TABLE IF EXISTS batches;
+DROP TABLE IF EXISTS accounts;
+DROP TABLE IF EXISTS profile_person_map;
+DROP TABLE IF EXISTS person_addresses;
+DROP TABLE IF EXISTS person_emails;
+DROP TABLE IF EXISTS person_contact_numbers;
+DROP TABLE IF EXISTS person_records;
+DROP TABLE IF EXISTS profiles;
+DROP TABLE IF EXISTS medical_aid_plans;
+DROP TABLE IF EXISTS medical_aids;
+DROP TABLE IF EXISTS employers;
+DROP TABLE IF EXISTS service_centers;
+DROP TABLE IF EXISTS service_centers_list;
+DROP TABLE IF EXISTS ref_clients;
+DROP TABLE IF EXISTS ref_clients_list;
+DROP TABLE IF EXISTS clients_logs;
+DROP TABLE IF EXISTS notes;
+DROP TABLE IF EXISTS logs;
+DROP TABLE IF EXISTS user_client_access;
+DROP TABLE IF EXISTS clients;
+DROP TABLE IF EXISTS user_permission_overrides;
+DROP TABLE IF EXISTS role_permissions;
+DROP TABLE IF EXISTS permissions;
+DROP TABLE IF EXISTS users;
+DROP TABLE IF EXISTS roles;
+
+SET FOREIGN_KEY_CHECKS = 1;
 
 -- Roles (template names)
 CREATE TABLE roles (
@@ -366,15 +396,47 @@ CREATE TABLE invoices (
     FOREIGN KEY (ref_client_id) REFERENCES ref_clients(ref_client_id)
 );
 
--- Inserting sample data for users
-INSERT INTO users (email)
+
+-- Inserting sample data for permissions
+INSERT INTO permissions (permission_name)
 VALUES 
-('henri@ebmaa.co.za'),
-('andrea@ebmaa.co.za'),
-('nicolene@ebmaa.co.za'),
-('francois@ebmaa.co.za'),
-('alet@ebmaa.co.za'),
-('ilze@ebmaa.co.za');
+('admittance-admit-batch'),
+('admittance-workflow'),
+('reception-workflow'),
+('billing-workflow'),
+('admittance-accept-batch'),
+('reception-add-batch'),
+('reception-complete-batch');
+
+-- Inserting sample data for permissions
+INSERT INTO roles (role_name)
+VALUES 
+('admittance-manager'),
+('admittance-clerk'),
+('reception'),
+('billing-manager'),
+('biller');
+
+-- Inserting sample data for permissions
+INSERT INTO role_permissions (role_id, permission_id)
+VALUES 
+(1, 1),
+(1, 2),
+(1, 3),
+(1, 4),
+(1, 5),
+(1, 6),
+(1, 7);
+
+-- Inserting sample data for users
+INSERT INTO users (email, role_id)
+VALUES 
+('henri@ebmaa.co.za', 1),
+('andrea@ebmaa.co.za', 1),
+('nicolene@ebmaa.co.za', 1),
+('francois@ebmaa.co.za', 1),
+('alet@ebmaa.co.za', 1),
+('ilze@ebmaa.co.za', 1);
 
 
 -- Inserting sample data for clients
@@ -531,36 +593,6 @@ VALUES
 (5, 3, 2, 3);
 
 
--- Inserting sample data for permissions
-INSERT INTO permissions (permission_name)
-VALUES 
-('admittance-admit-batch'),
-('admittance-workflow'),
-('reception-workflow'),
-('billing-workflow'),
-('admittance-accept-batch'),
-('reception-add-batch'),
-('reception-complete-batch');
-
--- Inserting sample data for permissions
-INSERT INTO roles (role_name)
-VALUES 
-('admittance-manager'),
-('admittance-clerk'),
-('reception'),
-('billing-manager'),
-('biller');
-
--- Inserting sample data for permissions
-INSERT INTO role_permissions (role_id, permission_id)
-VALUES 
-(1, 1),
-(1, 2),
-(1, 3),
-(1, 4),
-(1, 5),
-(1, 6),
-(1, 7);
 
 
 
