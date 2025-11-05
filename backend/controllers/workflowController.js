@@ -130,7 +130,11 @@ const workflowController = {
             status: fuFromDb?.status || 'current',
             is_pure_foreign_urgent: newBatch.is_pure_foreign_urgent || false,
             client_id: fuFromDb?.client_id || mainData.client_id,
-            date_received: fuFromDb?.date_received || mainData.date_received || new Date().toISOString(),
+            client_first: fuFromDb?.client_first || baseBatch?.client_first || null,
+            client_last: fuFromDb?.client_last || baseBatch?.client_last || null,
+            client_type: fuFromDb?.client_type || baseBatch?.client_type || null,
+            method_received: fuFromDb?.method_received || baseBatch?.method_received || null,
+            date_received: fuFromDb?.date_received || baseBatch?.date_received || mainData.date_received || new Date().toISOString(),
           };
           createdForeignUrgents.push(fuPayload);
           console.log('📤 Emitting batchCreated for foreignUrgent:', fuPayload);
