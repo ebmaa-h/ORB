@@ -2,23 +2,36 @@ const db = require('../config/db');
 const queries = require('./queries/logQueries');
 
 const Log = {
-  createLog: async (userId, action, table, id, changes) => {
+  createWorkflowLog: async ({
+    userId = null,
+    department,
+    batchType,
+    entityType = null,
+    entityId = null,
+    action,
+    message = null,
+    metadata = null,
+  }) => {
     const values = [
       userId,
+      department,
+      batchType,
+      entityType,
+      entityId,
       action,
-      table,
-      id,
-      JSON.stringify(changes || {})
+      message,
+      metadata ? JSON.stringify(metadata) : null,
     ];
 
-    await db.query(queries.insertLog, values);
+    const [insertResult] = await db.query(queries.INSERT_WORKFLOW_LOG, values);
+    const [rows] = await db.query(queries.GET_WORKFLOW_LOG_BY_ID, [insertResult.insertId]);
+    return rows[0];
   },
 
-  listLogs: async (targetTable, targetId) => {
-    const [rows] = await db.query(queries.getLogs, [targetTable, targetId]);
+  listWorkflowLogs: async ({ department, batchType }) => {
+    const [rows] = await db.query(queries.GET_WORKFLOW_LOGS, [department, batchType]);
     return rows;
-  }
-  
+  },
 };
 
 module.exports = Log;

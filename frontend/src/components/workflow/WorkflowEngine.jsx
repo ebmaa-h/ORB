@@ -12,9 +12,6 @@ import SearchBar from "../ui/SearchBar";
 export default function WorkflowEngine({ department = "none" }) {
   const { user } = useContext(UserContext);
   const config = WORKFLOW_CONFIG[department];
-
-  if (!config) return <div>{department} doesn't exist</div>;
-
   const [batches, setBatches] = useState([]);
   const [fuBatches, setFuBatches] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -22,7 +19,7 @@ export default function WorkflowEngine({ department = "none" }) {
   const [activeStatus, setActiveStatus] = useState("current");
   const [selectedBatch, setSelectedBatch] = useState(null);
   const [searchTerm, setSearchTerm] = useState("");
-  const endpoint = ENDPOINTS[config.endpointKey];
+  const endpoint = config?.endpointKey ? ENDPOINTS[config.endpointKey] : null;
 
   // fetch initial batches
   useEffect(() => {
@@ -43,6 +40,13 @@ export default function WorkflowEngine({ department = "none" }) {
         if (mounted) setLoading(false);
       }
     };
+
+    if (!endpoint) {
+      setBatches([]);
+      setFuBatches([]);
+      setLoading(false);
+      return () => {};
+    }
 
     fetchInitial();
 
@@ -150,9 +154,9 @@ export default function WorkflowEngine({ department = "none" }) {
 
   // filtered data
   const { visibleBatches, tableColumns } = useMemo(() => {
-    const columns = filterType === "fu" && config.foreignUrgentColumns
+    const columns = filterType === "fu" && config?.foreignUrgentColumns
       ? config.foreignUrgentColumns
-      : config.columns;
+      : config?.columns || [];
     const filtered = filterType === "normal"
       ? batches.filter(b => b.current_department === department)
       : fuBatches.filter(b => b.current_department === department);
@@ -242,7 +246,7 @@ export default function WorkflowEngine({ department = "none" }) {
     <div className="">
       <div className="container-row-outer justify-between w-full">
         <div className="flex gap-2 items-center">
-          {config.tables.map((table) => (
+          {(config?.tables || []).map((table) => (
             <button
               key={table.name}
               className={`btn-class ${activeStatus === table.name ? "font-bold bg-gray-100" : ""}`}
@@ -280,7 +284,9 @@ export default function WorkflowEngine({ department = "none" }) {
         </div>
       </div>
 
-      {loading ? (
+      {!config ? (
+        <div>{department} doesn't exist</div>
+      ) : loading ? (
         <div>Loading batches...</div>
       ) : (
         <div className="container-col-outer gap-4">
@@ -299,7 +305,7 @@ export default function WorkflowEngine({ department = "none" }) {
               department={department}
             />
           )}
-          <NotesAndLogs />
+          <NotesAndLogs department={department} filterType={filterType} />
         </div>
       )}
     </div>

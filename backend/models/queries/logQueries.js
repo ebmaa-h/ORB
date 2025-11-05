@@ -1,26 +1,47 @@
-const insertLog = `
-  INSERT INTO logs (user_id, action, target_table, target_id, changes)
-  VALUES (?, ?, ?, ?, ?)
+const INSERT_WORKFLOW_LOG = `
+  INSERT INTO logs (user_id, context, department, batch_type, entity_type, entity_id, action, message, metadata)
+  VALUES (?, 'workflow', ?, ?, ?, ?, ?, ?, ?)
 `;
 
-// target_id and table redundant -, but doig it for now check later, needed for create of invoice, to display that in the logs
-const getLogs = `
+const GET_WORKFLOW_LOGS = `
   SELECT 
     l.log_id,
     l.user_id,
     u.email,
     l.action,
-    l.target_table,
-    l.target_id,
-    l.changes,
-    l.timestamp
+    l.message,
+    l.metadata,
+    l.department,
+    l.batch_type,
+    l.entity_type,
+    l.entity_id,
+    l.created_at
   FROM logs l
   LEFT JOIN users u ON l.user_id = u.user_id
-  WHERE l.target_table = ? AND l.target_id = ?
-  ORDER BY l.timestamp DESC
+  WHERE l.context = 'workflow' AND l.department = ? AND l.batch_type = ?
+  ORDER BY l.created_at DESC
+`;
+
+const GET_WORKFLOW_LOG_BY_ID = `
+  SELECT 
+    l.log_id,
+    l.user_id,
+    u.email,
+    l.action,
+    l.message,
+    l.metadata,
+    l.department,
+    l.batch_type,
+    l.entity_type,
+    l.entity_id,
+    l.created_at
+  FROM logs l
+  LEFT JOIN users u ON l.user_id = u.user_id
+  WHERE l.log_id = ?
 `;
 
 module.exports = {
-  insertLog,
-  getLogs
+  INSERT_WORKFLOW_LOG,
+  GET_WORKFLOW_LOGS,
+  GET_WORKFLOW_LOG_BY_ID,
 };

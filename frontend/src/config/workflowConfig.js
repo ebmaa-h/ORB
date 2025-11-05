@@ -1,4 +1,10 @@
 // src/config/workflowConfig.js
+const formatCurrency = (val) => {
+  const num = Number(val);
+  if (Number.isFinite(num)) return `$${num.toFixed(2)}`;
+  return '$0.00';
+};
+
 const WORKFLOW_CONFIG = {
   reception: {
     socketRoom: "reception",
@@ -20,7 +26,7 @@ const WORKFLOW_CONFIG = {
       { name: "cc_availability", label: "CC Availability" },
       { name: "current_department", label: "Current Department" },
       { name: "status", label: "Status" },
-      { name: "batch_total", label: "Batch Total", formatter: (val) => `$${val?.toFixed(2) || "0.00"}` },
+      { name: "batch_total", label: "Batch Total", formatter: (val) => formatCurrency(val) },
       { name: "date_received", label: "Date Received", formatter: (val) => (val ? new Date(val).toLocaleDateString() : "") },
       { name: "date_completed", label: "Date Completed", formatter: (val) => (val ? new Date(val).toLocaleDateString() : "") },
       { name: "created_by", label: "Created By", formatter: (val, row) => row.created_by_name ?? val },
@@ -160,7 +166,7 @@ const WORKFLOW_CONFIG = {
       { name: "cc_availability", label: "CC Availability" },
       { name: "current_department", label: "Current Department" },
       { name: "status", label: "Status" },
-      { name: "batch_total", label: "Batch Total", formatter: (val) => `$${val?.toFixed(2) || "0.00"}` },
+      { name: "batch_total", label: "Batch Total", formatter: (val) => formatCurrency(val) },
       { name: "date_received", label: "Date Received", formatter: (val) => (val ? new Date(val).toLocaleDateString() : "") },
       { name: "date_completed", label: "Date Completed", formatter: (val) => (val ? new Date(val).toLocaleDateString() : "") },
       { name: "created_by", label: "Created By", formatter: (val, row) => row.created_by_name ?? val },
@@ -283,7 +289,7 @@ const WORKFLOW_CONFIG = {
       { name: "cc_availability", label: "CC Availability" },
       { name: "current_department", label: "Current Department" },
       { name: "status", label: "Status" },
-      { name: "batch_total", label: "Batch Total", formatter: (val) => `$${val?.toFixed(2) || "0.00"}` },
+      { name: "batch_total", label: "Batch Total", formatter: (val) => formatCurrency(val) },
       { name: "date_received", label: "Date Received", formatter: (val) => (val ? new Date(val).toLocaleDateString() : "") },
       { name: "date_completed", label: "Date Completed", formatter: (val) => (val ? new Date(val).toLocaleDateString() : "") },
       { name: "created_by", label: "Created By", formatter: (val, row) => row.created_by_name ?? val },

@@ -72,26 +72,38 @@ CREATE TABLE user_client_access (
 
 CREATE TABLE logs (
     log_id INT AUTO_INCREMENT PRIMARY KEY,
-    user_id INT,
-    action ENUM('create', 'update', 'delete') NOT NULL,
-    target_table VARCHAR(255) NOT NULL,
-    target_id INT NOT NULL,
-    changes JSON, 
-    timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    
+    user_id INT NULL,
+    context VARCHAR(50) NOT NULL DEFAULT 'workflow',
+    department VARCHAR(100) DEFAULT NULL,
+    batch_type VARCHAR(50) DEFAULT NULL,
+    entity_type VARCHAR(50) DEFAULT NULL,
+    entity_id INT DEFAULT NULL,
+    action VARCHAR(255) NOT NULL,
+    message TEXT,
+    metadata JSON,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (user_id) REFERENCES users(user_id)
 );
+
+CREATE INDEX idx_logs_context ON logs (context, department, batch_type);
+CREATE INDEX idx_logs_entity ON logs (entity_type, entity_id);
 
 
 CREATE TABLE notes (
     note_id INT AUTO_INCREMENT PRIMARY KEY,
-    user_id INT,
-    note TEXT,
-    target_table VARCHAR(255),
-    target_id INT,
+    user_id INT NOT NULL,
+    context VARCHAR(50) NOT NULL DEFAULT 'workflow',
+    department VARCHAR(100) DEFAULT NULL,
+    batch_type VARCHAR(50) DEFAULT NULL,
+    entity_type VARCHAR(50) DEFAULT NULL,
+    entity_id INT DEFAULT NULL,
+    note TEXT NOT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (user_id) REFERENCES users(user_id)
 );
+
+CREATE INDEX idx_notes_context ON notes (context, department, batch_type);
+CREATE INDEX idx_notes_entity ON notes (entity_type, entity_id);
 
 CREATE TABLE clients_logs (
     log_id INT AUTO_INCREMENT PRIMARY KEY,
@@ -262,22 +274,19 @@ CREATE TABLE batches (
     billing_email_sent_by INT,
     added_on_drive BOOLEAN DEFAULT FALSE,
     corrections BOOLEAN DEFAULT FALSE, 
-
     is_pure_foreign_urgent BOOLEAN DEFAULT FALSE, 
-
-
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     FOREIGN KEY (client_id) REFERENCES clients(client_id),
     FOREIGN KEY (created_by) REFERENCES users(user_id),
     FOREIGN KEY (admitted_by) REFERENCES users(user_id),
-    FOREIGN KEY (billed_by) REFERENCES users(user_id)
-    FOREIGN KEY (completed_by) REFERENCES users(user_id)
-    FOREIGN KEY (checked_by) REFERENCES users(user_id)
-    FOREIGN KEY (billing_emailed_by) REFERENCES users(user_id)
-    FOREIGN KEY (file_renamed_by) REFERENCES users(user_id)
-    FOREIGN KEY (file_checked_by) REFERENCES users(user_id)
-    FOREIGN KEY (filed_by) REFERENCES users(user_id)
+    FOREIGN KEY (billed_by) REFERENCES users(user_id),
+    FOREIGN KEY (completed_by) REFERENCES users(user_id),
+    FOREIGN KEY (checked_by) REFERENCES users(user_id),
+    FOREIGN KEY (billing_emailed_by) REFERENCES users(user_id),
+    FOREIGN KEY (file_renamed_by) REFERENCES users(user_id),
+    FOREIGN KEY (file_checked_by) REFERENCES users(user_id),
+    FOREIGN KEY (filed_by) REFERENCES users(user_id),
     FOREIGN KEY (billing_email_sent_by) REFERENCES users(user_id)
 );
 
@@ -291,6 +300,7 @@ CREATE TABLE foreign_urgent_accounts (
     current_department ENUM('reception', 'admittance', 'billing') DEFAULT 'reception',
     status ENUM('inbox','current','outbox', 'filing', 'archived') DEFAULT 'current',
     -- get date received from batches
+    bank_statements BOOLEAN DEFAULT FALSE,
     created_by INT,
     admitted_by INT,
     billed_by INT,
@@ -305,17 +315,19 @@ CREATE TABLE foreign_urgent_accounts (
     filed_by INT,
     notes TEXT,
     FULID VARCHAR(255),
+    added_on_drive BOOLEAN DEFAULT FALSE,
+    corrections BOOLEAN DEFAULT FALSE, 
+    cc_availability VARCHAR(255),
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     FOREIGN KEY (batch_id) REFERENCES batches(batch_id),
-    FOREIGN KEY (client_id) REFERENCES clients(client_id),
     FOREIGN KEY (created_by) REFERENCES users(user_id),
-    FOREIGN KEY (billed_by) REFERENCES users(user_id)
+    FOREIGN KEY (billed_by) REFERENCES users(user_id),
     FOREIGN KEY (completed_by) REFERENCES users(user_id),
     FOREIGN KEY (checked_by) REFERENCES users(user_id),
     FOREIGN KEY (file_renamed_by) REFERENCES users(user_id),
     FOREIGN KEY (file_checked_by) REFERENCES users(user_id),
-    FOREIGN KEY (filed_by) REFERENCES users(user_id),
+    FOREIGN KEY (filed_by) REFERENCES users(user_id)
 );
 
 -- Workflows: tracks where an item is within the workflow, including temp outbox shadows
@@ -523,6 +535,9 @@ VALUES
 INSERT INTO permissions (permission_name)
 VALUES 
 ('admittance-admit-batch'),
+('admittance-workflow'),
+('reception-workflow'),
+('billing-workflow'),
 ('admittance-accept-batch'),
 ('reception-add-batch'),
 ('reception-complete-batch');
@@ -535,6 +550,18 @@ VALUES
 ('reception'),
 ('billing-manager'),
 ('biller');
+
+-- Inserting sample data for permissions
+INSERT INTO role_permissions (role_id, permission_id)
+VALUES 
+(1, 1),
+(1, 2),
+(1, 3),
+(1, 4),
+(1, 5),
+(1, 6),
+(1, 7);
+
 
 
 

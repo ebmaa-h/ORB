@@ -21,6 +21,8 @@ const ENDPOINTS = {
   moveToFiling: `${API_URL}/batches/move/filing`,
   acceptBatch: `${API_URL}/batches/accept`,
   pullbackBatch: `${API_URL}/batches/pullback`,
+  archiveBatch: `${API_URL}/batches/archive`,
+  workflowClients: `${API_URL}/batches/clients`,
 
   addBatch : `${API_URL}/batches`, 
 
@@ -34,10 +36,8 @@ const ENDPOINTS = {
   profileDetails : (profileId) => `${API_URL}/profiles/${profileId}`,
   records : `${API_URL}/records`,
   recordDetails :  (recordId) => `${API_URL}/records/${recordId}`, // good, independant records view/edit is enough.
-  fetchNotes: (tableName, id) => `${API_URL}/notes/${tableName}/${id}`, 
-  addNote: (tableName, id) => `${API_URL}/notes/${tableName}/${id}`,
-  fetchLogs: (tableName, id) => `${API_URL}/logs/${tableName}/${id}`,
-  addLog: `${API_URL}/logs`,
+  workflowNotes: (department, batchType) => `${API_URL}/workflow/${department}/${batchType}/notes`,
+  workflowLogs: (department, batchType) => `${API_URL}/workflow/${department}/${batchType}/logs`,
   // clientInfo : `${API_URL}/client/info`,
 
 

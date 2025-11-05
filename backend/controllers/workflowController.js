@@ -3,6 +3,77 @@ const Note = require('../models/noteModel.js');
 const Log = require('../models/logModel.js');
 const Batch = require('../models/batchModel.js');
 
+const WORKFLOW_BATCH_TYPES = {
+  NORMAL: 'normal',
+  FOREIGN: 'foreign_urgent',
+};
+
+const ALLOWED_DEPARTMENTS = ['reception', 'admittance', 'billing'];
+
+const normalizeBatchType = (value = '') => {
+  const normalized = String(value || '').toLowerCase();
+  if (['fu', 'foreign', 'foreign_urgent', 'foreign-urgent'].includes(normalized)) {
+    return WORKFLOW_BATCH_TYPES.FOREIGN;
+  }
+  return WORKFLOW_BATCH_TYPES.NORMAL;
+};
+
+const resolveBatchTypeFromFlag = (isForeignUrgent = false) =>
+  isForeignUrgent ? WORKFLOW_BATCH_TYPES.FOREIGN : WORKFLOW_BATCH_TYPES.NORMAL;
+
+const parseMetadata = (metadata) => {
+  if (!metadata) return null;
+  if (typeof metadata === 'object') return metadata;
+  try {
+    return JSON.parse(metadata);
+  } catch (err) {
+    console.warn('Failed to parse workflow log metadata:', err);
+    return null;
+  }
+};
+
+const formatLogRow = (row) => {
+  if (!row) return row;
+  return {
+    ...row,
+    metadata: parseMetadata(row.metadata),
+  };
+};
+
+const emitWorkflowLog = (logRow) => {
+  if (!logRow?.department) return;
+  const io = getIO();
+  io.to(logRow.department).emit('workflow:logCreated', formatLogRow(logRow));
+};
+
+const emitWorkflowNote = (noteRow) => {
+  if (!noteRow?.department) return;
+  const io = getIO();
+  io.to(noteRow.department).emit('workflow:noteCreated', noteRow);
+};
+
+const recordWorkflowLog = async (logInput) => {
+  const logRow = await Log.createWorkflowLog(logInput);
+  const formatted = formatLogRow(logRow);
+  emitWorkflowLog(formatted);
+  return formatted;
+};
+
+const recordWorkflowLogs = async (logs = []) => {
+  const results = [];
+  for (const log of logs) {
+    if (!log) continue;
+    results.push(await recordWorkflowLog(log));
+  }
+  return results;
+};
+
+const createWorkflowNote = async (noteInput) => {
+  const noteRow = await Note.createWorkflowNote(noteInput);
+  emitWorkflowNote(noteRow);
+  return noteRow;
+};
+
 const workflowController = {
   createBatch: async (req, res) => {
     console.log("🧩 Received in createBatch:", req.body);
@@ -27,6 +98,17 @@ const workflowController = {
         is_pure_foreign_urgent: baseBatch?.is_pure_foreign_urgent || false,
       });
 
+      await recordWorkflowLog({
+        userId: mainData.created_by || null,
+        department: 'reception',
+        batchType: WORKFLOW_BATCH_TYPES.NORMAL,
+        entityType: 'batch',
+        entityId: newBatch.batch_id,
+        action: 'batch_created',
+        message: `Batch #${newBatch.batch_id} created in reception`,
+        metadata: { batch_id: newBatch.batch_id },
+      });
+
       // Create foreign/urgent if present
       const createdForeignUrgents = [];
       if (Array.isArray(foreign_urgents) && foreign_urgents.length > 0) {
@@ -39,23 +121,31 @@ const workflowController = {
           const newFu = await Batch.createForeignUrgent(fuData);
           // enroll FU in workflow as reception/current
           await Batch.upsertWorkflowMain({ entity_type: 'fu', entity_id: newFu.batch_id, department: 'reception', status: 'current', created_by: mainData.created_by || null });
-          const newFuWithInherited = {
-            batch_id: newFu.batch_id,
-            parent_batch_id: newFu.parent_batch_id,
-            patient_name: newFu.patient_name,
-            medical_aid_nr: newFu.medical_aid_nr,
-            current_department: newFu.current_department || 'reception',
-            status: newFu.status || 'current',
-            created_by: mainData.created_by,
-            client_id: mainData.client_id,
-            date_received: mainData.date_received || new Date().toISOString(),
-            created_at: newFu.created_at || new Date().toISOString(),
-            updated_at: newFu.updated_at || new Date().toISOString(),
+          const fuFromDb = await Batch.getForeignUrgentById(newFu.batch_id);
+          const fuPayload = {
+            ...fuFromDb,
+            batch_id: fuFromDb?.batch_id || newFu.batch_id,
+            parent_batch_id: fuFromDb?.parent_batch_id || newFu.parent_batch_id,
+            current_department: fuFromDb?.current_department || 'reception',
+            status: fuFromDb?.status || 'current',
             is_pure_foreign_urgent: newBatch.is_pure_foreign_urgent || false,
+            client_id: fuFromDb?.client_id || mainData.client_id,
+            date_received: fuFromDb?.date_received || mainData.date_received || new Date().toISOString(),
           };
-          createdForeignUrgents.push(newFuWithInherited);
-          console.log('📤 Emitting batchCreated for foreignUrgent:', newFuWithInherited);
-          io.to("reception").emit("batchCreated", newFuWithInherited);
+          createdForeignUrgents.push(fuPayload);
+          console.log('📤 Emitting batchCreated for foreignUrgent:', fuPayload);
+          io.to("reception").emit("batchCreated", fuPayload);
+
+          await recordWorkflowLog({
+            userId: mainData.created_by || null,
+            department: 'reception',
+            batchType: WORKFLOW_BATCH_TYPES.FOREIGN,
+            entityType: 'fu',
+            entityId: newFu.batch_id,
+            action: 'foreign_urgent_created',
+            message: `Foreign urgent #${newFu.batch_id} created for batch #${newBatch.batch_id}`,
+            metadata: { batch_id: newBatch.batch_id, foreign_urgent_id: newFu.batch_id },
+          });
         }
       }
 
@@ -73,8 +163,7 @@ const workflowController = {
   departmentBatches: async (req, res) => {
     try {
       const department = String(req.params.department || '').toLowerCase();
-      const allowed = ['reception', 'admittance', 'billing'];
-      if (!allowed.includes(department)) {
+      if (!ALLOWED_DEPARTMENTS.includes(department)) {
         return res.status(400).json({ error: 'Invalid department' });
       }
       const results = await Batch.getDepartmentBatches(department);
@@ -98,6 +187,7 @@ const workflowController = {
       const io = getIO();
 
       const entity_type = is_fu ? 'fu' : 'batch';
+      const batchType = resolveBatchTypeFromFlag(is_fu);
       const main = await Batch.getWorkflowMainByEntity({ entity_type, entity_id: batch_id });
       if (!main) return res.status(404).json({ error: 'Workflow main row not found' });
 
@@ -132,6 +222,37 @@ const workflowController = {
       if (fromDepartment) io.to(fromDepartment).emit('batchUpdated', outboxPayload);
       io.to(finalToDepartment).emit('batchUpdated', inboxPayload);
 
+      const destinationLabel = isFiling ? 'filing' : finalToDepartment;
+      const moveLogs = [];
+
+      if (fromDepartment) {
+        moveLogs.push({
+          userId: user_id || null,
+          department: fromDepartment,
+          batchType,
+          entityType: entity_type,
+          entityId: batch_id,
+          action: 'batch_sent',
+          message: `Batch #${batch_id} sent to ${destinationLabel}`,
+          metadata: { batch_id, from: fromDepartment, to: destinationLabel, entity_type },
+        });
+      }
+
+      moveLogs.push({
+        userId: user_id || null,
+        department: finalToDepartment,
+        batchType,
+        entityType: entity_type,
+        entityId: batch_id,
+        action: isFiling ? 'batch_to_filing' : 'batch_received',
+        message: isFiling
+          ? `Batch #${batch_id} moved to filing`
+          : `Batch #${batch_id} received from ${fromDepartment || 'unknown'}`,
+        metadata: { batch_id, from: fromDepartment, to: destinationLabel, entity_type },
+      });
+
+      await recordWorkflowLogs(moveLogs);
+
       res.json({ success: true, outbox: outboxPayload, inbox: inboxPayload });
     } catch (err) {
       console.error('Error moving batch:', err);
@@ -145,6 +266,7 @@ const workflowController = {
       if (!batch_id) return res.status(400).json({ error: 'batch_id is required' });
 
       const entity_type = is_fu ? 'fu' : 'batch';
+      const batchType = resolveBatchTypeFromFlag(is_fu);
       const main = await Batch.getWorkflowMainByEntity({ entity_type, entity_id: batch_id });
       if (!main) return res.status(404).json({ error: 'Workflow main row not found' });
 
@@ -170,6 +292,34 @@ const workflowController = {
         io.to(outbox.department).emit('batchUpdated', acceptedPayload);
       }
 
+      const acceptLogs = [
+        {
+          userId: user_id || null,
+          department: toDept,
+          batchType,
+          entityType: entity_type,
+          entityId: batch_id,
+          action: 'batch_accepted',
+          message: `Batch #${batch_id} accepted into ${toDept}`,
+          metadata: { batch_id, department: toDept, status: finalStatus },
+        },
+      ];
+
+      if (outbox?.department) {
+        acceptLogs.push({
+          userId: user_id || null,
+          department: outbox.department,
+          batchType,
+          entityType: entity_type,
+          entityId: batch_id,
+          action: 'batch_accepted_downstream',
+          message: `Batch #${batch_id} accepted by ${toDept}`,
+          metadata: { batch_id, from: outbox.department, accepted_by: toDept },
+        });
+      }
+
+      await recordWorkflowLogs(acceptLogs);
+
       res.json(acceptedPayload);
     } catch (err) {
       console.error('Error accepting batch:', err);
@@ -183,6 +333,7 @@ const workflowController = {
       if (!batch_id) return res.status(400).json({ error: 'batch_id is required' });
 
       const entity_type = is_fu ? 'fu' : 'batch';
+      const batchType = resolveBatchTypeFromFlag(is_fu);
       const outbox = await Batch.getWorkflowOutboxByEntity({ entity_type, entity_id: batch_id });
       if (!outbox) return res.status(404).json({ error: 'Outbox entry not found' });
 
@@ -214,6 +365,38 @@ const workflowController = {
         io.to(targetDepartment).emit('batchUpdated', payload);
       }
 
+      const cancelLogs = [];
+
+      if (originalDepartment) {
+        cancelLogs.push({
+          userId: user_id || null,
+          department: originalDepartment,
+          batchType,
+          entityType: entity_type,
+          entityId: batch_id,
+          action: 'transfer_cancelled',
+          message: `Batch #${batch_id} pulled back to ${originalDepartment}`,
+          metadata: { batch_id, from: targetDepartment, to: originalDepartment },
+        });
+      }
+
+      if (targetDepartment && targetDepartment !== originalDepartment) {
+        cancelLogs.push({
+          userId: user_id || null,
+          department: targetDepartment,
+          batchType,
+          entityType: entity_type,
+          entityId: batch_id,
+          action: 'transfer_cancelled_remote',
+          message: `Batch #${batch_id} pulled back by ${originalDepartment || 'originating department'}`,
+          metadata: { batch_id, from: targetDepartment, to: originalDepartment },
+        });
+      }
+
+      if (cancelLogs.length) {
+        await recordWorkflowLogs(cancelLogs);
+      }
+
       res.json(payload);
     } catch (err) {
       console.error('Error cancelling transfer:', err);
@@ -221,57 +404,132 @@ const workflowController = {
     }
   },
 
-  getNotes: async (reqOrData, res) => {
+  archiveBatch: async (req, res) => {
     try {
-      const targetId = reqOrData.params ? reqOrData.params.targetId : reqOrData.targetId;
-      const notes = await Note.listNotes('batches', targetId);
-      if (res) {
-        res.json(notes);
-      } else {
-        return notes;
-      }
-    } catch (err) {
-      console.error('❌ Error fetching notes:', err);
-      if (res) res.status(500).json({ error: 'Failed to fetch notes' });
-      else throw err;
-    }
-  },
+      const { batch_id, is_fu, user_id } = req.body || {};
+      if (!batch_id) return res.status(400).json({ error: 'batch_id is required' });
 
-  createNote: async (reqOrData, res) => {
-    try {
-      const targetId = reqOrData.params ? reqOrData.params.targetId : reqOrData.targetId;
-      const { userId, note } = reqOrData.body || reqOrData;
-      const newNote = await Note.createNote({
-        target_table: 'batches',
-        target_id: targetId,
-        user_id: userId,
-        note,
+      const entity_type = is_fu ? 'fu' : 'batch';
+      const batchType = resolveBatchTypeFromFlag(is_fu);
+      const main = await Batch.getWorkflowMainByEntity({ entity_type, entity_id: batch_id });
+      if (!main) return res.status(404).json({ error: 'Workflow main row not found' });
+
+      await Batch.deleteWorkflowMain({ entity_type, entity_id: batch_id });
+      await Batch.deleteWorkflowOutbox({ entity_type, entity_id: batch_id });
+
+      if (entity_type === 'fu') {
+        await Batch.archiveForeignUrgent({ entity_id: batch_id, filed_by: user_id || null });
+      } else {
+        await Batch.archiveBatch({ entity_id: batch_id, filed_by: user_id || null });
+      }
+
+      const io = getIO();
+      const base = entity_type === 'fu'
+        ? await Batch.getForeignUrgentById(batch_id)
+        : await Batch.getBatchById(batch_id);
+
+      const payload = {
+        ...(base || {}),
+        batch_id: base?.batch_id || batch_id,
+        parent_batch_id: base?.parent_batch_id,
+        current_department: null,
+        status: 'archived',
+      };
+
+      io.to(main.department).emit('batchUpdated', payload);
+
+      await recordWorkflowLog({
+        userId: user_id || null,
+        department: main.department,
+        batchType,
+        entityType: entity_type,
+        entityId: batch_id,
+        action: 'batch_archived',
+        message: `Batch #${batch_id} archived from filing`,
+        metadata: { batch_id, department: main.department },
       });
-      if (res) {
-        res.status(201).json(newNote);
-      } else {
-        return newNote;
-      }
+
+      res.json(payload);
     } catch (err) {
-      console.error('❌ Error creating note:', err);
-      if (res) res.status(500).json({ error: 'Failed to create note' });
-      else throw err;
+      console.error('Error archiving batch:', err);
+      res.status(500).json({ error: 'Failed to archive batch' });
     }
   },
 
-  createLog: async (reqOrData, res) => {
+  listClients: async (_req, res) => {
     try {
-      const { userId, action, changes, targetId } = reqOrData.body || reqOrData;
-      const log = await Log.createLog(userId, action, 'batches', targetId, changes);
-      if (res) {
-        res.status(201).json({ message: 'Log added successfully' });
-      } else {
-        return log;
-      }
+      const clients = await Batch.listClients();
+      res.json(clients);
     } catch (err) {
-      console.error('❌ Error creating log:', err);
-      if (res) res.status(500).json({ error: 'Failed to create log' });
-      else throw err;
+      console.error('Error fetching clients list:', err);
+      res.status(500).json({ error: 'Failed to fetch clients' });
+    }
+  },
+
+  getWorkflowNotes: async (req, res) => {
+    try {
+      const department = String(req.params.department || '').toLowerCase();
+      const batchType = normalizeBatchType(req.params.batchType);
+      if (!ALLOWED_DEPARTMENTS.includes(department)) {
+        return res.status(400).json({ error: 'Invalid department' });
+      }
+
+      const notes = await Note.listWorkflowNotes({ department, batchType });
+      res.json(notes);
+    } catch (err) {
+      console.error('Workflow error fetching notes:', err);
+      res.status(500).json({ error: 'Failed to fetch workflow notes' });
+    }
+  },
+
+  addWorkflowNote: async (req, res) => {
+    try {
+      const department = String(req.params.department || '').toLowerCase();
+      const batchType = normalizeBatchType(req.params.batchType);
+      if (!ALLOWED_DEPARTMENTS.includes(department)) {
+        return res.status(400).json({ error: 'Invalid department' });
+      }
+
+      const { userId, note, entityType = null, entityId = null } = req.body || {};
+      const trimmedNote = String(note || '').trim();
+      if (!trimmedNote) {
+        return res.status(400).json({ error: 'Note cannot be empty' });
+      }
+
+      const finalUserId = userId || req.user?.user_id || null;
+      if (!finalUserId) {
+        return res.status(401).json({ error: 'User context missing for note' });
+      }
+
+      const newNote = await createWorkflowNote({
+        department,
+        batchType,
+        userId: finalUserId,
+        note: trimmedNote,
+        entityType,
+        entityId,
+      });
+
+      res.status(201).json(newNote);
+    } catch (err) {
+      console.error('Workflow error creating note:', err);
+      res.status(500).json({ error: 'Failed to create workflow note' });
+    }
+  },
+
+  getWorkflowLogs: async (req, res) => {
+    try {
+      const department = String(req.params.department || '').toLowerCase();
+      const batchType = normalizeBatchType(req.params.batchType);
+      if (!ALLOWED_DEPARTMENTS.includes(department)) {
+        return res.status(400).json({ error: 'Invalid department' });
+      }
+
+      const logs = await Log.listWorkflowLogs({ department, batchType });
+      res.json(logs.map(formatLogRow));
+    } catch (err) {
+      console.error('Workflow error fetching logs:', err);
+      res.status(500).json({ error: 'Failed to fetch workflow logs' });
     }
   },
 };

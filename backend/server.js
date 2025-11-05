@@ -6,6 +6,7 @@ const http = require('http'); // for sockets
 const cors = require('cors');
 const authRoutes = require('./routes/auth.js');
 const batchRoutes = require('./routes/batch.js');
+const workflowMetaRoutes = require('./routes/workflowMeta.js');
 
 const registerSockets = require("./sockets/index");
 
@@ -76,6 +77,7 @@ app.use('/auth', authRoutes);
 // app.use('/notes', noteRoutes);
 // app.use('/logs', logRoutes);
 app.use('/batches', batchRoutes);
+app.use('/workflow', workflowMetaRoutes);
 
 // error Handling Middleware
 app.use((err, req, res, next) => {

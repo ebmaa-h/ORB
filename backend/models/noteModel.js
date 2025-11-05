@@ -2,24 +2,28 @@ const db = require('../config/db');
 const queries = require('./queries/noteQueries');
 
 const Note = {
-  listNotes: async (targetTable, targetId) => {
+  listWorkflowNotes: async ({ department, batchType }) => {
     try {
-      const [results] = await db.query(queries.fetchNotes, [targetTable, targetId]);
+      const [results] = await db.query(queries.FETCH_WORKFLOW_NOTES, [department, batchType]);
       return results;
     } catch (err) {
       throw err;
     }
   },
 
-  createNote: async ({ target_table, target_id, user_id, note }) => {
+  createWorkflowNote: async ({ department, batchType, userId, note, entityType = null, entityId = null }) => {
     try {
-      // Insert the note
-      const [insertResult] = await db.query(queries.insertNote, [target_table, target_id, user_id, note]);
+      const [insertResult] = await db.query(queries.INSERT_WORKFLOW_NOTE, [
+        userId,
+        department,
+        batchType,
+        entityType,
+        entityId,
+        note,
+      ]);
 
-      // Retrieve the newly inserted note
-      const [newNote] = await db.query(queries.fetchSingleNote, [insertResult.insertId]);
-
-      return newNote[0]; // Return the first result (object)
+      const [newNoteRows] = await db.query(queries.FETCH_NOTE_BY_ID, [insertResult.insertId]);
+      return newNoteRows[0];
     } catch (err) {
       throw err;
     }

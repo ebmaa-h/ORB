@@ -2,28 +2,53 @@ import React, { useState, useContext, useRef, useEffect } from "react";
 import { UserContext } from "../../context/UserContext";
 import axiosClient from "../../utils/axiosClient";
 import ENDPOINTS from "../../utils/apiEndpoints";
-import socket from "../../utils/socket";
+
+const METHOD_OPTIONS = [
+  "email",
+  "driver",
+  "courier",
+  "doctor",
+  "fax",
+  "collect",
+  "relative",
+  "other",
+];
 
 export default function NewBatch({ setActiveStatus }) {
   const { user } = useContext(UserContext);
 
+  const [clients, setClients] = useState([]);
   const [formData, setFormData] = useState({
     created_by: user.user_id || null,
     batch_size: "",
     client_id: "",
     date_received: "",
-    method_received: "",
+    method_received: METHOD_OPTIONS[0],
     bank_statements: false,
-    added_on_drive: true,
+    added_on_drive: false,
     total_urgent_foreign: "",
     cc_availability: "",
     foreign_urgents: [],
+    corrections: false,
   });
 
   const firstFieldRef = useRef(null);
 
   useEffect(() => {
     firstFieldRef.current?.focus();
+  }, []);
+
+  useEffect(() => {
+    const fetchClients = async () => {
+      try {
+        const res = await axiosClient.get(ENDPOINTS.workflowClients, { withCredentials: true });
+        setClients(res.data || []);
+      } catch (err) {
+        console.error("Failed to load clients:", err);
+      }
+    };
+
+    fetchClients();
   }, []);
 
   const handleChange = (e) => {
@@ -34,19 +59,16 @@ export default function NewBatch({ setActiveStatus }) {
     }));
   };
 
-  // handle changes in total_urgent_foreign to adjust fu rows
   const handleTotalUrgentChange = (e) => {
     const num = parseInt(e.target.value, 10) || 0;
     setFormData((prev) => {
       let newForeignUrgents = [...prev.foreign_urgents];
       if (num > newForeignUrgents.length) {
-        //add empty objects if increasing
         const toAdd = num - newForeignUrgents.length;
         for (let i = 0; i < toAdd; i++) {
           newForeignUrgents.push({ patient_name: "", medical_aid_nr: "" });
         }
       } else if (num < newForeignUrgents.length) {
-        // slice if decreasing
         newForeignUrgents = newForeignUrgents.slice(0, num);
       }
       return {
@@ -57,7 +79,6 @@ export default function NewBatch({ setActiveStatus }) {
     });
   };
 
-  // handle changes in fu rows
   const handleForeignUrgentChange = (index, e) => {
     const { name, value } = e.target;
     setFormData((prev) => {
@@ -77,23 +98,33 @@ export default function NewBatch({ setActiveStatus }) {
       alert("Mismatch between total urgent/foreign and entered details. Please check.");
       return;
     }
+    if (!formData.client_id) {
+      alert("Please select a client");
+      return;
+    }
+
     try {
-      const response = await axiosClient.post(ENDPOINTS.addBatch, formData);
+      const payload = {
+        ...formData,
+        client_id: Number(formData.client_id),
+      };
+
+      const response = await axiosClient.post(ENDPOINTS.addBatch, payload);
       if (response.data) {
-        const createdBatch = response.data.batch;
         setFormData({
           created_by: user.user_id || null,
           batch_size: "",
           client_id: "",
           date_received: "",
-          method_received: "",
+          method_received: METHOD_OPTIONS[0],
           bank_statements: false,
-          added_on_drive: true,
+          added_on_drive: false,
           total_urgent_foreign: "",
           cc_availability: "",
           foreign_urgents: [],
+          corrections: false,
         });
-        setActiveStatus("current"); // switch back to current after submission
+        setActiveStatus("current");
       }
     } catch (error) {
       console.error("Failed to add batch:", error);
@@ -117,15 +148,25 @@ export default function NewBatch({ setActiveStatus }) {
           className="border p-2 rounded"
           required
         />
-        <input
-          type="number"
+        <select
           name="client_id"
-          placeholder="Client ID"
           value={formData.client_id}
           onChange={handleChange}
-          className="border p-2 rounded"
+          className="border p-2 rounded min-w-[220px]"
           required
-        />
+        >
+          <option value="" disabled>
+            Select client
+          </option>
+          {clients.map((client) => {
+            const label = `Dr ${(client.first || "").trim()} ${(client.last || "").trim()}`.trim();
+            return (
+              <option key={client.client_id} value={client.client_id}>
+                {label}
+              </option>
+            );
+          })}
+        </select>
         <input
           type="date"
           name="date_received"
@@ -134,14 +175,18 @@ export default function NewBatch({ setActiveStatus }) {
           className="border p-2 rounded"
           required
         />
-        <input
-          type="text"
+        <select
           name="method_received"
-          placeholder="Method Received"
           value={formData.method_received}
           onChange={handleChange}
-          className="border p-2 rounded"
-        />
+          className="border p-2 rounded min-w-[160px]"
+        >
+          {METHOD_OPTIONS.map((option) => (
+            <option key={option} value={option}>
+              {option.charAt(0).toUpperCase() + option.slice(1)}
+            </option>
+          ))}
+        </select>
         <label className="flex items-center gap-2">
           <input
             type="checkbox"
@@ -150,6 +195,15 @@ export default function NewBatch({ setActiveStatus }) {
             onChange={handleChange}
           />
           Bank Statements
+        </label>
+        <label className="flex items-center gap-2">
+          <input
+            type="checkbox"
+            name="added_on_drive"
+            checked={formData.added_on_drive}
+            onChange={handleChange}
+          />
+          Added on Drive
         </label>
         <label className="flex items-center gap-2">
           <input
@@ -177,30 +231,29 @@ export default function NewBatch({ setActiveStatus }) {
           className="border p-2 rounded"
         />
 
-        {/* dynamic fu rows */}
-          {formData.foreign_urgents.map((fu, index) => (
-            <div key={index} className="container-row-outer p-0 place-items-center m-0">
-              <h4 className="font-semibold">{index + 1}</h4>
-              <input
-                type="text"
-                name="patient_name"
-                placeholder="Patient Name"
-                value={fu.patient_name}
-                onChange={(e) => handleForeignUrgentChange(index, e)}
-                className="border p-2 rounded"
-                required
-              />
-              <input
-                type="text"
-                name="medical_aid_nr"
-                placeholder="Medical Aid Number"
-                value={fu.medical_aid_nr}
-                onChange={(e) => handleForeignUrgentChange(index, e)}
-                className="border p-2 rounded"
-                required
-              />
-            </div>
-          ))}
+        {formData.foreign_urgents.map((fu, index) => (
+          <div key={index} className="container-row-outer p-0 place-items-center m-0">
+            <h4 className="font-semibold">{index + 1}</h4>
+            <input
+              type="text"
+              name="patient_name"
+              placeholder="Patient Name"
+              value={fu.patient_name}
+              onChange={(e) => handleForeignUrgentChange(index, e)}
+              className="border p-2 rounded"
+              required
+            />
+            <input
+              type="text"
+              name="medical_aid_nr"
+              placeholder="Medical Aid Number"
+              value={fu.medical_aid_nr}
+              onChange={(e) => handleForeignUrgentChange(index, e)}
+              className="border p-2 rounded"
+              required
+            />
+          </div>
+        ))}
         <div className="flex gap-2 self-center w-full mt-4">
           <button type="submit" className="btn-class min-w-[100px]">
             Add

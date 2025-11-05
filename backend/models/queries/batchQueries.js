@@ -286,6 +286,28 @@ const WF_DELETE_OUTBOX = `
   DELETE FROM workflows WHERE entity_type = ? AND entity_id = ? AND outbox_temp = 1
 `;
 
+const WF_DELETE_MAIN = `
+  DELETE FROM workflows WHERE entity_type = ? AND entity_id = ? AND outbox_temp = 0
+`;
+
+const ARCHIVE_BATCH = `
+  UPDATE batches
+  SET status = 'archived', filed_by = ?
+  WHERE batch_id = ?
+`;
+
+const ARCHIVE_FU = `
+  UPDATE foreign_urgent_accounts
+  SET status = 'archived', filed_by = ?
+  WHERE foreign_urgent_batch_id = ?
+`;
+
+const LIST_CLIENTS_SUMMARY = `
+  SELECT client_id, first, last
+  FROM clients
+  ORDER BY first, last
+`;
+
 const WF_GET_MAIN_BY_ENTITY = `
   SELECT * FROM workflows WHERE entity_type = ? AND entity_id = ? AND outbox_temp = 0
 `;
@@ -421,12 +443,16 @@ module.exports = {
   WF_UPSERT_MAIN,
   WF_UPSERT_OUTBOX,
   WF_DELETE_OUTBOX,
+  WF_DELETE_MAIN,
   WF_GET_MAIN_BY_ENTITY,
   WF_GET_OUTBOX_BY_ENTITY,
   WF_SELECT_BATCHES_MAIN_BY_DEPT,
   WF_SELECT_BATCHES_OUTBOX_BY_DEPT,
   WF_SELECT_FU_MAIN_BY_DEPT,
   WF_SELECT_FU_OUTBOX_BY_DEPT,
+  ARCHIVE_BATCH,
+  ARCHIVE_FU,
+  LIST_CLIENTS_SUMMARY,
 };
 
  

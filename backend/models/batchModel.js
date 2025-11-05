@@ -110,6 +110,23 @@ const Batch = {
     await db.query(queries.WF_DELETE_OUTBOX, [entity_type, entity_id]);
   },
 
+  deleteWorkflowMain: async ({ entity_type, entity_id }) => {
+    await db.query(queries.WF_DELETE_MAIN, [entity_type, entity_id]);
+  },
+
+  archiveBatch: async ({ entity_id, filed_by = null }) => {
+    await db.query(queries.ARCHIVE_BATCH, [filed_by, entity_id]);
+  },
+
+  archiveForeignUrgent: async ({ entity_id, filed_by = null }) => {
+    await db.query(queries.ARCHIVE_FU, [filed_by, entity_id]);
+  },
+
+  listClients: async () => {
+    const [rows] = await db.query(queries.LIST_CLIENTS_SUMMARY);
+    return rows;
+  },
+
   getWorkflowMainByEntity: async ({ entity_type, entity_id }) => {
     const [rows] = await db.query(queries.WF_GET_MAIN_BY_ENTITY, [entity_type, entity_id]);
     return rows[0] || null;

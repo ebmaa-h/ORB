@@ -1,31 +1,43 @@
-const fetchNotes = `
+const FETCH_WORKFLOW_NOTES = `
   SELECT 
-    n.note_id, 
-    n.user_id, 
-    u.email, 
-    n.note, 
-    n.created_at
+    n.note_id,
+    n.user_id,
+    u.email,
+    n.note,
+    n.created_at,
+    n.department,
+    n.batch_type,
+    n.entity_type,
+    n.entity_id
   FROM notes n
   LEFT JOIN users u ON n.user_id = u.user_id
-  WHERE n.target_table = ? AND n.target_id = ?
+  WHERE n.context = 'workflow' AND n.department = ? AND n.batch_type = ?
   ORDER BY n.created_at ASC;
 `;
 
-const insertNote = `
-  INSERT INTO notes (target_table, target_id, user_id, note, created_at)
-  VALUES (?, ?, ?, ?, NOW());
+const INSERT_WORKFLOW_NOTE = `
+  INSERT INTO notes (user_id, context, department, batch_type, entity_type, entity_id, note)
+  VALUES (?, 'workflow', ?, ?, ?, ?, ?);
 `;
 
-const fetchSingleNote = `
+const FETCH_NOTE_BY_ID = `
   SELECT 
-    n.note_id, 
-    n.user_id, 
-    u.email, 
-    n.note, 
-    n.created_at
+    n.note_id,
+    n.user_id,
+    u.email,
+    n.note,
+    n.created_at,
+    n.department,
+    n.batch_type,
+    n.entity_type,
+    n.entity_id
   FROM notes n
   LEFT JOIN users u ON n.user_id = u.user_id
   WHERE n.note_id = ?;
 `;
 
-module.exports = { fetchNotes, insertNote, fetchSingleNote };
+module.exports = {
+  FETCH_WORKFLOW_NOTES,
+  INSERT_WORKFLOW_NOTE,
+  FETCH_NOTE_BY_ID,
+};

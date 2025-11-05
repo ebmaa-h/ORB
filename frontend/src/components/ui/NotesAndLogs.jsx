@@ -1,190 +1,183 @@
-import { useEffect, useState, useContext } from 'react';
+import { useContext, useEffect, useMemo, useState } from 'react';
 import axiosClient from '../../utils/axiosClient';
 import ENDPOINTS from '../../utils/apiEndpoints';
 import { UserContext } from '../../context/UserContext';
 import { SearchBar } from '../../components';
 import socket from '../../utils/socket';
 
-export default function NotesAndLogs({ tableName, id, refreshTrigger }) {
+const normalizeFilterType = (filterType) => (filterType === 'fu' ? 'foreign_urgent' : 'normal');
+
+const sortByDateDesc = (list) =>
+  [...list].sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+
+const toNoteItem = (note) => ({
+  type: 'note',
+  id: `note-${note.note_id}`,
+  created_at: note.created_at,
+  email: note.email,
+  content: note.note,
+});
+
+const toLogItem = (log) => ({
+  type: 'log',
+  id: `log-${log.log_id}`,
+  created_at: log.created_at,
+  email: log.email,
+  content: log.message || '',
+  action: log.action,
+  metadata: log.metadata || null,
+});
+
+export default function NotesAndLogs({ department, filterType = 'normal' }) {
   const { user } = useContext(UserContext);
   const [items, setItems] = useState([]);
-  const [newNote, setNewNote] = useState("");
-  const [loading, setLoading] = useState(false);
+  const [newNote, setNewNote] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [showLogs, setShowLogs] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
 
-  // useEffect(() => {
-  //   const fetchNotesAndLogs = async () => {
-  //     setLoading(true);
-  //     try {
-  //       const [notesRes, logsRes] = await Promise.all([
-  //         axiosClient.get(ENDPOINTS.fetchNotes(tableName, id)),
-  //         axiosClient.get(ENDPOINTS.fetchLogs(tableName, id)),
-  //       ]);
+  const batchType = useMemo(() => normalizeFilterType(filterType), [filterType]);
 
-  //       // console.log(logsRes)
-
-  //       const formattedNotes = notesRes.data.notes.map(note => ({
-  //         type: 'note',
-  //         id: `note-${note.note_id}`,
-  //         created_at: note.created_at,
-  //         email: note.email,
-  //         content: note.note,
-  //       }));
-
-  //       // console.log(logsRes)
-  //       const formattedLogs = logsRes.data.map(log => ({
-  //         type: 'log',
-  //         id: `log-${log.log_id}`,
-  //         action: log.action,
-  //         target_table: log.target_table,
-  //         target_id: log.target_id,
-  //         created_at: log.timestamp,
-  //         email: log.email,
-  //         content: formatLogContent(log),
-  //       }));
-
-  //       // Combine notes and logs then sort by date
-  //       const combined = [...formattedNotes, ...formattedLogs].sort(
-  //         (a, b) => new Date(a.created_at) - new Date(b.created_at)
-  //       );
-
- 
-
-  //       setItems(combined);
-  //     } catch (error) {
-  //       console.error("Error fetching notes/logs:", error);
-  //     } finally {
-  //       setLoading(false);
-  //     }
-  //   };
-
-  //   if (id) {
-  //     fetchNotesAndLogs();
-  //   }
-  // }, [tableName, id, refreshTrigger]);
-
-  const columnNames = {
-    file_nr: 'File Nr',
-    auth_nr: 'Auth Nr',
-    date_of_service: 'Date of Service',
-    status: 'Status',
-    ref_client_id: 'Referring Client',
-  }
-
-  const friendlyTableNames = {
-    invoices: 'Invoice',
-    accounts: 'Account',
-  };
-
-  const formatLogContent = (log) => {
-    const action = log.action;
-    const tableName = log.target_table;
-    const targetId = log.target_id;
-  
-    if (action === 'create') {
-      const readableTable = friendlyTableNames[tableName] || tableName;
-      return `${log.email} created ${readableTable} #${targetId}.`;
+  useEffect(() => {
+    if (!department) {
+      setItems([]);
+      return;
     }
-  
-    if (action === 'delete') {
-      const readableTable = friendlyTableNames[tableName] || tableName;
-      return `${log.email} deleted ${readableTable} #${targetId}.`;
-    }
-  
-    if (action === 'update') {
-      if (!log.changes) return `${log.email} made an update`;
-  
-      let parsedChanges = {};
+
+    let cancelled = false;
+
+    const fetchNotesAndLogs = async () => {
+      setIsLoading(true);
       try {
-        parsedChanges = JSON.parse(log.changes);
-      } catch (e) {
-        return `${log.email} made an update (invalid change log format)`;
+        const [notesRes, logsRes] = await Promise.all([
+          axiosClient.get(ENDPOINTS.workflowNotes(department, batchType)),
+          axiosClient.get(ENDPOINTS.workflowLogs(department, batchType)),
+        ]);
+
+        if (cancelled) return;
+
+        const formattedNotes = (notesRes.data || []).map(toNoteItem);
+        const formattedLogs = (logsRes.data || []).map(toLogItem);
+        setItems(sortByDateDesc([...formattedNotes, ...formattedLogs]));
+      } catch (err) {
+        if (!cancelled) {
+          console.error('Failed to fetch workflow notes/logs:', err);
+          setItems([]);
+        }
+      } finally {
+        if (!cancelled) setIsLoading(false);
       }
-  
-      const parts = Object.entries(parsedChanges).map(
-        ([field, { new: newVal, old: oldVal }]) =>
-          `changed ${columnNames[field] || field} from ${oldVal ?? 'none'} to ${newVal ?? '-'}`
-      );
-  
-      return `${log.email} ${parts.join(' | ')}`;
-    }
-  
-    return `${log.email} performed unknown action "${action}"`;
-  };
-  
+    };
 
+    fetchNotesAndLogs();
 
+    return () => {
+      cancelled = true;
+    };
+  }, [department, batchType]);
+
+  useEffect(() => {
+    const handleNoteCreated = (payload) => {
+      if (!payload || payload.department !== department || payload.batch_type !== batchType) return;
+      const noteItem = toNoteItem(payload);
+      setItems((prev) => {
+        if (prev.some((item) => item.id === noteItem.id)) return prev;
+        return sortByDateDesc([...prev, noteItem]);
+      });
+    };
+
+    const handleLogCreated = (payload) => {
+      if (!payload || payload.department !== department || payload.batch_type !== batchType) return;
+      const logItem = toLogItem(payload);
+      setItems((prev) => {
+        if (prev.some((item) => item.id === logItem.id)) return prev;
+        return sortByDateDesc([...prev, logItem]);
+      });
+    };
+
+    socket.on('workflow:noteCreated', handleNoteCreated);
+    socket.on('workflow:logCreated', handleLogCreated);
+
+    return () => {
+      socket.off('workflow:noteCreated', handleNoteCreated);
+      socket.off('workflow:logCreated', handleLogCreated);
+    };
+  }, [department, batchType]);
 
   const handleAddNote = async () => {
-    if (!newNote.trim()) return;
-    
-    setLoading(true);
+    const trimmed = newNote.trim();
+    if (!trimmed || !department || !user?.user_id) return;
+
+    setIsSubmitting(true);
     try {
-      const res = await axiosClient.post(
-        ENDPOINTS.addNote(tableName, id),
-        { userId: user.user_id, note: newNote },
+      const response = await axiosClient.post(
+        ENDPOINTS.workflowNotes(department, batchType),
+        { userId: user.user_id, note: trimmed },
         { withCredentials: true }
       );
-      const addedNote = res.data.note;
 
-      // emit to socket room
-      socket.emit("addReceptionNote", {
-        targetId: id,
-        userId: user.user_id,
-        note: newNote
-      });
+      if (response?.data?.note_id) {
+        const noteItem = toNoteItem(response.data);
+        setItems((prev) => {
+          if (prev.some((item) => item.id === noteItem.id)) return prev;
+          return sortByDateDesc([...prev, noteItem]);
+        });
+      }
 
-      const formatted = {
-        type: 'note',
-        id: `note-${addedNote.note_id}`,
-        created_at: addedNote.created_at,
-        email: addedNote.email,
-        content: `${addedNote.note}`,
-      };
-
-      setItems((prev) => [...prev, formatted].sort((a, b) =>
-        new Date(a.created_at) - new Date(b.created_at)
-      ));
-      setNewNote("");
+      setNewNote('');
     } catch (err) {
-      console.error("Error adding note:", err);
+      console.error('Error adding workflow note:', err);
+    } finally {
+      setIsSubmitting(false);
     }
-    setLoading(false);
   };
 
+  const searchLower = searchTerm.toLowerCase();
+  const filteredHistory = items.filter((item) => {
+    const parts = [item.email, item.content, item.action, item.metadata ? JSON.stringify(item.metadata) : ''];
+    return parts.join(' ').toLowerCase().includes(searchLower);
+  });
 
-  const filteredHistory = items.filter((item) =>
-    Object.values(item).join(' ').toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const renderText = (item) => {
+    if (item.email) {
+      return `${item.email} - ${item.content}`;
+    }
+    return item.content;
+  };
 
   return (
     <div className="container-col">
-      <div className='flex flex-row items-center justify-start gap-6'>
-          <label className='flex gap-2 items-center text-gray-800'>
-            {/* Toggling logs visibility */}
-            <input
-              type="checkbox"
-              checked={showLogs}
-              onChange={() => setShowLogs(!showLogs)}
-            />
-            {/* {showLogs ? "Hide Logs" : "Show Logs"} */}
-            Logs
-          </label>
-          {/* Filter */}
-          <SearchBar searchTerm={searchTerm} setSearchTerm={setSearchTerm} classes="h-[25px] text-sm btn-class"/>
+      <div className="flex flex-row items-center justify-start gap-6">
+        <label className="flex gap-2 items-center text-gray-800">
+          <input
+            type="checkbox"
+            checked={showLogs}
+            onChange={() => setShowLogs((prev) => !prev)}
+          />
+          Logs
+        </label>
+        <SearchBar
+          searchTerm={searchTerm}
+          setSearchTerm={setSearchTerm}
+          classes="h-[25px] text-sm btn-class"
+        />
       </div>
-      <div className="flex flex-col gap-1 justify-center">
-        {filteredHistory.length ? (
+
+      <div className="flex flex-col gap-1 justify-center min-h-[10px]">
+        {isLoading ? (
+          <p>Loading notes and logs...</p>
+        ) : filteredHistory.length ? (
           filteredHistory.map((item) => (
-            <div key={item.id} className={`flex gap-4 items-start ${item.type === 'log' && !showLogs ? 'hidden' : ''}`}>
+            <div
+              key={item.id}
+              className={`flex gap-4 items-start ${item.type === 'log' && !showLogs ? 'hidden' : ''}`}
+            >
               <p className="text-gray-700 w-[160px] shrink-0">
                 {new Date(item.created_at).toLocaleString()}
               </p>
-              <p className={` ${item.type === 'log' ? 'text-gray-700 italic' : ''}`}>
-                {item.type === 'note'
-                  ? `${item.email} - ${item.content}`
-                  : item.content}
+              <p className={item.type === 'log' ? 'text-gray-700 italic' : ''}>
+                {renderText(item)}
               </p>
             </div>
           ))
@@ -200,16 +193,16 @@ export default function NotesAndLogs({ tableName, id, refreshTrigger }) {
           className="flex-1 btn-class"
           value={newNote}
           onChange={(e) => setNewNote(e.target.value)}
-          onKeyDown={(e) => e.key === "Enter" && handleAddNote()}
-          disabled={loading}
+          onKeyDown={(e) => e.key === 'Enter' && handleAddNote()}
+          disabled={isSubmitting}
         />
         <button
           type="button"
           onClick={handleAddNote}
           className="btn-class w-[100px] cursor-pointer"
-          disabled={!newNote.trim() || loading}
+          disabled={isSubmitting || !newNote.trim()}
         >
-          {loading ? "Adding..." : "Add Note"}
+          {isSubmitting ? 'Adding...' : 'Add Note'}
         </button>
       </div>
     </div>
