@@ -11,9 +11,14 @@ const WORKFLOW_CONFIG = {
     endpointKey: "receptionWorkflow",
     columns: [
       { name: "batch_id", label: "Batch ID" },
+      { name: "batch_size", label: "Batch Size" },
       { name: "client_id", label: "Client", formatter: (val, row) => (row.client_first || row.client_last) ? (`Dr ${row.client_first || ''} ${row.client_last || ''}`).trim() : val },
       { name: "date_received", label: "Date Received", formatter: (val) => (val ? new Date(val).toLocaleDateString() : "") },
       { name: "method_received", label: "Method Received" },
+      { name: "bank_statements", label: "Bank Statements", formatter: (val) => (val ? "Yes" : "No") },
+      { name: "added_on_drive", label: "Added on Drive", formatter: (val) => (val ? "Yes" : "No") },
+      { name: "corrections", label: "Corrections", formatter: (val) => (val ? "Yes" : "No") },
+      { name: "cc_availability", label: "CC Availability" },
     ],
     columnsExpanded: [
       { name: "batch_id", label: "Batch ID" },

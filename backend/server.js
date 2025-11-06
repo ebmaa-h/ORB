@@ -24,20 +24,11 @@ registerSockets(io);
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// after creating app:
-app.set('trust proxy', 1);  // trust first proxy if behind a proxy (for production Nginx)
+// trust first proxy if behind a proxy (for production Nginx)
+app.set('trust proxy', 1);
 
-// configure session middleware
-// app.use(session({
-//   secret: process.env.SESSION_SECRET,
-//   resave: false,
-//   saveUninitialized: false,
-//   cookie: {
-//     httpOnly: true,
-//     maxAge: 30600000, // 8.5 hours
-//   },
-// }));
 
+// SERVER SESSION WITH SECURE COOKIES 
 app.use(session({
   secret: process.env.SESSION_SECRET,
   resave: false,
@@ -45,7 +36,7 @@ app.use(session({
   cookie: {
     httpOnly: true,
     maxAge: 30600000,
-    secure: !!process.env.USE_HTTPS,   // set USE_HTTPS=1 in env when on TLS
+    // secure: !!process.env.USE_HTTPS,   // ENABLE FOR PRODUCTION//SERVER
     sameSite: 'lax'
   },
 }));

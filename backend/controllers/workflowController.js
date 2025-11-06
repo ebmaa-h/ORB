@@ -21,6 +21,17 @@ const normalizeBatchType = (value = '') => {
 const resolveBatchTypeFromFlag = (isForeignUrgent = false) =>
   isForeignUrgent ? WORKFLOW_BATCH_TYPES.FOREIGN : WORKFLOW_BATCH_TYPES.NORMAL;
 
+const normalizeBooleanFlag = (value) => {
+  if (typeof value === 'boolean') return value;
+  if (typeof value === 'number') return value === 1;
+  if (typeof value === 'string') {
+    const normalized = value.toLowerCase();
+    if (['1', 'true', 'yes', 'y'].includes(normalized)) return true;
+    if (['0', 'false', 'no', 'n', ''].includes(normalized)) return false;
+  }
+  return Boolean(value);
+};
+
 const parseMetadata = (metadata) => {
   if (!metadata) return null;
   if (typeof metadata === 'object') return metadata;
@@ -95,7 +106,7 @@ const workflowController = {
         ...baseBatch,
         current_department: 'reception',
         status: 'current',
-        is_pure_foreign_urgent: baseBatch?.is_pure_foreign_urgent || false,
+        is_pure_foreign_urgent: normalizeBooleanFlag(baseBatch?.is_pure_foreign_urgent),
       });
 
       await recordWorkflowLog({
@@ -128,7 +139,7 @@ const workflowController = {
             parent_batch_id: fuFromDb?.parent_batch_id || newFu.parent_batch_id,
             current_department: fuFromDb?.current_department || 'reception',
             status: fuFromDb?.status || 'current',
-            is_pure_foreign_urgent: newBatch.is_pure_foreign_urgent || false,
+            is_pure_foreign_urgent: normalizeBooleanFlag(newBatch.is_pure_foreign_urgent),
             client_id: fuFromDb?.client_id || mainData.client_id,
             client_first: fuFromDb?.client_first || baseBatch?.client_first || null,
             client_last: fuFromDb?.client_last || baseBatch?.client_last || null,

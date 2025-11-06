@@ -14,7 +14,7 @@ const METHOD_OPTIONS = [
   "other",
 ];
 
-export default function NewBatch({ setActiveStatus }) {
+export default function NewBatch({ onBatchCreated }) {
   const { user } = useContext(UserContext);
 
   const [clients, setClients] = useState([]);
@@ -124,7 +124,9 @@ export default function NewBatch({ setActiveStatus }) {
           foreign_urgents: [],
           corrections: false,
         });
-        setActiveStatus("current");
+        if (typeof onBatchCreated === "function") {
+          onBatchCreated();
+        }
       }
     } catch (error) {
       console.error("Failed to add batch:", error);
@@ -258,13 +260,14 @@ export default function NewBatch({ setActiveStatus }) {
           <button type="submit" className="btn-class min-w-[100px]">
             Add
           </button>
-          <button
+          {/* old meh */}
+          {/* <button
             type="button"
             onClick={() => setActiveStatus("current")}
             className="btn-class min-w-[100px] bg-gray-300 text-gray-dark"
           >
             Close
-          </button>
+          </button> */}
         </div>
       </form>
     </div>

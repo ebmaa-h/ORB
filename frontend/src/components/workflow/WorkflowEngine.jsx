@@ -1,4 +1,4 @@
-// src/components/Workflow/WorkflowEngine.jsx
+﻿// src/components/Workflow/WorkflowEngine.jsx
 import React, { useEffect, useState, useMemo, useContext, useCallback } from "react";
 import WORKFLOW_CONFIG from "../../config/workflowConfig";
 import ENDPOINTS from "../../utils/apiEndpoints";
@@ -19,7 +19,12 @@ export default function WorkflowEngine({ department = "none" }) {
   const [activeStatus, setActiveStatus] = useState("current");
   const [selectedBatch, setSelectedBatch] = useState(null);
   const [searchTerm, setSearchTerm] = useState("");
+  const [showNewBatchForm, setShowNewBatchForm] = useState(false);
   const endpoint = config?.endpointKey ? ENDPOINTS[config.endpointKey] : null;
+
+  useEffect(() => {
+    setShowNewBatchForm(false);
+  }, [department]);
 
   // fetch initial batches
   useEffect(() => {
@@ -30,12 +35,12 @@ export default function WorkflowEngine({ department = "none" }) {
       try {
         const res = await axiosClient.get(endpoint);
         if (!mounted) return;
-        console.log(`📥 Fetch response for ${department}:`, res.data);
+        console.log(`ðŸ“¥ Fetch response for ${department}:`, res.data);
         const { normal = [], foreignUrgent = [] } = res.data || {};
         setBatches(normal.filter(b => !b.is_pure_foreign_urgent && b.current_department === department));
         setFuBatches(foreignUrgent.filter(b => b.current_department === department));
       } catch (err) {
-        console.error(`❌ WorkflowEngine fetch error for ${department}:`, err);
+        console.error(`âŒ WorkflowEngine fetch error for ${department}:`, err);
       } finally {
         if (mounted) setLoading(false);
       }
@@ -88,42 +93,68 @@ export default function WorkflowEngine({ department = "none" }) {
   // web sockets
   useEffect(() => {
     if (!socket.connected) {
-      console.log('🔌 Connecting socket...');
+      console.log('ðŸ”Œ Connecting socket...');
       socket.connect();
     }
 
     socket.emit("joinRoom", department);
-    console.log(`🔗 Emitted joinRoom for ${department}`);
+    console.log(`ðŸ”— Emitted joinRoom for ${department}`);
 
-    const logBatch = (prefix, batch) =>
-      console.log(`🟢 ${prefix} received for dept ${department}:`, batch);
+    const logBatch = (label, batch) => {
+      console.log(`[socket] ${label} for ${department}`, batch);
+    };
+
+    const normalizeIncomingBatch = (incoming) => {
+      if (!incoming) return incoming;
+
+      const pureFlag = (() => {
+        if (typeof incoming.is_pure_foreign_urgent === "boolean") return incoming.is_pure_foreign_urgent;
+        if (incoming.is_pure_foreign_urgent === null || incoming.is_pure_foreign_urgent === undefined) return false;
+        const numeric = Number(incoming.is_pure_foreign_urgent);
+        if (!Number.isNaN(numeric)) return numeric === 1;
+        if (typeof incoming.is_pure_foreign_urgent === "string") {
+          const lowered = incoming.is_pure_foreign_urgent.toLowerCase();
+          if (["true", "yes", "y"].includes(lowered)) return true;
+          if (["false", "no", "n", ""].includes(lowered)) return false;
+        }
+        return Boolean(incoming.is_pure_foreign_urgent);
+      })();
+
+      return {
+        ...incoming,
+        current_department: incoming.current_department || department,
+        status: incoming.status || "current",
+        is_pure_foreign_urgent: pureFlag,
+      };
+    };
 
     const handleCreated = (newBatch) => {
-      logBatch("batchCreated", newBatch);
-      if (!newBatch.current_department || newBatch.current_department !== department) {
-        console.log(`❌ batchCreated ignored: wrong department ${newBatch.current_department} for ${department}`);
+      const normalized = normalizeIncomingBatch(newBatch);
+      logBatch('batchCreated', normalized);
+      if (!normalized.current_department || normalized.current_department !== department) {
+        console.log(`[socket] batchCreated ignored: wrong department ${normalized.current_department} for ${department}`);
         return;
       }
-      if (newBatch.parent_batch_id) { // foreignUrgent batch
+      if (normalized.parent_batch_id) { // foreignUrgent batch
         setFuBatches((prev) => {
-          if (prev.some(b => b.batch_id === newBatch.batch_id)) {
-            console.log(`ℹ️ foreignUrgent batch ${newBatch.batch_id} already exists`);
+          if (prev.some((b) => b.batch_id === normalized.batch_id)) {
+            console.log(`[socket] foreign urgent batch ${normalized.batch_id} already exists`);
             return prev;
           }
-          console.log(`✅ Adding foreignUrgent batch ${newBatch.batch_id}`);
-          return [...prev, newBatch];
+          console.log(`[socket] adding foreign urgent batch ${normalized.batch_id}`);
+          return [normalized, ...prev];
         });
-      } else if (!newBatch.is_pure_foreign_urgent) { // normal batch
+      } else if (!normalized.is_pure_foreign_urgent) { // normal batch
         setBatches((prev) => {
-          if (prev.some(b => b.batch_id === newBatch.batch_id)) {
-            console.log(`ℹ️ normal batch ${newBatch.batch_id} already exists`);
+          if (prev.some((b) => b.batch_id === normalized.batch_id)) {
+            console.log(`[socket] normal batch ${normalized.batch_id} already exists`);
             return prev;
           }
-          console.log(`✅ Adding normal batch ${newBatch.batch_id}`);
-          return [...prev, newBatch];
+          console.log(`[socket] adding normal batch ${normalized.batch_id}`);
+          return [normalized, ...prev];
         });
       } else {
-        console.log(`ℹ️ Skipping dummy pure foreign/urgent batch ${newBatch.batch_id}`);
+        console.log(`[socket] skipping pure foreign urgent batch ${normalized.batch_id}`);
       }
     };
 
@@ -136,7 +167,7 @@ export default function WorkflowEngine({ department = "none" }) {
     socket.on("batchUpdated", handleUpdated);
 
     socket.on("test", (data) => {
-      console.log('🔔 Test event received:', data);
+      console.log('ðŸ”” Test event received:', data);
     });
 
     return () => {
@@ -145,7 +176,7 @@ export default function WorkflowEngine({ department = "none" }) {
       socket.off("test");
       try {
         socket.emit("leaveRoom", department);
-        console.log(`🔗 Emitted leaveRoom for ${department}`);
+        console.log(`ðŸ”— Emitted leaveRoom for ${department}`);
       } catch (e) {
         console.warn(`Failed to leave room ${department}:`, e);
       }
@@ -257,10 +288,11 @@ export default function WorkflowEngine({ department = "none" }) {
           ))}
           {department === "reception" && (
             <button
-              className={`btn-class ${activeStatus === "newBatch" ? "font-bold bg-gray-100" : ""}`}
-              onClick={() => setActiveStatus("newBatch")}
+              className={`btn-class ${showNewBatchForm ? "font-bold bg-gray-100" : ""}`}
+              onClick={() => setShowNewBatchForm((prev) => !prev)}
             >
               Add Batch
+              {/* {showNewBatchForm ? "Close" : "Add Batch"} */}
             </button>
           )}
         </div>
@@ -290,25 +322,29 @@ export default function WorkflowEngine({ department = "none" }) {
         <div>Loading batches...</div>
       ) : (
         <div className="container-col-outer gap-4">
-          {activeStatus === "newBatch" && department === "reception" ? (
-            <NewBatch setActiveStatus={setActiveStatus} />
-          ) : (
-            <WorkflowTable
-              columns={tableColumns}
-              batches={visibleBatches.filter(b => b.status === activeStatus && b.current_department === department)}
-              selectedBatch={selectedBatch}
-              onSelect={setSelectedBatch}
-              mainActions={mainActionsForTable}
-              actions={dropdownActionsForTable}
-              onExecute={executeAction}
-              filterType={filterType}
-              department={department}
-            />
+          {department === "reception" && showNewBatchForm && (
+            <NewBatch onBatchCreated={() => setShowNewBatchForm(false)} />
           )}
+          <WorkflowTable
+            columns={tableColumns}
+            batches={visibleBatches.filter(b => b.status === activeStatus && b.current_department === department)}
+            selectedBatch={selectedBatch}
+            onSelect={setSelectedBatch}
+            mainActions={mainActionsForTable}
+            actions={dropdownActionsForTable}
+            onExecute={executeAction}
+            filterType={filterType}
+            department={department}
+          />
           <NotesAndLogs department={department} filterType={filterType} />
         </div>
       )}
     </div>
   );
 }
+
+
+
+
+
 
