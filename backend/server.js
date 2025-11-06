@@ -36,7 +36,7 @@ app.use(session({
   cookie: {
     httpOnly: true,
     maxAge: 30600000,
-    // secure: !!process.env.USE_HTTPS,   // ENABLE FOR PRODUCTION//SERVER
+    secure: !!process.env.USE_HTTPS,   // ENABLE FOR PRODUCTION//SERVER
     sameSite: 'lax'
   },
 }));
