@@ -20,10 +20,32 @@ export default function WorkflowEngine({ department = "none" }) {
   const [selectedBatch, setSelectedBatch] = useState(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [showNewBatchForm, setShowNewBatchForm] = useState(false);
+  const [clients, setClients] = useState([]);
   const endpoint = config?.endpointKey ? ENDPOINTS[config.endpointKey] : null;
 
   useEffect(() => {
     setShowNewBatchForm(false);
+  }, [department]);
+
+  useEffect(() => {
+    if (department !== "reception") {
+      setClients([]);
+      return;
+    }
+    let ignore = false;
+    const fetchClients = async () => {
+      try {
+        const res = await axiosClient.get(ENDPOINTS.workflowClients);
+        if (!ignore) setClients(res.data || []);
+      } catch (err) {
+        console.error("Failed to load workflow clients:", err);
+        if (!ignore) setClients([]);
+      }
+    };
+    fetchClients();
+    return () => {
+      ignore = true;
+    };
   }, [department]);
 
   // fetch initial batches
@@ -89,6 +111,50 @@ export default function WorkflowEngine({ department = "none" }) {
       });
     }
   }, [department]);
+
+  const handleReceptionUpdate = useCallback(
+    async (batchId, updates) => {
+      try {
+        const payload = {
+          ...updates,
+          user_id: user?.user_id || null,
+        };
+        const res = await axiosClient.patch(ENDPOINTS.updateBatch(batchId), payload);
+        if (res?.data) {
+          applyBatchUpdate(res.data);
+          return { success: true, batch: res.data };
+        }
+        return { success: false, error: "No data returned" };
+      } catch (err) {
+        console.error(`Failed to update batch ${batchId}:`, err);
+        const message = err?.response?.data?.error || "Failed to update batch";
+        return { success: false, error: message };
+      }
+    },
+    [user, applyBatchUpdate]
+  );
+
+  const handleArchiveDraft = useCallback(
+    async (batch) => {
+      try {
+        const res = await axiosClient.post(ENDPOINTS.archiveBatch, {
+          batch_id: batch.batch_id,
+          is_fu: !!batch.parent_batch_id,
+          user_id: user?.user_id || null,
+        });
+        if (res?.data) {
+          applyBatchUpdate(res.data);
+          return { success: true };
+        }
+        return { success: false, error: "No data returned" };
+      } catch (err) {
+        console.error("Failed to archive batch:", err);
+        const message = err?.response?.data?.error || "Failed to archive batch";
+        return { success: false, error: message };
+      }
+    },
+    [user, applyBatchUpdate]
+  );
 
   // web sockets
   useEffect(() => {
@@ -335,6 +401,10 @@ export default function WorkflowEngine({ department = "none" }) {
             onExecute={executeAction}
             filterType={filterType}
             department={department}
+            activeStatus={activeStatus}
+            onBatchUpdate={handleReceptionUpdate}
+            onArchiveDraft={handleArchiveDraft}
+            clients={clients}
           />
           <NotesAndLogs department={department} filterType={filterType} />
         </div>

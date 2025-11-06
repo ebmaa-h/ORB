@@ -13,6 +13,10 @@ const WorkflowTable = React.memo(function WorkflowTable({
   onExecute = () => {},
   filterType = "normal",
   department = "none",
+  activeStatus = "current",
+  onBatchUpdate = async () => ({ success: false }),
+  onArchiveDraft = async () => ({ success: false }),
+  clients = [],
 }) {
   if (!Array.isArray(batches)) batches = [];
 
@@ -20,6 +24,7 @@ const WorkflowTable = React.memo(function WorkflowTable({
   const expandedColumns = filterType === "fu" && config.foreignUrgentColumnsExpanded
     ? config.foreignUrgentColumnsExpanded
     : config.columnsExpanded;
+  const canEdit = department === "reception" && activeStatus === "current" && filterType === "normal";
 
   return (
     <div className="overflow-x-auto rounded border border-gray-blue-200 p-2">
@@ -51,6 +56,10 @@ const WorkflowTable = React.memo(function WorkflowTable({
                 onExecute={onExecute}
                 filterType={filterType}
                 expandedColumns={expandedColumns}
+                canEdit={canEdit}
+                onBatchUpdate={onBatchUpdate}
+                onArchiveDraft={onArchiveDraft}
+                clients={clients}
               />
             ))
           )}

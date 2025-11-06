@@ -6,7 +6,7 @@ const ExpandedRowActions = ({ mainActions = [], actions = [], selectedBatch, onE
     <div className="flex justify-between items-center p-4 mt-4 border-t border-gray-blue-200">
       {/* Left Side: View Batch Button */}
       <button
-        className="btn-class hover:bg-blue-600 min-w-[140px]"
+        className="btn-class hover:bg-blue-600 min-w-[140px] disabled"
         onClick={() => onViewBatch(selectedBatch)}
       >
         View Batch

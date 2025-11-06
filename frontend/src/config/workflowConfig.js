@@ -49,7 +49,7 @@ const WORKFLOW_CONFIG = {
       { name: "billing_email_sent_by", label: "Billing Email Sent By" },
       { name: "added_on_drive", label: "Added on Drive", formatter: (val) => (val ? "Yes" : "No") },
       { name: "corrections", label: "Corrections", formatter: (val) => (val ? "Yes" : "No") },
-      { name: "is_pure_foreign_urgent", label: "Is Pure Foreign Urgent", formatter: (val) => (val ? "Yes" : "No") },
+      // { name: "is_pure_foreign_urgent", label: "Is Pure Foreign Urgent", formatter: (val) => (val ? "Yes" : "No") },
       { name: "created_at", label: "Created At", formatter: (val) => (val ? new Date(val).toLocaleString() : "") },
       { name: "updated_at", label: "Updated At", formatter: (val) => (val ? new Date(val).toLocaleString() : "") },
     ],
@@ -128,12 +128,12 @@ const WORKFLOW_CONFIG = {
         method: "post",
         endpointKey: "moveToBilling",
       },
-      {
-        name: "sentToAdmittance",
-        label: "Send to Admittance",
-        method: "post",
-        endpointKey: "moveToAdmittance",
-      },
+      // {
+      //   name: "sentToAdmittance",
+      //   label: "Send to Admittance",
+      //   method: "post",
+      //   endpointKey: "moveToAdmittance",
+      // },
     ],
     // Main action available in expanded batch view
     expandedActionsMain: [
@@ -156,9 +156,14 @@ const WORKFLOW_CONFIG = {
     endpointKey: "admittanceWorkflow",
     columns: [
       { name: "batch_id", label: "Batch ID" },
+      { name: "batch_size", label: "Batch Size" },
       { name: "client_id", label: "Client", formatter: (val, row) => (row.client_first || row.client_last) ? (`Dr ${row.client_first || ''} ${row.client_last || ''}`).trim() : val },
       { name: "date_received", label: "Date Received", formatter: (val) => (val ? new Date(val).toLocaleDateString() : "") },
       { name: "method_received", label: "Method Received" },
+      { name: "bank_statements", label: "Bank Statements", formatter: (val) => (val ? "Yes" : "No") },
+      { name: "added_on_drive", label: "Added on Drive", formatter: (val) => (val ? "Yes" : "No") },
+      { name: "corrections", label: "Corrections", formatter: (val) => (val ? "Yes" : "No") },
+      { name: "cc_availability", label: "CC Availability" },
     ],
     columnsExpanded: [
       { name: "batch_id", label: "Batch ID" },
@@ -279,9 +284,14 @@ const WORKFLOW_CONFIG = {
     endpointKey: "billingWorkflow",
     columns: [
       { name: "batch_id", label: "Batch ID" },
+      { name: "batch_size", label: "Batch Size" },
       { name: "client_id", label: "Client", formatter: (val, row) => (row.client_first || row.client_last) ? (`Dr ${row.client_first || ''} ${row.client_last || ''}`).trim() : val },
       { name: "date_received", label: "Date Received", formatter: (val) => (val ? new Date(val).toLocaleDateString() : "") },
       { name: "method_received", label: "Method Received" },
+      { name: "bank_statements", label: "Bank Statements", formatter: (val) => (val ? "Yes" : "No") },
+      { name: "added_on_drive", label: "Added on Drive", formatter: (val) => (val ? "Yes" : "No") },
+      { name: "corrections", label: "Corrections", formatter: (val) => (val ? "Yes" : "No") },
+      { name: "cc_availability", label: "CC Availability" },
     ],
     columnsExpanded: [
       { name: "batch_id", label: "Batch ID" },

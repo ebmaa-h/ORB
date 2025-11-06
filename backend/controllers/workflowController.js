@@ -175,6 +175,121 @@ const workflowController = {
     }
   },
 
+  updateReceptionBatch: async (req, res) => {
+    try {
+      const batchId = Number(req.params.batchId);
+      if (!batchId) return res.status(400).json({ error: 'Invalid batch_id' });
+
+      const {
+        batch_size,
+        client_id,
+        date_received,
+        method_received,
+        bank_statements,
+        added_on_drive,
+        corrections,
+        cc_availability,
+        user_id,
+      } = req.body || {};
+
+      if (!batch_size || Number.isNaN(Number(batch_size))) {
+        return res.status(400).json({ error: 'batch_size is required and must be numeric' });
+      }
+      if (!client_id || Number.isNaN(Number(client_id))) {
+        return res.status(400).json({ error: 'client_id is required and must be numeric' });
+      }
+      if (!date_received) {
+        return res.status(400).json({ error: 'date_received is required' });
+      }
+      if (!method_received) {
+        return res.status(400).json({ error: 'method_received is required' });
+      }
+
+      const existing = await Batch.getBatchById(batchId);
+      if (!existing) return res.status(404).json({ error: 'Batch not found' });
+
+      const main = await Batch.getWorkflowMainByEntity({ entity_type: 'batch', entity_id: batchId });
+      if (!main || main.department !== 'reception' || main.status !== 'current') {
+        return res.status(409).json({ error: 'Batch cannot be edited in its current state' });
+      }
+
+      const boolFields = ['bank_statements', 'added_on_drive', 'corrections'];
+      const normalizedUpdate = {
+        batch_size: Number(batch_size),
+        client_id: Number(client_id),
+        date_received,
+        method_received,
+        bank_statements: Number(normalizeBooleanFlag(
+          bank_statements !== undefined ? bank_statements : existing.bank_statements
+        )),
+        added_on_drive: Number(normalizeBooleanFlag(
+          added_on_drive !== undefined ? added_on_drive : existing.added_on_drive
+        )),
+        corrections: Number(normalizeBooleanFlag(
+          corrections !== undefined ? corrections : existing.corrections
+        )),
+        cc_availability:
+          typeof cc_availability === 'string'
+            ? cc_availability
+            : (cc_availability ?? existing.cc_availability ?? ''),
+      };
+
+      const newIsPure = Number(normalizedUpdate.batch_size || 0) === Number(existing.total_urgent_foreign || 0);
+
+      await Batch.updateReceptionFields({
+        batch_id: batchId,
+        ...normalizedUpdate,
+        is_pure_foreign_urgent: newIsPure ? 1 : 0,
+      });
+
+      const updated = await Batch.getBatchById(batchId);
+
+      const io = getIO();
+      io.to('reception').emit('batchUpdated', {
+        ...updated,
+        current_department: updated.current_department || 'reception',
+        status: updated.status || 'current',
+        is_pure_foreign_urgent: normalizeBooleanFlag(updated.is_pure_foreign_urgent),
+      });
+
+      const changeSummary = {};
+      const comparable = (field, value) => {
+        if (boolFields.includes(field)) return normalizeBooleanFlag(value);
+        if (['batch_size', 'client_id'].includes(field)) return Number(value);
+        if (field === 'date_received') {
+          const dateVal = value ? new Date(value) : null;
+          return dateVal ? dateVal.toISOString().slice(0, 10) : null;
+        }
+        return value ?? null;
+      };
+
+      Object.entries(normalizedUpdate).forEach(([field, value]) => {
+        const before = comparable(field, existing[field]);
+        const after = comparable(field, value);
+        if (before !== after) {
+          changeSummary[field] = { before, after };
+        }
+      });
+
+      if (Object.keys(changeSummary).length) {
+        await recordWorkflowLog({
+          userId: user_id || null,
+          department: 'reception',
+          batchType: resolveBatchTypeFromFlag(newIsPure),
+          entityType: 'batch',
+          entityId: batchId,
+          action: 'batch_updated',
+          message: `Batch #${batchId} updated in reception`,
+          metadata: { batch_id: batchId, changes: changeSummary },
+        });
+      }
+
+      res.json(updated);
+    } catch (err) {
+      console.error('Error updating batch:', err);
+      res.status(500).json({ error: 'Failed to update batch' });
+    }
+  },
   departmentBatches: async (req, res) => {
     try {
       const department = String(req.params.department || '').toLowerCase();
@@ -453,6 +568,11 @@ const workflowController = {
 
       io.to(main.department).emit('batchUpdated', payload);
 
+      const isReceptionDraft = main.department === 'reception' && main.status === 'current';
+      const archiveMessage = isReceptionDraft
+        ? `Batch #${batch_id} archived from reception | current batches`
+        : `Batch #${batch_id} archived from reception ${main.status}`;
+
       await recordWorkflowLog({
         userId: user_id || null,
         department: main.department,
@@ -460,8 +580,8 @@ const workflowController = {
         entityType: entity_type,
         entityId: batch_id,
         action: 'batch_archived',
-        message: `Batch #${batch_id} archived from filing`,
-        metadata: { batch_id, department: main.department },
+        message: archiveMessage,
+        metadata: { batch_id, department: main.department, isReceptionDraft },
       });
 
       res.json(payload);
@@ -550,5 +670,6 @@ const workflowController = {
 };
 
 module.exports = workflowController;
+
 
 

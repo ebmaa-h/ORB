@@ -166,6 +166,21 @@ const UPDATE_BATCH_BILLED_BY = `
   WHERE batch_id = ?
 `;
 
+const UPDATE_BATCH_RECEPTION_FIELDS = `
+  UPDATE batches
+  SET
+    batch_size = ?,
+    client_id = ?,
+    date_received = ?,
+    method_received = ?,
+    bank_statements = ?,
+    added_on_drive = ?,
+    corrections = ?,
+    cc_availability = ?,
+    is_pure_foreign_urgent = ?
+  WHERE batch_id = ?
+`;
+
 const UPDATE_FU_ADMITTED_BY = `
   UPDATE foreign_urgent_accounts
   SET admitted_by = ?
@@ -433,6 +448,7 @@ module.exports = {
   MOVE_FU,
   ACCEPT_BATCH,
   ACCEPT_FU,
+  UPDATE_BATCH_RECEPTION_FIELDS,
   GET_BATCH_BY_ID,
   GET_FU_BY_ID,
   UPDATE_BATCH_ADMITTED_BY,

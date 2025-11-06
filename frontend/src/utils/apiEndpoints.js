@@ -23,6 +23,7 @@ const ENDPOINTS = {
   pullbackBatch: `${API_URL}/batches/pullback`,
   archiveBatch: `${API_URL}/batches/archive`,
   workflowClients: `${API_URL}/batches/clients`,
+  updateBatch: (batchId) => `${API_URL}/batches/${batchId}/update`,
 
   addBatch : `${API_URL}/batches`, 
 

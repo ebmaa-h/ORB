@@ -9,6 +9,7 @@ router.post('/accept', wc.acceptBatch);
 router.post('/pullback', wc.cancelTransfer);
 router.post('/archive', wc.archiveBatch);
 router.get('/clients', wc.listClients);
+router.patch('/:batchId/update', wc.updateReceptionBatch);
 router.get('/:department', wc.departmentBatches);
 // router.get('/reception', wc.receptionForeignUrgentBatches);
 

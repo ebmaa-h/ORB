@@ -257,17 +257,9 @@ export default function NewBatch({ onBatchCreated }) {
           </div>
         ))}
         <div className="flex gap-2 self-center w-full mt-4">
-          <button type="submit" className="btn-class min-w-[100px]">
+          <button type="submit" className="btn-class min-w-[100px] bg-green text-white">
             Add
           </button>
-          {/* old meh */}
-          {/* <button
-            type="button"
-            onClick={() => setActiveStatus("current")}
-            className="btn-class min-w-[100px] bg-gray-300 text-gray-dark"
-          >
-            Close
-          </button> */}
         </div>
       </form>
     </div>

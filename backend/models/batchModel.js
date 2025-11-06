@@ -73,6 +73,32 @@ const Batch = {
     };
   },
 
+  updateReceptionFields: async ({
+    batch_id,
+    batch_size,
+    client_id,
+    date_received,
+    method_received,
+    bank_statements,
+    added_on_drive,
+    corrections,
+    cc_availability,
+    is_pure_foreign_urgent,
+  }) => {
+    await db.query(queries.UPDATE_BATCH_RECEPTION_FIELDS, [
+      batch_size,
+      client_id,
+      date_received,
+      method_received,
+      bank_statements,
+      added_on_drive,
+      corrections,
+      cc_availability,
+      is_pure_foreign_urgent,
+      batch_id,
+    ]);
+  },
+
   getBatchById: async (batch_id) => {
     const [rows] = await db.query(queries.GET_BATCH_BY_ID, [batch_id]);
     return rows[0] || null;
