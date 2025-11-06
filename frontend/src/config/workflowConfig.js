@@ -1,8 +1,8 @@
 // src/config/workflowConfig.js
 const formatCurrency = (val) => {
   const num = Number(val);
-  if (Number.isFinite(num)) return `$${num.toFixed(2)}`;
-  return '$0.00';
+  if (Number.isFinite(num)) return `R${num.toFixed(2)}`;
+  return 'R0.00';
 };
 
 const WORKFLOW_CONFIG = {
