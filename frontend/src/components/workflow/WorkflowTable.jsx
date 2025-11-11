@@ -1,5 +1,5 @@
 // src/components/Workflow/WorkflowTable.jsx
-import React from "react";
+import React, { useCallback, useState } from "react";
 import Row from "./Row";
 import WORKFLOW_CONFIG from "../../config/workflowConfig";
 
@@ -20,11 +20,19 @@ const WorkflowTable = React.memo(function WorkflowTable({
 }) {
   if (!Array.isArray(batches)) batches = [];
 
+  const [expandedBatchId, setExpandedBatchId] = useState(null);
+  const handleToggleExpand = useCallback(
+    (batchId) => {
+      setExpandedBatchId((prev) => (prev === batchId ? null : batchId));
+    },
+    [],
+  );
+
   const config = WORKFLOW_CONFIG[department];
   const expandedColumns = filterType === "fu" && config.foreignUrgentColumnsExpanded
     ? config.foreignUrgentColumnsExpanded
     : config.columnsExpanded;
-  const canEdit = department === "reception" && activeStatus === "current" && filterType === "normal";
+  const canEdit = activeStatus === "current";
 
   return (
     <div className="overflow-x-auto rounded border border-gray-blue-200 p-2">
@@ -50,7 +58,9 @@ const WorkflowTable = React.memo(function WorkflowTable({
                 batch={batch}
                 columns={columns}
                 onSelect={onSelect}
+                onToggleExpand={handleToggleExpand}
                 isSelected={selectedBatch?.batch_id === batch.batch_id}
+                isExpanded={expandedBatchId === batch.batch_id}
                 mainActions={mainActions}
                 actions={actions}
                 onExecute={onExecute}

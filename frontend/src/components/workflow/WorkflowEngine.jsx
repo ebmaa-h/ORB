@@ -1,16 +1,21 @@
 ﻿// src/components/Workflow/WorkflowEngine.jsx
 import React, { useEffect, useState, useMemo, useContext, useCallback } from "react";
+import { useNavigate } from "react-router-dom";
 import WORKFLOW_CONFIG from "../../config/workflowConfig";
 import ENDPOINTS from "../../utils/apiEndpoints";
 import axiosClient from "../../utils/axiosClient";
 import socket from "../../utils/socket";
 import WorkflowTable from "./WorkflowTable";
 import { UserContext } from "../../context/UserContext";
-import { NewBatch, NotesAndLogs } from "../index";
+import { NewBatch } from "../index";
+import EntityNotesAndLogs from "../ui/EntityNotesAndLogs";
 import SearchBar from "../ui/SearchBar";
+
+const LOGS_TAB = "logs";
 
 export default function WorkflowEngine({ department = "none" }) {
   const { user } = useContext(UserContext);
+  const navigate = useNavigate();
   const config = WORKFLOW_CONFIG[department];
   const [batches, setBatches] = useState([]);
   const [fuBatches, setFuBatches] = useState([]);
@@ -22,16 +27,46 @@ export default function WorkflowEngine({ department = "none" }) {
   const [showNewBatchForm, setShowNewBatchForm] = useState(false);
   const [clients, setClients] = useState([]);
   const endpoint = config?.endpointKey ? ENDPOINTS[config.endpointKey] : null;
+  const normalizedBatchType = useMemo(
+    () => (filterType === "fu" ? "foreign_urgent" : "normal"),
+    [filterType],
+  );
+  const statusTabs = useMemo(() => {
+    const base = config?.tables || [];
+    return base.filter((tab) => tab.name !== "filing");
+  }, [config]);
+  const filingTab = useMemo(() => {
+    return (config?.tables || []).find((tab) => tab.name === "filing") || null;
+  }, [config]);
+  const showNotesTab = activeStatus === LOGS_TAB;
+  const handleNavigateToBatch = useCallback(
+    (batchId) => {
+      if (batchId === null || batchId === undefined) return false;
+      const normalizedId = String(batchId).trim();
+      if (!normalizedId) return false;
+      const allBatches = [...batches, ...fuBatches];
+      const found = allBatches.find((entry) => String(entry.batch_id) === normalizedId);
+      if (found) {
+        navigate(`/batches/${found.batch_id}`, { state: { batch: found } });
+        return true;
+      }
+      navigate(`/batches/${normalizedId}`);
+      return true;
+    },
+    [batches, fuBatches, navigate],
+  );
 
   useEffect(() => {
     setShowNewBatchForm(false);
   }, [department]);
 
   useEffect(() => {
-    if (department !== "reception") {
-      setClients([]);
-      return;
+    if (activeStatus === LOGS_TAB) {
+      setShowNewBatchForm(false);
     }
+  }, [activeStatus]);
+
+  useEffect(() => {
     let ignore = false;
     const fetchClients = async () => {
       try {
@@ -46,7 +81,7 @@ export default function WorkflowEngine({ department = "none" }) {
     return () => {
       ignore = true;
     };
-  }, [department]);
+  }, []);
 
   // fetch initial batches
   useEffect(() => {
@@ -284,17 +319,19 @@ export default function WorkflowEngine({ department = "none" }) {
 
   const mainActionsForTable = useMemo(() => {
     if (!config) return [];
+    if (showNotesTab) return [];
     if (activeStatus === "inbox") return config.inboxActions || [];
     if (activeStatus === "outbox") return config.outboxActions || [];
     if (activeStatus === "filing" && config.filingActions) return config.filingActions;
     return config.expandedActionsMain || config.mainActions || [];
-  }, [activeStatus, config]);
+  }, [activeStatus, config, showNotesTab]);
 
   const dropdownActionsForTable = useMemo(() => {
     if (!config) return [];
+     if (showNotesTab) return [];
     if (activeStatus === "inbox" || activeStatus === "outbox") return [];
     return config.expandedActions || config.actions || [];
-  }, [activeStatus, config]);
+  }, [activeStatus, config, showNotesTab]);
 
   // actions
   const executeAction = async (action, batch) => {
@@ -341,32 +378,53 @@ export default function WorkflowEngine({ department = "none" }) {
 
   return (
     <div className="">
-      <div className="container-row-outer justify-between w-full">
-        <div className="flex gap-2 items-center">
-          {(config?.tables || []).map((table) => (
+      <div className="container-row-outer w-full flex-wrap gap-4 items-center">
+        <div className="flex gap-2 flex-wrap items-center">
+          {statusTabs.map((table) => {
+            const label = table.label || table.name;
+            return (
+              <button
+                key={table.name}
+                className={`btn-class ${activeStatus === table.name ? "font-bold bg-gray-100" : ""}`}
+                onClick={() => setActiveStatus(table.name)}
+              >
+                {label.charAt(0).toUpperCase() + label.slice(1)}
+              </button>
+            );
+          })}
+        </div>
+
+        <span className="text-gray-400 select-none">|</span>
+
+        <div className="flex gap-2 flex-wrap items-center">
+          <button
+            className={`btn-class ${showNotesTab ? "font-bold bg-gray-100" : ""}`}
+            onClick={() => setActiveStatus(LOGS_TAB)}
+          >
+            Logs
+          </button>
+          {filingTab && (
             <button
-              key={table.name}
-              className={`btn-class ${activeStatus === table.name ? "font-bold bg-gray-100" : ""}`}
-              onClick={() => setActiveStatus(table.name)}
+              className={`btn-class ${activeStatus === "filing" ? "font-bold bg-gray-100" : ""}`}
+              onClick={() => setActiveStatus("filing")}
             >
-              {table.name.charAt(0).toUpperCase() + table.name.slice(1)}
+              {filingTab.label || "Filing"}
             </button>
-          ))}
+          )}
           {department === "reception" && (
             <button
               className={`btn-class ${showNewBatchForm ? "font-bold bg-gray-100" : ""}`}
               onClick={() => setShowNewBatchForm((prev) => !prev)}
             >
               Add Batch
-              {/* {showNewBatchForm ? "Close" : "Add Batch"} */}
             </button>
           )}
         </div>
 
-        <div className="flex gap-2">
-          <div className="flex gap-2">
-            <SearchBar searchTerm={searchTerm} setSearchTerm={setSearchTerm} classes="max-w-md" />
-          </div>
+        <span className="text-gray-400 select-none">|</span>
+
+        <div className="flex gap-2 flex-wrap items-center ml-auto">
+          <SearchBar searchTerm={searchTerm} setSearchTerm={setSearchTerm} classes="max-w-md" />
           <button
             className={`btn-class ${filterType === "normal" ? "font-bold bg-gray-100" : ""}`}
             onClick={() => setFilterType("normal")}
@@ -386,6 +444,24 @@ export default function WorkflowEngine({ department = "none" }) {
         <div>{department} doesn't exist</div>
       ) : loading ? (
         <div>Loading batches...</div>
+      ) : showNotesTab ? (
+        <div className="container-col-outer gap-4">
+          <EntityNotesAndLogs
+            department={department}
+            batchType={normalizedBatchType}
+            context="workflow"
+            requireEntitySelection={false}
+            initialShowLogs
+            listMaxHeight={500}
+            headerDescription={`Logs for ${department} (${filterType === "fu" ? "Foreign & Urgent" : "Normal"})`}
+            title="Logs"
+            allowedTypes={["log"]}
+            enableLogToggle={false}
+            allowNotesInput={false}
+            includeNotes={false}
+            onBatchNavigate={handleNavigateToBatch}
+          />
+        </div>
       ) : (
         <div className="container-col-outer gap-4">
           {department === "reception" && showNewBatchForm && (
@@ -406,7 +482,6 @@ export default function WorkflowEngine({ department = "none" }) {
             onArchiveDraft={handleArchiveDraft}
             clients={clients}
           />
-          <NotesAndLogs department={department} filterType={filterType} />
         </div>
       )}
     </div>

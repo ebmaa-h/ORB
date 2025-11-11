@@ -2,6 +2,7 @@ const { getIO } = require("../sockets/socket.js");
 const Note = require('../models/noteModel.js');
 const Log = require('../models/logModel.js');
 const Batch = require('../models/batchModel.js');
+const { WORKFLOW_LOG_EVENTS, logWorkflowEvent, formatLogRow } = require('../utils/workflowLogEngine');
 
 const WORKFLOW_BATCH_TYPES = {
   NORMAL: 'normal',
@@ -32,51 +33,10 @@ const normalizeBooleanFlag = (value) => {
   return Boolean(value);
 };
 
-const parseMetadata = (metadata) => {
-  if (!metadata) return null;
-  if (typeof metadata === 'object') return metadata;
-  try {
-    return JSON.parse(metadata);
-  } catch (err) {
-    console.warn('Failed to parse workflow log metadata:', err);
-    return null;
-  }
-};
-
-const formatLogRow = (row) => {
-  if (!row) return row;
-  return {
-    ...row,
-    metadata: parseMetadata(row.metadata),
-  };
-};
-
-const emitWorkflowLog = (logRow) => {
-  if (!logRow?.department) return;
-  const io = getIO();
-  io.to(logRow.department).emit('workflow:logCreated', formatLogRow(logRow));
-};
-
 const emitWorkflowNote = (noteRow) => {
   if (!noteRow?.department) return;
   const io = getIO();
   io.to(noteRow.department).emit('workflow:noteCreated', noteRow);
-};
-
-const recordWorkflowLog = async (logInput) => {
-  const logRow = await Log.createWorkflowLog(logInput);
-  const formatted = formatLogRow(logRow);
-  emitWorkflowLog(formatted);
-  return formatted;
-};
-
-const recordWorkflowLogs = async (logs = []) => {
-  const results = [];
-  for (const log of logs) {
-    if (!log) continue;
-    results.push(await recordWorkflowLog(log));
-  }
-  return results;
 };
 
 const createWorkflowNote = async (noteInput) => {
@@ -109,15 +69,13 @@ const workflowController = {
         is_pure_foreign_urgent: normalizeBooleanFlag(baseBatch?.is_pure_foreign_urgent),
       });
 
-      await recordWorkflowLog({
+      await logWorkflowEvent(WORKFLOW_LOG_EVENTS.BATCH_CREATED, {
         userId: mainData.created_by || null,
         department: 'reception',
         batchType: WORKFLOW_BATCH_TYPES.NORMAL,
         entityType: 'batch',
         entityId: newBatch.batch_id,
-        action: 'batch_created',
-        message: `Batch #${newBatch.batch_id} created in reception`,
-        metadata: { batch_id: newBatch.batch_id },
+        batchId: newBatch.batch_id,
       });
 
       // Create foreign/urgent if present
@@ -151,15 +109,14 @@ const workflowController = {
           console.log('📤 Emitting batchCreated for foreignUrgent:', fuPayload);
           io.to("reception").emit("batchCreated", fuPayload);
 
-          await recordWorkflowLog({
+          await logWorkflowEvent(WORKFLOW_LOG_EVENTS.FOREIGN_URGENT_CREATED, {
             userId: mainData.created_by || null,
             department: 'reception',
             batchType: WORKFLOW_BATCH_TYPES.FOREIGN,
             entityType: 'fu',
             entityId: newFu.batch_id,
-            action: 'foreign_urgent_created',
-            message: `Foreign urgent #${newFu.batch_id} created for batch #${newBatch.batch_id}`,
-            metadata: { batch_id: newBatch.batch_id, foreign_urgent_id: newFu.batch_id },
+            batchId: newBatch.batch_id,
+            foreignUrgentId: newFu.batch_id,
           });
         }
       }
@@ -209,9 +166,10 @@ const workflowController = {
       if (!existing) return res.status(404).json({ error: 'Batch not found' });
 
       const main = await Batch.getWorkflowMainByEntity({ entity_type: 'batch', entity_id: batchId });
-      if (!main || main.department !== 'reception' || main.status !== 'current') {
+      if (!main || main.status !== 'current' || !ALLOWED_DEPARTMENTS.includes(main.department)) {
         return res.status(409).json({ error: 'Batch cannot be edited in its current state' });
       }
+      const activeDepartment = main.department;
 
       const boolFields = ['bank_statements', 'added_on_drive', 'corrections'];
       const normalizedUpdate = {
@@ -235,6 +193,7 @@ const workflowController = {
       };
 
       const newIsPure = Number(normalizedUpdate.batch_size || 0) === Number(existing.total_urgent_foreign || 0);
+      const batchTypeLabel = resolveBatchTypeFromFlag(newIsPure);
 
       await Batch.updateReceptionFields({
         batch_id: batchId,
@@ -245,9 +204,9 @@ const workflowController = {
       const updated = await Batch.getBatchById(batchId);
 
       const io = getIO();
-      io.to('reception').emit('batchUpdated', {
+      io.to(activeDepartment).emit('batchUpdated', {
         ...updated,
-        current_department: updated.current_department || 'reception',
+        current_department: updated.current_department || activeDepartment,
         status: updated.status || 'current',
         is_pure_foreign_urgent: normalizeBooleanFlag(updated.is_pure_foreign_urgent),
       });
@@ -272,15 +231,14 @@ const workflowController = {
       });
 
       if (Object.keys(changeSummary).length) {
-        await recordWorkflowLog({
+        await logWorkflowEvent(WORKFLOW_LOG_EVENTS.BATCH_UPDATED, {
           userId: user_id || null,
-          department: 'reception',
-          batchType: resolveBatchTypeFromFlag(newIsPure),
+          department: activeDepartment,
+          batchType: batchTypeLabel,
           entityType: 'batch',
           entityId: batchId,
-          action: 'batch_updated',
-          message: `Batch #${batchId} updated in reception`,
-          metadata: { batch_id: batchId, changes: changeSummary },
+          batchId,
+          changes: changeSummary,
         });
       }
 
@@ -353,35 +311,33 @@ const workflowController = {
       io.to(finalToDepartment).emit('batchUpdated', inboxPayload);
 
       const destinationLabel = isFiling ? 'filing' : finalToDepartment;
-      const moveLogs = [];
-
       if (fromDepartment) {
-        moveLogs.push({
+        await logWorkflowEvent(WORKFLOW_LOG_EVENTS.BATCH_SENT, {
           userId: user_id || null,
           department: fromDepartment,
           batchType,
           entityType: entity_type,
           entityId: batch_id,
-          action: 'batch_sent',
-          message: `Batch #${batch_id} sent to ${destinationLabel}`,
-          metadata: { batch_id, from: fromDepartment, to: destinationLabel, entity_type },
+          batchId: batch_id,
+          fromDepartment,
+          toDepartment: destinationLabel,
         });
       }
 
-      moveLogs.push({
+      const incomingEvent = isFiling
+        ? WORKFLOW_LOG_EVENTS.BATCH_TO_FILING
+        : WORKFLOW_LOG_EVENTS.BATCH_RECEIVED;
+
+      await logWorkflowEvent(incomingEvent, {
         userId: user_id || null,
         department: finalToDepartment,
         batchType,
         entityType: entity_type,
         entityId: batch_id,
-        action: isFiling ? 'batch_to_filing' : 'batch_received',
-        message: isFiling
-          ? `Batch #${batch_id} moved to filing`
-          : `Batch #${batch_id} received from ${fromDepartment || 'unknown'}`,
-        metadata: { batch_id, from: fromDepartment, to: destinationLabel, entity_type },
+        batchId: batch_id,
+        fromDepartment,
+        toDepartment: destinationLabel,
       });
-
-      await recordWorkflowLogs(moveLogs);
 
       res.json({ success: true, outbox: outboxPayload, inbox: inboxPayload });
     } catch (err) {
@@ -422,33 +378,28 @@ const workflowController = {
         io.to(outbox.department).emit('batchUpdated', acceptedPayload);
       }
 
-      const acceptLogs = [
-        {
-          userId: user_id || null,
-          department: toDept,
-          batchType,
-          entityType: entity_type,
-          entityId: batch_id,
-          action: 'batch_accepted',
-          message: `Batch #${batch_id} accepted into ${toDept}`,
-          metadata: { batch_id, department: toDept, status: finalStatus },
-        },
-      ];
+      await logWorkflowEvent(WORKFLOW_LOG_EVENTS.BATCH_ACCEPTED, {
+        userId: user_id || null,
+        department: toDept,
+        batchType,
+        entityType: entity_type,
+        entityId: batch_id,
+        batchId: batch_id,
+        status: finalStatus,
+      });
 
       if (outbox?.department) {
-        acceptLogs.push({
+        await logWorkflowEvent(WORKFLOW_LOG_EVENTS.BATCH_ACCEPTED_DOWNSTREAM, {
           userId: user_id || null,
           department: outbox.department,
           batchType,
           entityType: entity_type,
           entityId: batch_id,
-          action: 'batch_accepted_downstream',
-          message: `Batch #${batch_id} accepted by ${toDept}`,
-          metadata: { batch_id, from: outbox.department, accepted_by: toDept },
+          batchId: batch_id,
+          fromDepartment: outbox.department,
+          acceptedBy: toDept,
         });
       }
-
-      await recordWorkflowLogs(acceptLogs);
 
       res.json(acceptedPayload);
     } catch (err) {
@@ -495,36 +446,31 @@ const workflowController = {
         io.to(targetDepartment).emit('batchUpdated', payload);
       }
 
-      const cancelLogs = [];
-
       if (originalDepartment) {
-        cancelLogs.push({
+        await logWorkflowEvent(WORKFLOW_LOG_EVENTS.TRANSFER_CANCELLED, {
           userId: user_id || null,
           department: originalDepartment,
           batchType,
           entityType: entity_type,
           entityId: batch_id,
-          action: 'transfer_cancelled',
-          message: `Batch #${batch_id} pulled back to ${originalDepartment}`,
-          metadata: { batch_id, from: targetDepartment, to: originalDepartment },
+          batchId: batch_id,
+          fromDepartment: targetDepartment,
+          toDepartment: originalDepartment,
         });
       }
 
       if (targetDepartment && targetDepartment !== originalDepartment) {
-        cancelLogs.push({
+        await logWorkflowEvent(WORKFLOW_LOG_EVENTS.TRANSFER_CANCELLED_REMOTE, {
           userId: user_id || null,
           department: targetDepartment,
           batchType,
           entityType: entity_type,
           entityId: batch_id,
-          action: 'transfer_cancelled_remote',
-          message: `Batch #${batch_id} pulled back by ${originalDepartment || 'originating department'}`,
-          metadata: { batch_id, from: targetDepartment, to: originalDepartment },
+          batchId: batch_id,
+          fromDepartment: targetDepartment,
+          toDepartment: originalDepartment,
+          byDepartment: originalDepartment,
         });
-      }
-
-      if (cancelLogs.length) {
-        await recordWorkflowLogs(cancelLogs);
       }
 
       res.json(payload);
@@ -573,15 +519,15 @@ const workflowController = {
         ? `Batch #${batch_id} archived from reception | current batches`
         : `Batch #${batch_id} archived from reception ${main.status}`;
 
-      await recordWorkflowLog({
+      await logWorkflowEvent(WORKFLOW_LOG_EVENTS.BATCH_ARCHIVED, {
         userId: user_id || null,
         department: main.department,
         batchType,
         entityType: entity_type,
         entityId: batch_id,
-        action: 'batch_archived',
-        message: archiveMessage,
-        metadata: { batch_id, department: main.department, isReceptionDraft },
+        batchId: batch_id,
+        isReceptionDraft,
+        customMessage: archiveMessage,
       });
 
       res.json(payload);

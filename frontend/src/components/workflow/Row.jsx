@@ -1,5 +1,6 @@
 // src/components/Workflow/Row.jsx
 import React, { useEffect, useMemo, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import ExpandedRowActions from "./ExpandedRowActions";
 
 const METHOD_OPTIONS = [
@@ -68,6 +69,7 @@ const Row = ({
   columns,
   onSelect,
   isSelected,
+  isExpanded = false,
   mainActions,
   actions,
   onExecute,
@@ -76,8 +78,9 @@ const Row = ({
   onBatchUpdate,
   onArchiveDraft,
   clients = [],
+  onToggleExpand = () => {},
 }) => {
-  const [isExpanded, setIsExpanded] = useState(false);
+  const navigate = useNavigate();
   const [editValues, setEditValues] = useState(buildInitialValues(batch));
   const [saving, setSaving] = useState(false);
   const [archiving, setArchiving] = useState(false);
@@ -108,6 +111,16 @@ const Row = ({
   }, [normalizedInitial, normalizedCurrent]);
 
   const busy = saving || archiving;
+  const editableColumns = useMemo(
+    () => expandedColumns.filter((col) => EDITABLE_FIELDS.has(col.name)),
+    [expandedColumns],
+  );
+  const systemColumns = useMemo(
+    () => expandedColumns.filter((col) => !EDITABLE_FIELDS.has(col.name)),
+    [expandedColumns],
+  );
+  const sectionGridClasses =
+    "grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5";
 
   const updateField = (field, value) => {
     setEditValues((prev) => ({ ...prev, [field]: value }));
@@ -248,19 +261,19 @@ const Row = ({
   };
 
   const handleViewBatch = (selected) => {
-    console.log(`Navigating to edit page for batch ${selected.batch_id}`);
-    // Example: useNavigate(`/batch/${selected.batch_id}/edit`);
+    if (!selected?.batch_id) return;
+    navigate(`/batches/${selected.batch_id}`, { state: { batch: selected } });
   };
 
   return (
     <>
       <tr
-        className={`border-b border-gray-blue-200 cursor-pointer hover:bg-gray-50 ${
-          isSelected ? "bg-gray-200" : ""
-        }`}
+        className={`cursor-pointer hover:bg-gray-50 ${
+          isExpanded ? "border-x border-gray-blue-200 bg-gray-50" : "border-b  border-gray-blue-200"
+        } ${isSelected ? "bg-gray-50" : ""}`}
         onClick={() => {
           onSelect(batch);
-          setIsExpanded((expanded) => !expanded);
+          onToggleExpand(batch.batch_id);
         }}
       >
         {columns.map((col) => {
@@ -284,25 +297,58 @@ const Row = ({
         })}
       </tr>
       {isExpanded && (
-        <tr className="bg-gray-200 border border-gray-blue-200">
-          <td colSpan={columns.length} className="px-2 py-3">
-            <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-              {expandedColumns.map((col) => {
-                const isEditable = canEdit && EDITABLE_FIELDS.has(col.name);
-                return (
-                  <div key={col.name} className="text-sm">
-                    <span className="font-semibold block text-gray-700">{col.label}:</span>
-                    {isEditable ? renderEditableField(col) : <span>{renderDisplayValue(col)}</span>}
+        <tr className="bg-gray-50 border-x border-b border-gray-blue-200">
+          <td colSpan={columns.length} className="px-2 pb-4 pt-1">
+            <div className="flex flex-col gap-4">
+              {editableColumns.length > 0 && (
+                <section className=" border border-gray-blue-200 bg-white/70 p-3">
+                  {/* <p className="text-xs uppercase tracking-wide text-gray-blue-600 mb-3">Editable Fields</p> */}
+                  <div className={sectionGridClasses}>
+                    {editableColumns.map((col) => {
+                      const isEditable = canEdit && EDITABLE_FIELDS.has(col.name);
+                      return (
+                        <div key={col.name} className="text-sm">
+                          <span className="font-semibold text-gray-800">{col.label}:</span>
+                          {isEditable ? renderEditableField(col) : <span>{renderDisplayValue(col)}</span>}
+                        </div>
+                      );
+                    })}
                   </div>
-                );
-              })}
+                </section>
+              )}
+
+              {systemColumns.length > 0 && (
+                <section className=" border border-gray-blue-200 bg-white/30 p-3">
+                {/* rounded border  border-gray-blue-200 bg-white  p-3 */}
+                  {/* <p className="text-xs uppercase tracking-wide text-gray-blue-600 mb-3">System Data</p> */}
+                  <div className={sectionGridClasses}>
+                    {systemColumns.map((col) => (
+                      <div key={col.name} className="text-sm">
+                        <span className=" text-gray-800 font-semibold">{col.label}: </span>
+                        <span className="">{renderDisplayValue(col)}</span>
+                      </div>
+                    ))}
+                  </div>
+                </section>
+              )}
             </div>
 
             {canEdit && (
-              <div className="mt-4 flex flex-wrap items-center gap-3 justify-end">
+              <div className="mt-4 flex flex-wrap items-center gap-3 justify-between">
                 <button
                   type="button"
-                  className="btn-class min-w-[130px] bg-green-500 text-white"
+                  className="btn-class-dark text-s min-w-[80px] bg-red-500 text-white hover:bg-red-500/70"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleArchive();
+                  }}
+                  disabled={busy}
+                >
+                  {archiving ? "Archiving..." : "Archive"}
+                </button>
+                <button
+                  type="button"
+                  className="btn-class-dark min-w-[130px] bg-green-500 text-white hover:bg-green-active"
                   onClick={(e) => {
                     e.stopPropagation();
                     handleSave();
@@ -310,17 +356,6 @@ const Row = ({
                   disabled={!isDirty || busy}
                 >
                   {saving ? "Saving..." : "Save Changes"}
-                </button>
-                <button
-                  type="button"
-                  className="btn-class min-w-[130px] bg-red-500 text-white"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    handleArchive();
-                  }}
-                  disabled={busy}
-                >
-                  {archiving ? "Archiving..." : "Archive Draft"}
                 </button>
                 {saveSuccess && <span className="text-xs text-green-600">Changes saved</span>}
                 {saveError && <span className="text-xs text-red-600">{saveError}</span>}

@@ -1,12 +1,10 @@
 import './App.css';
 import { useContext } from 'react';
-import { BrowserRouter as Router, Route, Routes, Navigate } from 'react-router-dom';
+import { Route, Routes, Navigate } from 'react-router-dom';
 
-
-import {NotFound } from './pages/index'
-import { Logout } from './components/index'
+import { Login, Workflow, ProtectedLayout, NotFound, BatchView } from './pages';
+import { Logout } from './components';
 import { UserContext } from './context/UserContext';
-import { Login, Workflow, ProtectedLayout} from './pages/index';
 
 function App() {
   const { user, loading  } = useContext(UserContext);
@@ -21,6 +19,7 @@ function App() {
         {/* protected routes */}
         <Route element={<ProtectedLayout />}>
           <Route path="/workflow" element={<Workflow />} />
+          <Route path="/batches/:batchId" element={<BatchView />} />
         </Route>
 
         {/* catch all // Not found*/}
