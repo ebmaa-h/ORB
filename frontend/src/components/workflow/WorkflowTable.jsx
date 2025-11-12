@@ -1,5 +1,5 @@
 // src/components/Workflow/WorkflowTable.jsx
-import React, { useCallback, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import Row from "./Row";
 import WORKFLOW_CONFIG from "../../config/workflowConfig";
 
@@ -33,6 +33,10 @@ const WorkflowTable = React.memo(function WorkflowTable({
     ? config.foreignUrgentColumnsExpanded
     : config.columnsExpanded;
   const canEdit = activeStatus === "current";
+
+  useEffect(() => {
+    setExpandedBatchId(null);
+  }, [activeStatus, filterType, department]);
 
   return (
     <div className="overflow-x-auto rounded border border-gray-blue-200 p-2">

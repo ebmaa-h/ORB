@@ -38,7 +38,7 @@ export default function WorkflowEngine({ department = "none" }) {
   const filingTab = useMemo(() => {
     return (config?.tables || []).find((tab) => tab.name === "filing") || null;
   }, [config]);
-  const showNotesTab = activeStatus === LOGS_TAB;
+  const showLogsTab = activeStatus === LOGS_TAB;
   const handleNavigateToBatch = useCallback(
     (batchId) => {
       if (batchId === null || batchId === undefined) return false;
@@ -319,19 +319,19 @@ export default function WorkflowEngine({ department = "none" }) {
 
   const mainActionsForTable = useMemo(() => {
     if (!config) return [];
-    if (showNotesTab) return [];
+    if (showLogsTab) return [];
     if (activeStatus === "inbox") return config.inboxActions || [];
     if (activeStatus === "outbox") return config.outboxActions || [];
     if (activeStatus === "filing" && config.filingActions) return config.filingActions;
     return config.expandedActionsMain || config.mainActions || [];
-  }, [activeStatus, config, showNotesTab]);
+  }, [activeStatus, config, showLogsTab]);
 
   const dropdownActionsForTable = useMemo(() => {
     if (!config) return [];
-     if (showNotesTab) return [];
+     if (showLogsTab) return [];
     if (activeStatus === "inbox" || activeStatus === "outbox") return [];
     return config.expandedActions || config.actions || [];
-  }, [activeStatus, config, showNotesTab]);
+  }, [activeStatus, config, showLogsTab]);
 
   // actions
   const executeAction = async (action, batch) => {
@@ -398,7 +398,7 @@ export default function WorkflowEngine({ department = "none" }) {
 
         <div className="flex gap-2 flex-wrap items-center">
           <button
-            className={`btn-class ${showNotesTab ? "font-bold bg-gray-100" : ""}`}
+            className={`btn-class ${showLogsTab ? "font-bold bg-gray-100" : ""}`}
             onClick={() => setActiveStatus(LOGS_TAB)}
           >
             Logs
@@ -444,7 +444,7 @@ export default function WorkflowEngine({ department = "none" }) {
         <div>{department} doesn't exist</div>
       ) : loading ? (
         <div>Loading batches...</div>
-      ) : showNotesTab ? (
+      ) : showLogsTab ? (
         <div className="container-col-outer gap-4">
           <EntityNotesAndLogs
             department={department}
@@ -452,13 +452,16 @@ export default function WorkflowEngine({ department = "none" }) {
             context="workflow"
             requireEntitySelection={false}
             initialShowLogs
-            listMaxHeight={500}
+            listMaxHeight={600}
             headerDescription={`Logs for ${department} (${filterType === "fu" ? "Foreign & Urgent" : "Normal"})`}
             title="Logs"
             allowedTypes={["log"]}
             enableLogToggle={false}
             allowNotesInput={false}
             includeNotes={false}
+            searchTermOverride={searchTerm}
+            onSearchTermChange={setSearchTerm}
+            showSearchInput={false}
             onBatchNavigate={handleNavigateToBatch}
           />
         </div>

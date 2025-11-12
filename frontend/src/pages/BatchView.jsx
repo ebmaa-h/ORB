@@ -1,6 +1,14 @@
-import React, { useMemo } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
 import EntityNotesAndLogs from "../components/ui/EntityNotesAndLogs";
+import SearchBar from "../components/ui/SearchBar";
+import axiosClient from "../utils/axiosClient";
+import ENDPOINTS from "../utils/apiEndpoints";
+
+const TAB_KEYS = {
+  BATCH: "batch",
+  NOTES: "notes",
+};
 
 const toNumber = (value) => {
   const parsed = Number(value);
@@ -53,11 +61,38 @@ const computeBatchSize = (batch) => {
   return realSize.toString();
 };
 
+const accountMatchesSearch = (account, term) => {
+  if (!account || !term) return true;
+  const normalized = term.toLowerCase();
+  const values = [
+    account.account_id,
+    account.member_name,
+    account.main_member_id,
+    account.patient_name,
+    account.patient_dependent_number,
+    account.medical_aid_nr,
+    account.plan_id,
+    account.plan_code,
+    account.total_invoice_balance,
+    account.status,
+  ];
+
+  return values.some((value) => {
+    if (value === null || value === undefined) return false;
+    return String(value).toLowerCase().includes(normalized);
+  });
+};
+
 const BatchView = () => {
   const { batchId } = useParams();
   const navigate = useNavigate();
   const location = useLocation();
   const batch = location.state?.batch || null;
+  const [accounts, setAccounts] = useState([]);
+  const [accountsLoading, setAccountsLoading] = useState(false);
+  const [accountsError, setAccountsError] = useState("");
+  const [activeTab, setActiveTab] = useState(TAB_KEYS.BATCH);
+  const [searchTerm, setSearchTerm] = useState("");
 
   const infoItems = useMemo(() => {
     if (!batch) return [];
@@ -68,6 +103,47 @@ const BatchView = () => {
       { label: "Date Received", value: formatDate(batch.date_received) },
     ];
   }, [batch]);
+
+  useEffect(() => {
+    if (!batch?.client_id) {
+      setAccounts([]);
+      setAccountsError("Client ID unavailable for this batch.");
+      return;
+    }
+
+    let cancelled = false;
+    const fetchAccounts = async () => {
+      setAccountsLoading(true);
+      setAccountsError("");
+      try {
+        const res = await axiosClient.get(ENDPOINTS.clientAccounts(batch.client_id));
+        if (!cancelled) {
+          setAccounts(Array.isArray(res.data) ? res.data : []);
+        }
+      } catch (err) {
+        if (!cancelled) {
+          setAccounts([]);
+          setAccountsError(err?.response?.data?.error || "Failed to load accounts");
+        }
+      } finally {
+        if (!cancelled) setAccountsLoading(false);
+      }
+    };
+
+    fetchAccounts();
+    return () => {
+      cancelled = true;
+    };
+  }, [batch]);
+
+  const accountCount = accounts.length;
+  const batchSize = Number(batch?.batch_size || 0);
+  const filteredAccounts = useMemo(() => {
+    if (!searchTerm.trim()) return accounts;
+    return accounts.filter((account) => accountMatchesSearch(account, searchTerm.trim()));
+  }, [accounts, searchTerm]);
+  const searchActive = Boolean(searchTerm.trim());
+  const isBatchTab = activeTab === TAB_KEYS.BATCH;
 
   if (!batch) {
     return (
@@ -94,22 +170,62 @@ const BatchView = () => {
   const entityType = getEntityType(batch);
 
   return (
-    <div className="mt-4 flex flex-col gap-4">
-      <section className="bg-white border border-gray-blue-200 rounded shadow-sm">
-        <div className="flex flex-col gap-4 p-4">
+    <div className="flex flex-col">
+      <div className="container-row-outer flex-wrap gap-4 items-center border ">
+        <div className="flex gap-2 flex-wrap items-center">
+          <button
+            type="button"
+            className={`btn-class ${isBatchTab ? "font-bold bg-gray-100" : ""}`}
+            onClick={() => setActiveTab(TAB_KEYS.BATCH)}
+          >
+            View Batch
+          </button>
+          <button
+            type="button"
+            className={`btn-class ${activeTab === TAB_KEYS.NOTES ? "font-bold bg-gray-100" : ""}`}
+            onClick={() => setActiveTab(TAB_KEYS.NOTES)}
+          >
+            Notes & Logs
+          </button>
+        </div>
+
+        <span className="text-gray-400 select-none">|</span>
+
+        <div className="flex gap-2 flex-wrap items-center">
+          <button
+            type="button"
+            className="btn-class opacity-70 cursor-not-allowed"
+            disabled
+            title="Coming soon"
+          >
+            CRQ
+          </button>
+        </div>
+
+        <span className="text-gray-400 select-none">|</span>
+
+        <div className="flex gap-2 flex-wrap items-center ml-auto">
+          <SearchBar searchTerm={searchTerm} setSearchTerm={setSearchTerm} classes="min-w-[220px]" />
+          <button
+            type="button"
+            className="btn-class-dark bg-ebmaa-purple text-white px-4 hover:bg-ebmaa-purple-light whitespace-nowrap"
+            onClick={() => navigate("/workflow")}
+          >
+            Back to Workflow
+          </button>
+        </div>
+      </div>
+
+      {isBatchTab ? (
+        <>
+      <section className="bg-white border border-gray-blue-100 rounded shadow-sm ">
+        <div className="flex flex-row gap-4 py-4">
           <div className="flex flex-wrap items-center justify-between gap-4">
             <div>
-              <p className="text-xs uppercase tracking-wide text-gray-blue-600">Batch</p>
-              <h1 className="text-2xl font-semibold text-gray-dark">{batchType}</h1>
-              <p className="text-sm text-gray-blue-700 mt-1">#{batch.batch_id}</p>
+              {/* <p className="text-xs uppercase tracking-wide text-gray-blue-600">Batch</p> */}
+              {/* <h1 className="text-2xl font-semibold text-gray-dark">{batchType}</h1> */}
+              {/* <p className="text-sm text-gray-blue-700 mt-1">#{batch.batch_id}</p> */}
             </div>
-            <button
-              type="button"
-              className="btn-class-dark bg-ebmaa-purple text-white min-w-[150px] hover:bg-ebmaa-purple-light"
-              onClick={() => navigate("/workflow")}
-            >
-              Back to Workflow
-            </button>
           </div>
 
           <div className="flex">
@@ -122,26 +238,122 @@ const BatchView = () => {
               ))}
             </div>
           </div>
+
         </div>
       </section>
 
       <section
-        aria-label="Batch invoices workspace"
-        className="rounded border border-gray-blue-200 bg-white min-h-[320px] p-4 text-gray-blue-700"
+        aria-label="Batch accounts workspace"
+        className="rounded border border-gray-blue-100 bg-white p-4 text-gray-blue-700"
       >
-        <p className="text-sm">
-          Batch container space - invoices and related actions will appear here as we continue building this page.
-        </p>
-      </section>
+        <div className="flex flex-wrap items-center justify-between gap-4 border-b border-gray-blue-100 pb-4 mb-4">
+          <div>
+            <p className="text-xs uppercase tracking-wide text-gray-blue-600">Accounts Linked to Batch</p>
+            <p className="text-2xl font-semibold text-gray-dark">
+              {accountCount} / {batchSize}
+            </p>
+            <p className="text-sm text-gray-blue-600">Current Accounts / Batch Size</p>
+          </div>
+          <div className="text-right">
+            {/* <p className="text-xs uppercase tracking-wide text-gray-blue-600">Client ID</p>
+            <p className="text-lg font-semibold text-gray-dark">{batch.client_id || "N/A"}</p> */}
+          </div>
+        </div>
 
-      <EntityNotesAndLogs
-        entityId={batch.batch_id}
-        entityType={entityType}
-        department={departmentKey}
-        batchType={batchTypeKey}
-        title="Batch Notes & Logs"
-        listMaxHeight={250}
-      />
+        {accountsLoading ? (
+          <p className="text-sm text-gray-blue-700">Loading accounts...</p>
+        ) : accountsError ? (
+          <p className="text-sm text-red-600">{accountsError}</p>
+        ) : accountCount === 0 ? (
+          <p className="text-sm text-gray-blue-700">No accounts linked to this batch yet.</p>
+        ) : searchActive && filteredAccounts.length === 0 ? (
+          <p className="text-sm text-gray-blue-700">No accounts match your search.</p>
+        ) : (
+          <div className="flex flex-col gap-4">
+            {filteredAccounts.map((account) => (
+              <div key={account.account_id} className="border border-gray-blue-100 rounded-lg p-4 bg-gray-blue-50/30">
+                <div className="flex flex-wrap items-center justify-between gap-4">
+                  <div>
+                    <p className="text-xs uppercase text-gray-blue-600">Account ID</p>
+                    <p className="text-lg font-semibold text-gray-dark">#{account.account_id}</p>
+                  </div>
+                  <button
+                    type="button"
+                    className="btn-class min-w-[150px] opacity-70 cursor-not-allowed"
+                    disabled
+                    title="Coming soon"
+                  >
+                    View Account
+                  </button>
+                </div>
+
+                <div className="mt-4 grid grid-cols-1 gap-3 md:grid-cols-2 lg:grid-cols-3">
+                  <div>
+                    <p className="text-xs uppercase text-gray-blue-600">Main Member</p>
+                    <p className="text-sm font-semibold text-gray-dark">{account.member_name || "N/A"}</p>
+                    <p className="text-xs text-gray-blue-600">ID: {account.main_member_id || "N/A"}</p>
+                  </div>
+                  <div>
+                    <p className="text-xs uppercase text-gray-blue-600">Patient</p>
+                    <p className="text-sm font-semibold text-gray-dark">{account.patient_name || "N/A"}</p>
+                    <p className="text-xs text-gray-blue-600">
+                      Dep #: {account.patient_dependent_number || "N/A"}
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-xs uppercase text-gray-blue-600">Medical Aid</p>
+                    <p className="text-sm font-semibold text-gray-dark">{account.medical_aid_nr || "N/A"}</p>
+                    <p className="text-xs text-gray-blue-600">
+                      Plan: {account.plan_id || account.plan_code || "N/A"}
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-xs uppercase text-gray-blue-600">Status</p>
+                    <p className="text-sm font-semibold text-gray-dark">
+                      {account.is_active === false
+                        ? "Inactive"
+                        : account.is_active === true
+                        ? "Active"
+                        : "Unknown"}
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-xs uppercase text-gray-blue-600">Balance</p>
+                    <p className="text-sm font-semibold text-gray-dark">
+                      {account.total_invoice_balance || "N/A"}
+                    </p>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+
+        <div className="mt-6 flex justify-end">
+          <button
+            type="button"
+            className="btn-class min-w-[160px] opacity-70 cursor-not-allowed"
+            disabled
+            title="Coming soon"
+          >
+            Add Account
+          </button>
+        </div>
+      </section>
+        </>
+      ) : (
+        <EntityNotesAndLogs
+          entityId={batch.batch_id}
+          entityType={entityType}
+          department={departmentKey}
+          batchType={batchTypeKey}
+          title="Batch Notes & Logs"
+          listMaxHeight={600}
+          searchTermOverride={searchTerm}
+          onSearchTermChange={setSearchTerm}
+          showSearchInput={false}
+        />
+      )}
     </div>
   );
 };

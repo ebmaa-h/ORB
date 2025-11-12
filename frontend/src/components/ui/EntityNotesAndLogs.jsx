@@ -113,17 +113,23 @@ export default function EntityNotesAndLogs({
   enableLogToggle = true,
   allowNotesInput = true,
   includeNotes = true,
+  searchTermOverride = null,
+  onSearchTermChange = null,
+  showSearchInput = true,
 }) {
   const { user } = useContext(UserContext);
   const [items, setItems] = useState([]);
   const [newNote, setNewNote] = useState("");
-  const [searchTerm, setSearchTerm] = useState("");
+  const [internalSearchTerm, setInternalSearchTerm] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showLogs, setShowLogs] = useState(initialShowLogs);
   const navigate = useNavigate();
   const { collapsed: collapsedChanges, toggle: toggleChanges } = useLogDetailToggles();
   const showLogsEffective = enableLogToggle ? showLogs : true;
+  const effectiveSearchTerm =
+    typeof searchTermOverride === "string" ? searchTermOverride : internalSearchTerm;
+  const handleSearchTermChange = onSearchTermChange || setInternalSearchTerm;
 
   const normalizedEntityId = useMemo(() => normalizeId(entityId), [entityId]);
   const normalizedEntityType = useMemo(
@@ -270,7 +276,7 @@ export default function EntityNotesAndLogs({
     [navigate, onBatchNavigate],
   );
 
-  const searchLower = searchTerm.toLowerCase();
+  const searchLower = effectiveSearchTerm.toLowerCase();
   const filteredItems = items.filter((item) => {
     if (allowedTypes && !allowedTypes.includes(item.type)) return false;
     if (item.type === "log" && !showLogsEffective) return false;
@@ -356,7 +362,7 @@ export default function EntityNotesAndLogs({
     );
   };
 
-  const containerClasses = `container-col ${className}`.trim();
+  const containerClasses = `container-col ${className} mt-0`.trim();
 
   if (!contextConfig) {
     return (
@@ -407,11 +413,13 @@ export default function EntityNotesAndLogs({
               Show Logs
             </label>
           )}
-          <SearchBar
-            searchTerm={searchTerm}
-            setSearchTerm={setSearchTerm}
-            classes="h-[32px] text-sm btn-class"
-          />
+          {showSearchInput && (
+            <SearchBar
+              searchTerm={effectiveSearchTerm}
+              setSearchTerm={handleSearchTermChange}
+              classes="h-[32px] text-sm btn-class"
+            />
+          )}
         </div>
       </div>
 
