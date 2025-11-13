@@ -237,7 +237,7 @@ const Row = ({
       case "added_on_drive":
       case "corrections":
         return (
-          <label className="mt-1 flex items-center gap-2 text-sm">
+          <label className="mt-1 flex items-center gap-2 text-sm text-gray-900">
             <input
               type="checkbox"
               checked={Boolean(editValues[field])}
@@ -268,7 +268,7 @@ const Row = ({
   return (
     <>
       <tr
-        className={`cursor-pointer hover:bg-gray-50 ${
+        className={`cursor-pointer hover:bg-gray-50 text-gray-900 ${
           isExpanded ? "border-x border-gray-blue-200 bg-gray-50" : "border-b  border-gray-blue-200"
         } ${isSelected ? "bg-gray-50" : ""}`}
         onClick={() => {
@@ -282,16 +282,17 @@ const Row = ({
 
           if (col.name === "client_name") {
             return (
-              <td key={col.name} className="px-2 py-1">
-                {batch.client_first} {batch.client_last} <br />
-                <span className="text-xs text-gray-500">{batch.client_type}</span>
+              <td key={col.name} className="px-2 py-2 align-top text-sm text-gray-900">
+                <span className="font-semibold">{batch.client_first} {batch.client_last}</span>
+                <br />
+                <span className="text-xs uppercase tracking-wide text-gray-blue-600">{batch.client_type}</span>
               </td>
             );
           }
 
           return (
-            <td key={col.name} className="px-2 py-1">
-              {value ?? ""}
+            <td key={col.name} className="px-2 py-2 align-top text-sm text-gray-900">
+              <span>{value ?? ""}</span>
             </td>
           );
         })}
@@ -301,15 +302,18 @@ const Row = ({
           <td colSpan={columns.length} className="px-2 pb-4 pt-1">
             <div className="flex flex-col gap-4">
               {editableColumns.length > 0 && (
-                <section className=" border border-gray-blue-200 bg-white/70 p-3">
-                  {/* <p className="text-xs uppercase tracking-wide text-gray-blue-600 mb-3">Editable Fields</p> */}
+                <section className="border border-gray-blue-200 bg-white/70 p-3">
                   <div className={sectionGridClasses}>
                     {editableColumns.map((col) => {
                       const isEditable = canEdit && EDITABLE_FIELDS.has(col.name);
                       return (
-                        <div key={col.name} className="text-sm">
-                          <span className="font-semibold text-gray-800">{col.label}:</span>
-                          {isEditable ? renderEditableField(col) : <span>{renderDisplayValue(col)}</span>}
+                        <div key={col.name} className="text-sm text-gray-900">
+                          <span className="text-xs uppercase tracking-wide text-gray-blue-600 block">{col.label}</span>
+                          {isEditable ? (
+                            renderEditableField(col)
+                          ) : (
+                            <span className="font-semibold">{renderDisplayValue(col)}</span>
+                          )}
                         </div>
                       );
                     })}
@@ -318,14 +322,12 @@ const Row = ({
               )}
 
               {systemColumns.length > 0 && (
-                <section className=" border border-gray-blue-200 bg-white/30 p-3">
-                {/* rounded border  border-gray-blue-200 bg-white  p-3 */}
-                  {/* <p className="text-xs uppercase tracking-wide text-gray-blue-600 mb-3">System Data</p> */}
+                <section className="border border-gray-blue-200 bg-white/30 p-3">
                   <div className={sectionGridClasses}>
                     {systemColumns.map((col) => (
-                      <div key={col.name} className="text-sm">
-                        <span className=" text-gray-800 font-semibold">{col.label}: </span>
-                        <span className="">{renderDisplayValue(col)}</span>
+                      <div key={col.name} className="text-sm text-gray-900">
+                        <span className="text-xs uppercase tracking-wide text-gray-blue-600 block">{col.label}</span>
+                        <span className="font-semibold">{renderDisplayValue(col)}</span>
                       </div>
                     ))}
                   </div>

@@ -27,6 +27,11 @@ const ENDPOINTS = {
 
   addBatch : `${API_URL}/batches`, 
 
+  // batchInvoices
+  batchInvoices: (batchId) => `${API_URL}/batches/${batchId}/invoices`,
+  batchAccountCreate: (batchId) => `${API_URL}/batches/${batchId}/accounts`,
+  accountSearch: `${API_URL}/accounts/search`,
+
   clientInvoices: (clientId) => `${API_URL}/clients/${clientId}/invoices`,
   clientInvoice: (clientId, invoiceId) => `${API_URL}/clients/${clientId}/invoices/${invoiceId}`, 
   updateInvoice: (clientId, invoiceId) => `${API_URL}/clients/${clientId}/invoices/${invoiceId}`,
@@ -37,6 +42,7 @@ const ENDPOINTS = {
   profileDetails : (profileId) => `${API_URL}/profiles/${profileId}`,
   records : `${API_URL}/records`,
   recordDetails :  (recordId) => `${API_URL}/records/${recordId}`, // good, independant records view/edit is enough.
+
   workflowNotes: (department, batchType) => `${API_URL}/workflow/${department}/${batchType}/notes`,
   workflowLogs: (department, batchType) => `${API_URL}/workflow/${department}/${batchType}/logs`,
   // clientInfo : `${API_URL}/client/info`,

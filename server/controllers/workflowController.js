@@ -2,7 +2,7 @@ const { getIO } = require("../sockets/socket.js");
 const Note = require('../models/noteModel.js');
 const Log = require('../models/logModel.js');
 const Batch = require('../models/batchModel.js');
-const { WORKFLOW_LOG_EVENTS, logWorkflowEvent, formatLogRow } = require('../utils/workflowLogEngine');
+const { WORKFLOW_LOG_EVENTS, logWorkflowEvent, formatLogRow } = require('../utils/workflowLogEngine.js');
 
 const WORKFLOW_BATCH_TYPES = {
   NORMAL: 'normal',

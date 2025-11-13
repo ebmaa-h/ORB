@@ -39,19 +39,21 @@ const WorkflowTable = React.memo(function WorkflowTable({
   }, [activeStatus, filterType, department]);
 
   return (
-    <div className="overflow-x-auto rounded border border-gray-blue-200 p-2">
-      <table className="table-auto w-full border-collapse text-gray-dark text-sm">
-        <thead>
-          <tr className="text-left border-b border-gray-blue-200">
+    <div className="overflow-x-auto rounded border border-gray-blue-200 p-2 bg-white">
+      <table className="table-auto w-full border-collapse text-sm">
+        <thead className="bg-gray-blue-50/60">
+          <tr className="text-left border-b border-gray-blue-200 text-gray-blue-600 uppercase text-xs tracking-wide">
             {columns.map((col) => (
-              <th key={col.name} className="px-2 py-1">{col.label}</th>
+              <th key={col.name} className="px-2 py-2 font-semibold">
+                {col.label}
+              </th>
             ))}
           </tr>
         </thead>
         <tbody>
           {batches.length === 0 ? (
             <tr>
-              <td colSpan={columns.length} className="pt-2 text-md text-gray-500 text-center">
+              <td colSpan={columns.length} className="pt-4 text-md text-center text-gray-blue-600">
                 No batches
               </td>
             </tr>

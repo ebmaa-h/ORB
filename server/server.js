@@ -1,11 +1,12 @@
 require('dotenv').config();
-require('./config/passport');
+require('./config/passport.js');
 
 const express = require('express');
 const http = require('http'); // for sockets
 const cors = require('cors');
 const authRoutes = require('./routes/auth.js');
 const batchRoutes = require('./routes/batch.js');
+const accountRoutes = require('./routes/accounts.js');
 const workflowMetaRoutes = require('./routes/workflowMeta.js');
 
 const registerSockets = require("./sockets/index");
@@ -15,7 +16,7 @@ const passport = require('passport');
 
 // express app
 const app = express();
-const { init } = require("./sockets/socket");
+const { init } = require("./sockets/socket.js");
 
 const server = http.createServer(app); 
 const io = init(server); 
@@ -89,6 +90,7 @@ app.use('/auth', authRoutes);
 // app.use('/logs', logRoutes);
 app.use('/batches', batchRoutes);
 app.use('/workflow', workflowMetaRoutes);
+app.use('/accounts', accountRoutes);
 
 // error Handling Middleware
 app.use((err, req, res, next) => {

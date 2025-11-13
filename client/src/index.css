@@ -34,6 +34,21 @@
   .container-row-outer {
     @apply flex flex-row gap-2 p-4 my-4 bg-white border-b border-gray-blue-100 rounded w-full items-center;
   }
+  .tab-panel {
+    @apply flex flex-wrap gap-3 items-center p-4 my-4 bg-white border border-gray-blue-200 rounded-lg shadow-sm;
+  }
+  .tab-pill {
+    @apply px-3 py-1.5 text-sm font-semibold rounded-full border border-gray-blue-100 text-gray-blue-600 bg-white transition-colors duration-200;
+  }
+  .tab-pill:not(:disabled):hover {
+    @apply border-ebmaa-purple text-ebmaa-purple;
+  }
+  .tab-pill-active {
+    @apply border-ebmaa-purple bg-ebmaa-purple/10 text-ebmaa-purple shadow-sm;
+  }
+  .tab-pill-disabled {
+    @apply cursor-not-allowed border-gray-blue-200 text-gray-blue-400 bg-gray-50;
+  }
 }
  /* text-sm text-center min-w-[100px] rounded hover:border hover:border-ebmaa-purple */
 

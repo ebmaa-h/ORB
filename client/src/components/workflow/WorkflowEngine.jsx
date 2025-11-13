@@ -378,14 +378,15 @@ export default function WorkflowEngine({ department = "none" }) {
 
   return (
     <div className="">
-      <div className="container-row-outer w-full flex-wrap gap-4 items-center">
+      <div className="tab-panel w-full">
         <div className="flex gap-2 flex-wrap items-center">
           {statusTabs.map((table) => {
             const label = table.label || table.name;
+            const active = activeStatus === table.name;
             return (
               <button
                 key={table.name}
-                className={`btn-class ${activeStatus === table.name ? "font-bold bg-gray-100" : ""}`}
+                className={`tab-pill ${active ? "tab-pill-active" : ""}`}
                 onClick={() => setActiveStatus(table.name)}
               >
                 {label.charAt(0).toUpperCase() + label.slice(1)}
@@ -394,18 +395,18 @@ export default function WorkflowEngine({ department = "none" }) {
           })}
         </div>
 
-        <span className="text-gray-400 select-none">|</span>
+        <span className="hidden h-6 w-px bg-gray-blue-100 md:block" aria-hidden="true" />
 
         <div className="flex gap-2 flex-wrap items-center">
           <button
-            className={`btn-class ${showLogsTab ? "font-bold bg-gray-100" : ""}`}
+            className={`tab-pill ${showLogsTab ? "tab-pill-active" : ""}`}
             onClick={() => setActiveStatus(LOGS_TAB)}
           >
             Logs
           </button>
           {filingTab && (
             <button
-              className={`btn-class ${activeStatus === "filing" ? "font-bold bg-gray-100" : ""}`}
+              className={`tab-pill ${activeStatus === "filing" ? "tab-pill-active" : ""}`}
               onClick={() => setActiveStatus("filing")}
             >
               {filingTab.label || "Filing"}
@@ -413,7 +414,7 @@ export default function WorkflowEngine({ department = "none" }) {
           )}
           {department === "reception" && (
             <button
-              className={`btn-class ${showNewBatchForm ? "font-bold bg-gray-100" : ""}`}
+              className={`tab-pill ${showNewBatchForm ? "tab-pill-active" : ""}`}
               onClick={() => setShowNewBatchForm((prev) => !prev)}
             >
               Add Batch
@@ -421,18 +422,18 @@ export default function WorkflowEngine({ department = "none" }) {
           )}
         </div>
 
-        <span className="text-gray-400 select-none">|</span>
+        <span className="hidden h-6 w-px bg-gray-blue-100 md:block" aria-hidden="true" />
 
         <div className="flex gap-2 flex-wrap items-center ml-auto">
           <SearchBar searchTerm={searchTerm} setSearchTerm={setSearchTerm} classes="max-w-md" />
           <button
-            className={`btn-class ${filterType === "normal" ? "font-bold bg-gray-100" : ""}`}
+            className={`tab-pill ${filterType === "normal" ? "tab-pill-active" : ""}`}
             onClick={() => setFilterType("normal")}
           >
             Normal
           </button>
           <button
-            className={`btn-class ${filterType === "fu" ? "font-bold bg-gray-100" : ""}`}
+            className={`tab-pill ${filterType === "fu" ? "tab-pill-active" : ""}`}
             onClick={() => setFilterType("fu")}
           >
             Foreign & Urgent

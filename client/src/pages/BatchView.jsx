@@ -61,20 +61,29 @@ const computeBatchSize = (batch) => {
   return realSize.toString();
 };
 
-const accountMatchesSearch = (account, term) => {
-  if (!account || !term) return true;
+const formatCurrency = (value) => {
+  if (value === null || value === undefined || value === "") return "R 0.00";
+  const amount = Number(value);
+  if (Number.isNaN(amount)) return value;
+  return `R ${amount.toFixed(2)}`;
+};
+
+const invoiceMatchesSearch = (invoice, term) => {
+  if (!invoice || !term) return true;
   const normalized = term.toLowerCase();
   const values = [
-    account.account_id,
-    account.member_name,
-    account.main_member_id,
-    account.patient_name,
-    account.patient_dependent_number,
-    account.medical_aid_nr,
-    account.plan_id,
-    account.plan_code,
-    account.total_invoice_balance,
-    account.status,
+    invoice.invoice_id,
+    invoice.nr_in_batch,
+    invoice.medical_aid_nr,
+    invoice.medical_aid_name,
+    invoice.plan_name,
+    invoice.plan_code,
+    invoice.main_member_first,
+    invoice.main_member_last,
+    invoice.patient_first,
+    invoice.patient_last,
+    invoice.file_nr,
+    invoice.auth_nr,
   ];
 
   return values.some((value) => {
@@ -88,9 +97,9 @@ const BatchView = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const batch = location.state?.batch || null;
-  const [accounts, setAccounts] = useState([]);
-  const [accountsLoading, setAccountsLoading] = useState(false);
-  const [accountsError, setAccountsError] = useState("");
+  const [invoices, setInvoices] = useState([]);
+  const [invoicesLoading, setInvoicesLoading] = useState(false);
+  const [invoicesError, setInvoicesError] = useState("");
   const [activeTab, setActiveTab] = useState(TAB_KEYS.BATCH);
   const [searchTerm, setSearchTerm] = useState("");
 
@@ -105,43 +114,44 @@ const BatchView = () => {
   }, [batch]);
 
   useEffect(() => {
-    if (!batch?.client_id) {
-      setAccounts([]);
-      setAccountsError("Client ID unavailable for this batch.");
+    if (!batch?.batch_id) {
+      setInvoices([]);
+      setInvoicesError("Batch unavailable.");
       return;
     }
 
     let cancelled = false;
-    const fetchAccounts = async () => {
-      setAccountsLoading(true);
-      setAccountsError("");
+    const fetchInvoices = async () => {
+      setInvoicesLoading(true);
+      setInvoicesError("");
       try {
-        const res = await axiosClient.get(ENDPOINTS.clientAccounts(batch.client_id));
+        const res = await axiosClient.get(ENDPOINTS.batchInvoices(batch.batch_id));
         if (!cancelled) {
-          setAccounts(Array.isArray(res.data) ? res.data : []);
+          const next = Array.isArray(res.data) ? res.data : res.data?.invoices;
+          setInvoices(Array.isArray(next) ? next : []);
         }
       } catch (err) {
         if (!cancelled) {
-          setAccounts([]);
-          setAccountsError(err?.response?.data?.error || "Failed to load accounts");
+          setInvoices([]);
+          setInvoicesError(err?.response?.data?.error || "Failed to load invoices");
         }
       } finally {
-        if (!cancelled) setAccountsLoading(false);
+        if (!cancelled) setInvoicesLoading(false);
       }
     };
 
-    fetchAccounts();
+    fetchInvoices();
     return () => {
       cancelled = true;
     };
   }, [batch]);
 
-  const accountCount = accounts.length;
+  const invoiceCount = invoices.length;
   const batchSize = Number(batch?.batch_size || 0);
-  const filteredAccounts = useMemo(() => {
-    if (!searchTerm.trim()) return accounts;
-    return accounts.filter((account) => accountMatchesSearch(account, searchTerm.trim()));
-  }, [accounts, searchTerm]);
+  const filteredInvoices = useMemo(() => {
+    if (!searchTerm.trim()) return invoices;
+    return invoices.filter((invoice) => invoiceMatchesSearch(invoice, searchTerm.trim()));
+  }, [invoices, searchTerm]);
   const searchActive = Boolean(searchTerm.trim());
   const isBatchTab = activeTab === TAB_KEYS.BATCH;
 
@@ -171,30 +181,30 @@ const BatchView = () => {
 
   return (
     <div className="flex flex-col">
-      <div className="container-row-outer flex-wrap gap-4 items-center border ">
+      <div className="tab-panel w-full">
         <div className="flex gap-2 flex-wrap items-center">
           <button
             type="button"
-            className={`btn-class ${isBatchTab ? "font-bold bg-gray-100" : ""}`}
+            className={`tab-pill ${isBatchTab ? "tab-pill-active" : ""}`}
             onClick={() => setActiveTab(TAB_KEYS.BATCH)}
           >
             View Batch
           </button>
           <button
             type="button"
-            className={`btn-class ${activeTab === TAB_KEYS.NOTES ? "font-bold bg-gray-100" : ""}`}
+            className={`tab-pill ${activeTab === TAB_KEYS.NOTES ? "tab-pill-active" : ""}`}
             onClick={() => setActiveTab(TAB_KEYS.NOTES)}
           >
             Notes & Logs
           </button>
         </div>
 
-        <span className="text-gray-400 select-none">|</span>
+        <span className="hidden h-6 w-px bg-gray-blue-100 md:block" aria-hidden="true" />
 
         <div className="flex gap-2 flex-wrap items-center">
           <button
             type="button"
-            className="btn-class opacity-70 cursor-not-allowed"
+            className="tab-pill tab-pill-disabled"
             disabled
             title="Coming soon"
           >
@@ -202,7 +212,7 @@ const BatchView = () => {
           </button>
         </div>
 
-        <span className="text-gray-400 select-none">|</span>
+        <span className="hidden h-6 w-px bg-gray-blue-100 md:block" aria-hidden="true" />
 
         <div className="flex gap-2 flex-wrap items-center ml-auto">
           <SearchBar searchTerm={searchTerm} setSearchTerm={setSearchTerm} classes="min-w-[220px]" />
@@ -222,9 +232,9 @@ const BatchView = () => {
         <div className="flex flex-row gap-4 py-4">
           <div className="flex flex-wrap items-center justify-between gap-4">
             <div>
-              {/* <p className="text-xs uppercase tracking-wide text-gray-blue-600">Batch</p> */}
-              {/* <h1 className="text-2xl font-semibold text-gray-dark">{batchType}</h1> */}
-              {/* <p className="text-sm text-gray-blue-700 mt-1">#{batch.batch_id}</p> */}
+              <p className="text-xs uppercase tracking-wide text-gray-blue-600">Batch</p>
+              <h1 className="text-2xl font-semibold text-gray-dark">{batchType}</h1>
+              <p className="text-sm text-gray-blue-700 mt-1">#{batch.batch_id}</p>
             </div>
           </div>
 
@@ -242,17 +252,14 @@ const BatchView = () => {
         </div>
       </section>
 
-      <section
-        aria-label="Batch accounts workspace"
-        className="rounded border border-gray-blue-100 bg-white p-4 text-gray-blue-700"
-      >
+      <section aria-label="Batch invoices workspace" className="rounded border border-gray-blue-100 bg-white p-4 text-gray-blue-700">
         <div className="flex flex-wrap items-center justify-between gap-4 border-b border-gray-blue-100 pb-4 mb-4">
           <div>
-            <p className="text-xs uppercase tracking-wide text-gray-blue-600">Accounts Linked to Batch</p>
+            <p className="text-xs uppercase tracking-wide text-gray-blue-600">Invoices Linked to Batch</p>
             <p className="text-2xl font-semibold text-gray-dark">
-              {accountCount} / {batchSize}
+              {invoiceCount} / {batchSize}
             </p>
-            <p className="text-sm text-gray-blue-600">Current Accounts / Batch Size</p>
+            <p className="text-sm text-gray-blue-600">Current Invoices / Batch Size</p>
           </div>
           <div className="text-right">
             {/* <p className="text-xs uppercase tracking-wide text-gray-blue-600">Client ID</p>
@@ -260,22 +267,23 @@ const BatchView = () => {
           </div>
         </div>
 
-        {accountsLoading ? (
-          <p className="text-sm text-gray-blue-700">Loading accounts...</p>
-        ) : accountsError ? (
-          <p className="text-sm text-red-600">{accountsError}</p>
-        ) : accountCount === 0 ? (
-          <p className="text-sm text-gray-blue-700">No accounts linked to this batch yet.</p>
-        ) : searchActive && filteredAccounts.length === 0 ? (
-          <p className="text-sm text-gray-blue-700">No accounts match your search.</p>
+        {invoicesLoading ? (
+          <p className="text-sm text-gray-blue-700">Loading invoices...</p>
+        ) : invoicesError ? (
+          <p className="text-sm text-red-600">{invoicesError}</p>
+        ) : invoiceCount === 0 ? (
+          <p className="text-sm text-gray-blue-700">No invoices linked to this batch yet.</p>
+        ) : searchActive && filteredInvoices.length === 0 ? (
+          <p className="text-sm text-gray-blue-700">No invoices match your search.</p>
         ) : (
           <div className="flex flex-col gap-4">
-            {filteredAccounts.map((account) => (
-              <div key={account.account_id} className="border border-gray-blue-100 rounded-lg p-4 bg-gray-blue-50/30">
+            {filteredInvoices.map((invoice) => (
+              <div key={invoice.invoice_id} className="border border-gray-blue-100 rounded-lg p-4 bg-gray-blue-50/30">
                 <div className="flex flex-wrap items-center justify-between gap-4">
                   <div>
-                    <p className="text-xs uppercase text-gray-blue-600">Account ID</p>
-                    <p className="text-lg font-semibold text-gray-dark">#{account.account_id}</p>
+                    <p className="text-xs uppercase text-gray-blue-600">Invoice</p>
+                    <p className="text-lg font-semibold text-gray-dark">#{invoice.invoice_id}</p>
+                    <p className="text-xs text-gray-blue-600">Nr in batch: {invoice.nr_in_batch || "N/A"}</p>
                   </div>
                   <button
                     type="button"
@@ -283,45 +291,42 @@ const BatchView = () => {
                     disabled
                     title="Coming soon"
                   >
-                    View Account
+                    View Invoice
                   </button>
                 </div>
 
-                <div className="mt-4 grid grid-cols-1 gap-3 md:grid-cols-2 lg:grid-cols-3">
-                  <div>
-                    <p className="text-xs uppercase text-gray-blue-600">Main Member</p>
-                    <p className="text-sm font-semibold text-gray-dark">{account.member_name || "N/A"}</p>
-                    <p className="text-xs text-gray-blue-600">ID: {account.main_member_id || "N/A"}</p>
+                <div className="mt-4 grid grid-cols-1 gap-4 lg:grid-cols-4">
+                  <div className="space-y-1">
+                    <p className="text-xs uppercase text-gray-blue-600">Invoice Details</p>
+                    <p className="text-sm text-gray-700">Date of service: {formatDate(invoice.date_of_service)}</p>
+                    <p className="text-sm text-gray-700">Status: {invoice.status || "N/A"}</p>
+                    <p className="text-sm text-gray-700">Balance: {formatCurrency(invoice.balance)}</p>
+                    <p className="text-sm text-gray-700">File #: {invoice.file_nr || "N/A"}</p>
+                    <p className="text-sm text-gray-700">Auth #: {invoice.auth_nr || "N/A"}</p>
                   </div>
-                  <div>
-                    <p className="text-xs uppercase text-gray-blue-600">Patient</p>
-                    <p className="text-sm font-semibold text-gray-dark">{account.patient_name || "N/A"}</p>
-                    <p className="text-xs text-gray-blue-600">
-                      Dep #: {account.patient_dependent_number || "N/A"}
-                    </p>
-                  </div>
-                  <div>
+                  <div className="space-y-1">
                     <p className="text-xs uppercase text-gray-blue-600">Medical Aid</p>
-                    <p className="text-sm font-semibold text-gray-dark">{account.medical_aid_nr || "N/A"}</p>
-                    <p className="text-xs text-gray-blue-600">
-                      Plan: {account.plan_id || account.plan_code || "N/A"}
-                    </p>
-                  </div>
-                  <div>
-                    <p className="text-xs uppercase text-gray-blue-600">Status</p>
                     <p className="text-sm font-semibold text-gray-dark">
-                      {account.is_active === false
-                        ? "Inactive"
-                        : account.is_active === true
-                        ? "Active"
-                        : "Unknown"}
+                      {invoice.medical_aid_name || "N/A"}
                     </p>
+                    <p className="text-sm text-gray-700">Number: {invoice.medical_aid_nr || "N/A"}</p>
+                    <p className="text-sm text-gray-700">Plan: {invoice.plan_name || invoice.plan_code || "N/A"}</p>
                   </div>
-                  <div>
-                    <p className="text-xs uppercase text-gray-blue-600">Balance</p>
+                  <div className="space-y-1">
+                    <p className="text-xs uppercase text-gray-blue-600">Main Member</p>
                     <p className="text-sm font-semibold text-gray-dark">
-                      {account.total_invoice_balance || "N/A"}
+                      {[invoice.main_member_first, invoice.main_member_last].filter(Boolean).join(" ") || "N/A"}
                     </p>
+                    <p className="text-sm text-gray-700">ID: {invoice.main_member_id_nr || "N/A"}</p>
+                    <p className="text-sm text-gray-700">Dep #: {invoice.main_member_dependent_nr || "N/A"}</p>
+                  </div>
+                  <div className="space-y-1">
+                    <p className="text-xs uppercase text-gray-blue-600">Patient</p>
+                    <p className="text-sm font-semibold text-gray-dark">
+                      {[invoice.patient_first, invoice.patient_last].filter(Boolean).join(" ") || "N/A"}
+                    </p>
+                    <p className="text-sm text-gray-700">ID: {invoice.patient_id_nr || "N/A"}</p>
+                    <p className="text-sm text-gray-700">Dep #: {invoice.patient_dependent_nr || "N/A"}</p>
                   </div>
                 </div>
               </div>
@@ -332,9 +337,8 @@ const BatchView = () => {
         <div className="mt-6 flex justify-end">
           <button
             type="button"
-            className="btn-class min-w-[160px] opacity-70 cursor-not-allowed"
-            disabled
-            title="Coming soon"
+            className="btn-class min-w-[160px]"
+            onClick={() => navigate(`/batches/${batch.batch_id}/accounts/new`, { state: { batch } })}
           >
             Add Account
           </button>
@@ -348,7 +352,6 @@ const BatchView = () => {
           department={departmentKey}
           batchType={batchTypeKey}
           title="Batch Notes & Logs"
-          listMaxHeight={600}
           searchTermOverride={searchTerm}
           onSearchTermChange={setSearchTerm}
           showSearchInput={false}

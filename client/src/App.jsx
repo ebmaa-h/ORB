@@ -2,7 +2,7 @@ import './App.css';
 import { useContext } from 'react';
 import { Route, Routes, Navigate } from 'react-router-dom';
 
-import { Login, Workflow, ProtectedLayout, NotFound, BatchView } from './pages';
+import { Login, Workflow, ProtectedLayout, NotFound, BatchView, AddAccount } from './pages';
 import { Logout } from './components';
 import { UserContext } from './context/UserContext';
 
@@ -20,6 +20,7 @@ function App() {
         <Route element={<ProtectedLayout />}>
           <Route path="/workflow" element={<Workflow />} />
           <Route path="/batches/:batchId" element={<BatchView />} />
+          <Route path="/batches/:batchId/accounts/new" element={<AddAccount />} />
         </Route>
 
         {/* catch all // Not found*/}
