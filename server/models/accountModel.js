@@ -120,6 +120,23 @@ const AccountModel = {
     ]);
     return result.insertId;
   },
+
+  getProfilePersons: async (profileIds = []) => {
+    if (!profileIds.length) return [];
+    const placeholdersQuery = queries.buildProfilePersonsQuery(profileIds.length);
+    const [rows] = await db.query(placeholdersQuery, profileIds);
+    return rows;
+  },
+
+  getAllMedicalAids: async () => {
+    const [rows] = await db.query(queries.SELECT_ALL_MEDICAL_AIDS);
+    return rows;
+  },
+
+  getAllMedicalAidPlans: async () => {
+    const [rows] = await db.query(queries.SELECT_ALL_MEDICAL_AID_PLANS);
+    return rows;
+  },
 };
 
 module.exports = AccountModel;

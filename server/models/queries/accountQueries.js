@@ -54,6 +54,36 @@ const SEARCH_PROFILES_WITH_ACCOUNTS = `
   LIMIT 100
 `;
 
+const buildProfilePersonsQuery = (count) => `
+  SELECT
+    ppm.profile_id,
+    ppm.is_main_member,
+    ppm.dependent_nr,
+    pr.record_id,
+    pr.first,
+    pr.last,
+    pr.title,
+    pr.date_of_birth,
+    pr.gender,
+    pr.id_type,
+    pr.id_nr
+  FROM profile_person_map ppm
+  INNER JOIN person_records pr ON pr.record_id = ppm.record_id
+  WHERE ppm.profile_id IN (${new Array(count).fill("?").join(", ")})
+`;
+
+const SELECT_ALL_MEDICAL_AIDS = `
+  SELECT medical_aid_id, name
+  FROM medical_aids
+  ORDER BY name ASC
+`;
+
+const SELECT_ALL_MEDICAL_AID_PLANS = `
+  SELECT plan_id, plan_name, plan_code, medical_aid_id
+  FROM medical_aid_plans
+  ORDER BY plan_name ASC
+`;
+
 const SELECT_PROFILE_BY_MEDICAL_AID_NR = `
   SELECT *
   FROM profiles
@@ -139,4 +169,7 @@ module.exports = {
   SELECT_ACCOUNT_BY_KEYS,
   INSERT_ACCOUNT,
   INSERT_INVOICE,
+  buildProfilePersonsQuery,
+  SELECT_ALL_MEDICAL_AIDS,
+  SELECT_ALL_MEDICAL_AID_PLANS,
 };

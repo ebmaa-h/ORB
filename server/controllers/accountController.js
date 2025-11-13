@@ -95,6 +95,7 @@ const accountController = {
                 }
               : null,
             accounts: [],
+            profilePersons: [],
           });
         }
 
@@ -134,6 +135,27 @@ const accountController = {
           });
         }
       });
+
+      const profileIds = Array.from(map.keys());
+      if (profileIds.length) {
+        const personRows = await AccountModel.getProfilePersons(profileIds);
+        personRows.forEach((person) => {
+          const profile = map.get(person.profile_id);
+          if (!profile) return;
+          profile.profilePersons.push({
+            recordId: person.record_id,
+            first: person.first,
+            last: person.last,
+            title: person.title,
+            dateOfBirth: person.date_of_birth,
+            gender: person.gender,
+            idType: person.id_type,
+            idNumber: person.id_nr,
+            dependentNumber: person.dependent_nr,
+            isMainMember: person.is_main_member === 1,
+          });
+        });
+      }
 
       res.json({
         profiles: Array.from(map.values()),
@@ -280,6 +302,39 @@ const accountController = {
     } catch (err) {
       console.error('Batch account error:', err);
       res.status(500).json({ error: 'Unexpected server error' });
+    }
+  },
+
+  getMedicalAidCatalog: async (req, res) => {
+    try {
+      const [medicalAids, medicalAidPlans] = await Promise.all([
+        AccountModel.getAllMedicalAids(),
+        AccountModel.getAllMedicalAidPlans(),
+      ]);
+
+      const planMap = new Map();
+      medicalAidPlans.forEach((plan) => {
+        if (!planMap.has(plan.medical_aid_id)) {
+          planMap.set(plan.medical_aid_id, []);
+        }
+        planMap.get(plan.medical_aid_id).push({
+          id: plan.plan_id,
+          name: plan.plan_name,
+          code: plan.plan_code,
+          medicalAidId: plan.medical_aid_id,
+        });
+      });
+
+      const normalized = medicalAids.map((aid) => ({
+        id: aid.medical_aid_id,
+        name: aid.name,
+        plans: planMap.get(aid.medical_aid_id) || [],
+      }));
+
+      res.json({ medicalAids: normalized });
+    } catch (err) {
+      console.error('Error fetching medical aid catalog:', err);
+      res.status(500).json({ error: 'Failed to load medical aid catalog' });
     }
   },
 };

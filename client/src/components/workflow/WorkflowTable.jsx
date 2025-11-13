@@ -42,7 +42,7 @@ const WorkflowTable = React.memo(function WorkflowTable({
     <div className="overflow-x-auto rounded border border-gray-blue-200 p-2 bg-white">
       <table className="table-auto w-full border-collapse text-sm">
         <thead className="bg-gray-blue-50/60">
-          <tr className="text-left border-b border-gray-blue-200 text-gray-blue-600 uppercase text-xs tracking-wide">
+          <tr className="text-left border-b border-gray-blue-200 text-gray-blue-600 uppercase text-xs">
             {columns.map((col) => (
               <th key={col.name} className="px-2 py-2 font-semibold">
                 {col.label}
