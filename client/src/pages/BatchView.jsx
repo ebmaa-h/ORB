@@ -164,10 +164,10 @@ const BatchView = () => {
         <div className="mt-4">
           <button
             type="button"
-            className="btn-class-dark bg-ebmaa-purple text-white px-6 hover:bg-ebmaa-purple-light"
+            className="button-pill min-w-[100px]"
             onClick={() => navigate("/workflow")}
           >
-            Back to Workflow
+            Back
           </button>
         </div>
       </section>
@@ -218,18 +218,18 @@ const BatchView = () => {
           <SearchBar searchTerm={searchTerm} setSearchTerm={setSearchTerm} classes="min-w-[220px]" />
           <button
             type="button"
-            className="btn-class-dark bg-ebmaa-purple text-white px-4 hover:bg-ebmaa-purple-light whitespace-nowrap"
+            className="button-pill min-w-[100px]"
             onClick={() => navigate("/workflow")}
           >
-            Back to Workflow
+            Back
           </button>
         </div>
       </div>
 
       {isBatchTab ? (
         <>
-      <section className="bg-white border border-gray-blue-100 rounded shadow-sm ">
-        <div className="flex flex-row gap-4 py-4">
+      <section className="tab-panel m-0">
+        <div className="flex flex-row gap-4">
           <div className="flex flex-wrap items-center justify-between gap-4">
             <div>
               <p className="text-xs uppercase tracking-wide text-gray-blue-600">Batch</p>
@@ -252,7 +252,7 @@ const BatchView = () => {
         </div>
       </section>
 
-      <section aria-label="Batch invoices workspace" className="rounded border border-gray-blue-100 bg-white p-4 text-gray-blue-700">
+      <section aria-label="Batch invoices workspace" className="tab-panel flex-col items-start w-full">
         <div className="flex flex-wrap items-center justify-between gap-4 border-b border-gray-blue-100 pb-4 mb-4">
           <div>
             <p className="text-xs uppercase tracking-wide text-gray-blue-600">Invoices Linked to Batch</p>
@@ -278,7 +278,7 @@ const BatchView = () => {
         ) : (
           <div className="flex flex-col gap-4">
             {filteredInvoices.map((invoice) => (
-              <div key={invoice.invoice_id} className="border border-gray-blue-100 rounded-lg p-4 bg-gray-blue-50/30">
+              <div key={invoice.invoice_id} className="border border-gray-blue-100 rounded p-4 bg-gray-blue-50/30">
                 <div className="flex flex-wrap items-center justify-between gap-4">
                   <div>
                     <p className="text-xs uppercase text-gray-blue-600">Invoice</p>
@@ -287,7 +287,7 @@ const BatchView = () => {
                   </div>
                   <button
                     type="button"
-                    className="btn-class min-w-[150px] opacity-70 cursor-not-allowed"
+                    className="tab-pill min-w-[150px] opacity-70 cursor-not-allowed"
                     disabled
                     title="Coming soon"
                   >
@@ -337,7 +337,7 @@ const BatchView = () => {
         <div className="mt-6 flex justify-end">
           <button
             type="button"
-            className="btn-class min-w-[160px]"
+            className="button-pill min-w-[160px]"
             onClick={() => navigate(`/batches/${batch.batch_id}/accounts/new`, { state: { batch } })}
           >
             Add Account

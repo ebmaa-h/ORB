@@ -34,6 +34,7 @@ export default {
       "gray-100": "#f7f7f7",
 
       "gray-50": "#f5f5f5",
+      "gray-blue-50": "#f5f8fb",
       "gray-blue-100": "#e9edf0",
       "gray-blue-200": "#cfd8df",
       "gray-blue-300": "#b4c2ce",
@@ -80,4 +81,3 @@ export default {
     // },
   ],
 }
-

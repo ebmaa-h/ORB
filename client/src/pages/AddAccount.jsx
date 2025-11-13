@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
 import SearchBar from "../components/ui/SearchBar";
 import axiosClient from "../utils/axiosClient";
@@ -15,6 +15,37 @@ const defaultPerson = () => ({
   idNumber: "",
   dependentNumber: "",
 });
+
+const STATUS_OPTIONS = ["Open", "Archived"];
+
+const formatPersonName = (person) => {
+  if (!person) return "N/A";
+  const first = typeof person.first === "string" ? person.first.trim() : "";
+  const last = typeof person.last === "string" ? person.last.trim() : "";
+  const combined = [first, last].filter(Boolean).join(" ");
+  return combined || (person.title ? person.title : "N/A");
+};
+
+const formatPersonMeta = (person) => {
+  if (!person) return "";
+  const meta = [];
+  if (person.idNumber) meta.push(`ID: ${person.idNumber}`);
+  if (person.dateOfBirth) meta.push(`DOB: ${person.dateOfBirth}`);
+  if (person.gender) meta.push(`Gender: ${person.gender}`);
+  return meta.join(" • ");
+};
+
+const formatClientDisplayName = (batch) => {
+  if (!batch) return "Client";
+  const toNamePart = (value) => (typeof value === "string" ? value.trim() : "");
+  const first = toNamePart(batch.client_first);
+  const last = toNamePart(batch.client_last);
+  const combined = [first, last].filter(Boolean).join(" ").trim();
+  if (combined) {
+    return /^dr\b/i.test(combined) ? combined : `Dr ${combined}`;
+  }
+  return batch.client_id ? `Client #${batch.client_id}` : "Client";
+};
 
 const AddAccount = () => {
   const { batchId } = useParams();
@@ -46,6 +77,8 @@ const AddAccount = () => {
   const [saveError, setSaveError] = useState("");
   const [invoiceCount, setInvoiceCount] = useState(0);
   const [lastImported, setLastImported] = useState(null);
+  const [isStatusDropdownOpen, setIsStatusDropdownOpen] = useState(false);
+  const statusDropdownRef = useRef(null);
 
   useEffect(() => {
     if (!batch?.batch_id) return;
@@ -73,6 +106,18 @@ const AddAccount = () => {
     };
   }, [batch]);
 
+  const clientDisplayName = useMemo(() => formatClientDisplayName(batch), [batch]);
+
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (statusDropdownRef.current && !statusDropdownRef.current.contains(event.target)) {
+        setIsStatusDropdownOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
   if (!batch) {
     return (
       <section className="container-col">
@@ -81,7 +126,7 @@ const AddAccount = () => {
         </p>
         <button
           type="button"
-          className="btn-class-dark bg-ebmaa-purple text-white px-6 hover:bg-ebmaa-purple-light mt-4"
+          className="tab-pill-dark bg-ebmaa-purple text-white px-6 hover:bg-ebmaa-purple-light mt-4"
           onClick={() => navigate("/workflow")}
         >
           Back to Workflow
@@ -92,6 +137,7 @@ const AddAccount = () => {
 
   const infoItems = [
     { label: "Batch", value: `#${batch.batch_id}` },
+    { label: "Client", value: clientDisplayName },
     { label: "Client ID", value: batch.client_id || "N/A" },
     { label: "Invoice Count", value: invoiceCount },
   ];
@@ -197,6 +243,11 @@ const AddAccount = () => {
     }
   };
 
+  const handleStatusSelect = (value) => {
+    setInvoiceForm((prev) => ({ ...prev, status: value }));
+    setIsStatusDropdownOpen(false);
+  };
+
   return (
     <div className="flex flex-col gap-4">
       <section className="container-col">
@@ -204,9 +255,9 @@ const AddAccount = () => {
           <div>
             <p className="text-xs uppercase tracking-wide text-gray-blue-600">Add Account / Invoice</p>
             <h1 className="text-2xl font-semibold text-gray-dark">Batch #{batch.batch_id}</h1>
-            <p className="text-sm text-gray-blue-600">Client #{batch.client_id}</p>
+            <p className="text-sm text-gray-blue-600">{clientDisplayName}</p>
           </div>
-          <button type="button" className="btn-class" onClick={() => navigate(-1)}>
+          <button type="button" className="button-pill min-w-[100px]" onClick={() => navigate(-1)}>
             Back
           </button>
         </div>
@@ -220,14 +271,14 @@ const AddAccount = () => {
         </div>
       </section>
 
-      <section className="container-col">
+      <section className="container-col m-0">
         <div className="flex flex-wrap items-center gap-4">
           <div className="flex-1 min-w-[220px]">
             <SearchBar searchTerm={searchTerm} setSearchTerm={setSearchTerm} classes="w-full" />
           </div>
           <button
             type="button"
-            className="btn-class"
+            className="button-pill"
             onClick={handleSearchProfiles}
             disabled={searchLoading || !batch.client_id}
           >
@@ -255,30 +306,42 @@ const AddAccount = () => {
                       Plan: {profile.plan?.name || profile.plan?.code || "N/A"}
                     </p>
                   </div>
-                  <button type="button" className="btn-class" onClick={() => handleImport(profile, null)}>
+                  <button type="button" className="button-pill" onClick={() => handleImport(profile, null)}>
                     Import Profile
                   </button>
                 </div>
                 {profile.accounts?.length ? (
                   <div className="mt-4 flex flex-col gap-3">
-                    {profile.accounts.map((account) => (
-                      <div key={account.accountId} className="rounded border border-gray-blue-100 p-3 bg-white">
-                        <div className="flex flex-wrap items-center justify-between gap-4">
-                          <div>
-                            <p className="text-xs uppercase text-gray-blue-600">Account #{account.accountId}</p>
-                            <p className="text-sm text-gray-700">
-                              Member: {[account.member?.first, account.member?.last].filter(Boolean).join(" ") || "N/A"}
-                            </p>
-                            <p className="text-sm text-gray-700">
-                              Patient: {[account.patient?.first, account.patient?.last].filter(Boolean).join(" ") || "N/A"}
-                            </p>
+                    {profile.accounts.map((account) => {
+                      const memberName = formatPersonName(account.member);
+                      const memberMeta = formatPersonMeta(account.member);
+                      const patientName = formatPersonName(account.patient);
+                      const patientMeta = formatPersonMeta(account.patient);
+                      return (
+                        <div key={account.accountId} className="rounded border border-gray-blue-100 p-3 bg-white">
+                          <div className="flex flex-wrap items-center justify-between gap-4">
+                            <div>
+                              <p className="text-xs uppercase text-gray-blue-600">Account #{account.accountId}</p>
+                              <p className="text-xs text-gray-blue-600 ml-2 block">
+                                Member: <span className="font-semibold">{memberName}</span>
+                                {memberMeta && (
+                                  <span className="text-xs text-gray-blue-600 ml-2 inline-block">{memberMeta}</span>
+                                )}
+                              </p>
+                              <p className="text-xs text-gray-blue-600 ml-2 inline-block">
+                                Patient: <span className="font-semibold">{patientName}</span>
+                                {patientMeta && (
+                                  <span className="text-xs text-gray-blue-600 ml-2 inline-block">{patientMeta}</span>
+                                )}
+                              </p>
+                            </div>
+                            <button type="button" className="tab-pill" onClick={() => handleImport(profile, account)}>
+                              Import Account
+                            </button>
                           </div>
-                          <button type="button" className="btn-class" onClick={() => handleImport(profile, account)}>
-                            Import Account
-                          </button>
                         </div>
-                      </div>
-                    ))}
+                      );
+                    })}
                   </div>
                 ) : (
                   <p className="text-sm text-gray-blue-600 mt-4">No accounts for this client. You can still import the profile details.</p>
@@ -289,14 +352,14 @@ const AddAccount = () => {
         </div>
       </section>
 
-      <section className="container-col">
+      <section className="container-col m-0">
         <p className="text-xs uppercase tracking-wide text-gray-blue-600">Medical Aid</p>
         <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
           <div className="flex flex-col gap-1">
             <label className="text-xs text-gray-blue-600">Medical Aid Number</label>
             <input
               type="text"
-              className="btn-class"
+              className="input-pill"
               value={medicalAidForm.medicalAidNr}
               onChange={(e) => setMedicalAidForm((prev) => ({ ...prev, medicalAidNr: e.target.value }))}
             />
@@ -305,7 +368,7 @@ const AddAccount = () => {
             <label className="text-xs text-gray-blue-600">Medical Aid ID</label>
             <input
               type="text"
-              className="btn-class"
+              className="input-pill"
               value={medicalAidForm.medicalAidId}
               onChange={(e) => setMedicalAidForm((prev) => ({ ...prev, medicalAidId: e.target.value }))}
             />
@@ -314,7 +377,7 @@ const AddAccount = () => {
             <label className="text-xs text-gray-blue-600">Plan ID</label>
             <input
               type="text"
-              className="btn-class"
+              className="input-pill"
               value={medicalAidForm.planId}
               onChange={(e) => setMedicalAidForm((prev) => ({ ...prev, planId: e.target.value }))}
             />
@@ -322,35 +385,35 @@ const AddAccount = () => {
         </div>
       </section>
 
-      <section className="container-col">
+      <section className="container-col m-0">
         <p className="text-xs uppercase tracking-wide text-gray-blue-600">Main Member</p>
         <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
           <div className="flex flex-col gap-1">
             <label className="text-xs text-gray-blue-600">Record ID (optional)</label>
             <input
               type="text"
-              className="btn-class"
+              className="input-pill"
               value={memberForm.recordId}
               onChange={onPersonFieldChange(setMemberForm, "recordId")}
             />
           </div>
           <div className="flex flex-col gap-1">
             <label className="text-xs text-gray-blue-600">First Name</label>
-            <input type="text" className="btn-class" value={memberForm.first} onChange={onPersonFieldChange(setMemberForm, "first")} />
+            <input type="text" className="input-pill" value={memberForm.first} onChange={onPersonFieldChange(setMemberForm, "first")} />
           </div>
           <div className="flex flex-col gap-1">
             <label className="text-xs text-gray-blue-600">Last Name</label>
-            <input type="text" className="btn-class" value={memberForm.last} onChange={onPersonFieldChange(setMemberForm, "last")} />
+            <input type="text" className="input-pill" value={memberForm.last} onChange={onPersonFieldChange(setMemberForm, "last")} />
           </div>
           <div className="flex flex-col gap-1">
             <label className="text-xs text-gray-blue-600">ID Number</label>
-            <input type="text" className="btn-class" value={memberForm.idNumber} onChange={onPersonFieldChange(setMemberForm, "idNumber")} />
+            <input type="text" className="input-pill" value={memberForm.idNumber} onChange={onPersonFieldChange(setMemberForm, "idNumber")} />
           </div>
           <div className="flex flex-col gap-1">
             <label className="text-xs text-gray-blue-600">DOB</label>
             <input
               type="date"
-              className="btn-class"
+              className="input-pill"
               value={memberForm.dateOfBirth}
               onChange={onPersonFieldChange(setMemberForm, "dateOfBirth")}
             />
@@ -359,7 +422,7 @@ const AddAccount = () => {
             <label className="text-xs text-gray-blue-600">Dependent #</label>
             <input
               type="text"
-              className="btn-class"
+              className="input-pill"
               value={memberForm.dependentNumber}
               onChange={onPersonFieldChange(setMemberForm, "dependentNumber")}
             />
@@ -367,35 +430,35 @@ const AddAccount = () => {
         </div>
       </section>
 
-      <section className="container-col">
+      <section className="container-col m-0">
         <p className="text-xs uppercase tracking-wide text-gray-blue-600">Patient</p>
         <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
           <div className="flex flex-col gap-1">
             <label className="text-xs text-gray-blue-600">Record ID (optional)</label>
             <input
               type="text"
-              className="btn-class"
+              className="input-pill"
               value={patientForm.recordId}
               onChange={onPersonFieldChange(setPatientForm, "recordId")}
             />
           </div>
           <div className="flex flex-col gap-1">
             <label className="text-xs text-gray-blue-600">First Name</label>
-            <input type="text" className="btn-class" value={patientForm.first} onChange={onPersonFieldChange(setPatientForm, "first")} />
+            <input type="text" className="input-pill" value={patientForm.first} onChange={onPersonFieldChange(setPatientForm, "first")} />
           </div>
           <div className="flex flex-col gap-1">
             <label className="text-xs text-gray-blue-600">Last Name</label>
-            <input type="text" className="btn-class" value={patientForm.last} onChange={onPersonFieldChange(setPatientForm, "last")} />
+            <input type="text" className="input-pill" value={patientForm.last} onChange={onPersonFieldChange(setPatientForm, "last")} />
           </div>
           <div className="flex flex-col gap-1">
             <label className="text-xs text-gray-blue-600">ID Number</label>
-            <input type="text" className="btn-class" value={patientForm.idNumber} onChange={onPersonFieldChange(setPatientForm, "idNumber")} />
+            <input type="text" className="input-pill" value={patientForm.idNumber} onChange={onPersonFieldChange(setPatientForm, "idNumber")} />
           </div>
           <div className="flex flex-col gap-1">
             <label className="text-xs text-gray-blue-600">DOB</label>
             <input
               type="date"
-              className="btn-class"
+              className="input-pill"
               value={patientForm.dateOfBirth}
               onChange={onPersonFieldChange(setPatientForm, "dateOfBirth")}
             />
@@ -404,7 +467,7 @@ const AddAccount = () => {
             <label className="text-xs text-gray-blue-600">Dependent #</label>
             <input
               type="text"
-              className="btn-class"
+              className="input-pill"
               value={patientForm.dependentNumber}
               onChange={onPersonFieldChange(setPatientForm, "dependentNumber")}
             />
@@ -412,14 +475,14 @@ const AddAccount = () => {
         </div>
       </section>
 
-      <section className="container-col">
+      <section className="container-col m-0 mb-4">
         <p className="text-xs uppercase tracking-wide text-gray-blue-600">Invoice Details</p>
         <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
           <div className="flex flex-col gap-1">
             <label className="text-xs text-gray-blue-600">Nr in Batch</label>
             <input
               type="number"
-              className="btn-class"
+              className="input-pill"
               value={invoiceForm.nrInBatch}
               onChange={(e) => setInvoiceForm((prev) => ({ ...prev, nrInBatch: e.target.value }))}
             />
@@ -428,27 +491,48 @@ const AddAccount = () => {
             <label className="text-xs text-gray-blue-600">Date of Service</label>
             <input
               type="date"
-              className="btn-class"
+              className="input-pill"
               value={invoiceForm.dateOfService}
               onChange={(e) => setInvoiceForm((prev) => ({ ...prev, dateOfService: e.target.value }))}
             />
           </div>
-          <div className="flex flex-col gap-1">
+          <div className="flex flex-col gap-1 relative" ref={statusDropdownRef}>
             <label className="text-xs text-gray-blue-600">Status</label>
-            <select
-              className="btn-class"
-              value={invoiceForm.status}
-              onChange={(e) => setInvoiceForm((prev) => ({ ...prev, status: e.target.value }))}
+            <button
+              type="button"
+              className="input-pill flex items-center justify-between gap-2"
+              onClick={() => setIsStatusDropdownOpen((prev) => !prev)}
             >
-              <option value="Open">Open</option>
-              <option value="Archived">Archived</option>
-            </select>
+              <span>{invoiceForm.status}</span>
+              <svg
+                className={`w-4 h-4 transform transition-transform ${isStatusDropdownOpen ? "rotate-180" : ""}`}
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
+              </svg>
+            </button>
+            {isStatusDropdownOpen && (
+              <div className="nav-dropdown-panel w-full absolute left-0 top-full">
+                {STATUS_OPTIONS.map((option) => (
+                  <button
+                    key={option}
+                    type="button"
+                    className={`nav-dropdown-item ${invoiceForm.status === option ? "nav-dropdown-item-active" : ""}`}
+                    onClick={() => handleStatusSelect(option)}
+                  >
+                    {option}
+                  </button>
+                ))}
+              </div>
+            )}
           </div>
           <div className="flex flex-col gap-1">
             <label className="text-xs text-gray-blue-600">Balance</label>
             <input
               type="number"
-              className="btn-class"
+              className="input-pill"
               value={invoiceForm.balance}
               onChange={(e) => setInvoiceForm((prev) => ({ ...prev, balance: e.target.value }))}
             />
@@ -457,7 +541,7 @@ const AddAccount = () => {
             <label className="text-xs text-gray-blue-600">File #</label>
             <input
               type="text"
-              className="btn-class"
+              className="input-pill"
               value={invoiceForm.fileNr}
               onChange={(e) => setInvoiceForm((prev) => ({ ...prev, fileNr: e.target.value }))}
             />
@@ -466,7 +550,7 @@ const AddAccount = () => {
             <label className="text-xs text-gray-blue-600">Auth #</label>
             <input
               type="text"
-              className="btn-class"
+              className="input-pill"
               value={invoiceForm.authNr}
               onChange={(e) => setInvoiceForm((prev) => ({ ...prev, authNr: e.target.value }))}
             />
@@ -480,12 +564,12 @@ const AddAccount = () => {
         )}
         {saveError && <p className="text-sm text-red-600 mt-3">{saveError}</p>}
         <div className="flex justify-end gap-3 mt-4">
-          <button type="button" className="btn-class" onClick={() => navigate(-1)} disabled={saving}>
+          <button type="button" className="button-pill" onClick={() => navigate(-1)} disabled={saving}>
             Cancel
           </button>
           <button
             type="button"
-            className={`btn-class-dark text-white px-4 ${canSave ? "bg-ebmaa-purple" : "bg-gray-400 cursor-not-allowed"}`}
+            className={`tab-pill text-white px-4 ${canSave ? "bg-ebmaa-purple" : "bg-gray-400 cursor-not-allowed"}`}
             onClick={handleSave}
             disabled={!canSave || saving}
           >

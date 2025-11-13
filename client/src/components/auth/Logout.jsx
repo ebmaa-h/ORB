@@ -48,7 +48,7 @@ export default function Logout() {
             <button
             onClick={backToLogin}
             type='submit'
-            className='btn-class px-6'
+            className='button-pill px-6'
             >
               Back to login
             </button>

@@ -14,6 +14,12 @@ const METHOD_OPTIONS = [
   "other",
 ];
 
+const BOOLEAN_FIELD_ORDER = [
+  { name: "added_on_drive", label: "Added on Drive" },
+  { name: "corrections", label: "Corrections" },
+  { name: "bank_statements", label: "Bank Statements" },
+];
+
 export default function NewBatch({ onBatchCreated }) {
   const { user } = useContext(UserContext);
 
@@ -134,8 +140,8 @@ export default function NewBatch({ onBatchCreated }) {
   };
 
   return (
-    <div>
-      <h3 className="font-bold mb-4">Add New Batch</h3>
+    <div className="tab-panel">
+      <h3 className="font-bold text-gray-blue-600">Add New Batch</h3>
       <form
         onSubmit={handleSubmit}
         className="flex flex-row flex-wrap gap-4 text-gray-dark"
@@ -147,14 +153,14 @@ export default function NewBatch({ onBatchCreated }) {
           placeholder="Batch Size"
           value={formData.batch_size}
           onChange={handleChange}
-          className="border p-2 rounded"
+          className="border p-2 rounded border-gray-blue-600 border-gray-blue-600"
           required
         />
         <select
           name="client_id"
           value={formData.client_id}
           onChange={handleChange}
-          className="border p-2 rounded min-w-[220px]"
+          className="border p-2 rounded border-gray-blue-600 min-w-[220px]"
           required
         >
           <option value="" disabled>
@@ -174,14 +180,14 @@ export default function NewBatch({ onBatchCreated }) {
           name="date_received"
           value={formData.date_received}
           onChange={handleChange}
-          className="border p-2 rounded"
+          className="border p-2 rounded border-gray-blue-600 min-w-[200px]"
           required
         />
         <select
           name="method_received"
           value={formData.method_received}
           onChange={handleChange}
-          className="border p-2 rounded min-w-[160px]"
+          className="border p-2 rounded border-gray-blue-600 min-w-[200px]"
         >
           {METHOD_OPTIONS.map((option) => (
             <option key={option} value={option}>
@@ -189,40 +195,13 @@ export default function NewBatch({ onBatchCreated }) {
             </option>
           ))}
         </select>
-        <label className="flex items-center gap-2">
-          <input
-            type="checkbox"
-            name="bank_statements"
-            checked={formData.bank_statements}
-            onChange={handleChange}
-          />
-          Bank Statements
-        </label>
-        <label className="flex items-center gap-2">
-          <input
-            type="checkbox"
-            name="added_on_drive"
-            checked={formData.added_on_drive}
-            onChange={handleChange}
-          />
-          Added on Drive
-        </label>
-        <label className="flex items-center gap-2">
-          <input
-            type="checkbox"
-            name="corrections"
-            checked={formData.corrections}
-            onChange={handleChange}
-          />
-          Corrections
-        </label>
         <input
           type="number"
           name="total_urgent_foreign"
           placeholder="Total Urgent Foreign"
           value={formData.total_urgent_foreign}
           onChange={handleTotalUrgentChange}
-          className="border p-2 rounded"
+          className="border p-2 rounded border-gray-blue-600 min-w-[200px]"
         />
         <input
           type="text"
@@ -230,11 +209,24 @@ export default function NewBatch({ onBatchCreated }) {
           placeholder="CC Availability"
           value={formData.cc_availability}
           onChange={handleChange}
-          className="border p-2 rounded"
+          className="border p-2 rounded border-gray-blue-600 min-w-[200px]"
         />
-
+        <div className="flex gap-4 w-full">
+          {BOOLEAN_FIELD_ORDER.map(({ name, label }) => (
+            <label key={name} className="flex items-center gap-2">
+              <input
+                type="checkbox"
+                name={name}
+                checked={Boolean(formData[name])}
+                onChange={handleChange}
+              />
+              {label}
+            </label>
+          ))}
+        </div>
+        <div className="flex-col w-full">
         {formData.foreign_urgents.map((fu, index) => (
-          <div key={index} className="container-row-outer p-0 place-items-center m-0">
+          <div key={index} className="container-row-outer p-0 place-items-center">
             <h4 className="font-semibold">{index + 1}</h4>
             <input
               type="text"
@@ -242,7 +234,7 @@ export default function NewBatch({ onBatchCreated }) {
               placeholder="Patient Name"
               value={fu.patient_name}
               onChange={(e) => handleForeignUrgentChange(index, e)}
-              className="border p-2 rounded"
+              className="border p-2 rounded border-gray-blue-600"
               required
             />
             <input
@@ -251,13 +243,14 @@ export default function NewBatch({ onBatchCreated }) {
               placeholder="Medical Aid Number"
               value={fu.medical_aid_nr}
               onChange={(e) => handleForeignUrgentChange(index, e)}
-              className="border p-2 rounded"
+              className="border p-2 rounded border-gray-blue-600"
               required
             />
           </div>
         ))}
-        <div className="flex gap-2 self-center w-full mt-4">
-          <button type="submit" className="btn-class min-w-[100px] bg-green text-white">
+      </div>
+        <div className="flex gap-2 self-center w-full">
+          <button type="submit" className="tab-pill min-w-[100px]">
             Add
           </button>
         </div>

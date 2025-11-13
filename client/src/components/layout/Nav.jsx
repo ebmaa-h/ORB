@@ -27,15 +27,16 @@ export default function Nav() {
   }, [location]);
 
   return (
-    <div className="bg-white border-b border-gray-blue-100 rounded flex justify-between items-center flex-row h-[60px] px-6">
+    <div className="bg-white border-b border-gray-blue-200 rounded flex justify-between items-center flex-row h-[60px] px-6">
       {/* left */}
       <div className="flex gap-6">
         <div className="relative" ref={workflowRef}>
           <button
-            className="text-gray-dark hover:text-ebmaa-purple transition-colors duration-500 flex items-center gap-1"
-            onClick={() => setIsWorkflowOpen(!isWorkflowOpen)}
+            type="button"
+            className={`nav-dropdown-trigger ${isWorkflowOpen ? "nav-dropdown-trigger-active" : ""}`}
+            onClick={() => setIsWorkflowOpen((prev) => !prev)}
           >
-            {activeDept.charAt(0).toUpperCase() + activeDept.slice(1)}
+            <span>{activeDept.charAt(0).toUpperCase() + activeDept.slice(1)}</span>
             <svg
               className={`w-4 h-4 transform transition-transform ${isWorkflowOpen ? "rotate-180" : ""}`}
               fill="none"
@@ -46,13 +47,12 @@ export default function Nav() {
             </svg>
           </button>
           {isWorkflowOpen && (
-            <div className="absolute top-full left-0 mt-2 w-48 bg-white rounded z-10 border-b border-gray-blue-200">
+            <div className="nav-dropdown-panel absolute top-full left-0">
               {availableDepts.map((dept) => (
                 <button
                   key={dept}
-                  className={`block w-full text-left px-4 py-2 text-gray-dark hover:bg-gray-200 ${
-                    activeDept === dept ? "font-bold bg-gray-200" : ""
-                  }`}
+                  type="button"
+                  className={`nav-dropdown-item ${activeDept === dept ? "nav-dropdown-item-active" : ""}`}
                   onClick={() => {
                     setActiveDept(dept);
                     setIsWorkflowOpen(false);
@@ -75,7 +75,7 @@ export default function Nav() {
         </Link> */}
         <Link
           to="/logout"
-          className="text-gray-dark hover:text-red transition-colors duration-500"
+          className="nav-dropdown-trigger hover:nav-dropdown-trigger-active"
         >
           Logout
         </Link>

@@ -467,7 +467,7 @@ export default function WorkflowEngine({ department = "none" }) {
           />
         </div>
       ) : (
-        <div className="container-col-outer gap-4">
+        <div className="tab-pill4">
           {department === "reception" && showNewBatchForm && (
             <NewBatch onBatchCreated={() => setShowNewBatchForm(false)} />
           )}

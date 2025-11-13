@@ -11,7 +11,7 @@ export default function WorkflowActions({ actions = [], selectedBatch = null, on
       {actions.map((action) => (
         <button
           key={action.name}
-          className="btn-class min-w-[140px]"
+          className="tab-pill min-w-[140px]"
           onClick={() => {
             if (!selectedBatch) {
               // simple client-side guard, might replace with toast

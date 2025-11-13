@@ -417,7 +417,7 @@ export default function EntityNotesAndLogs({
             <SearchBar
               searchTerm={effectiveSearchTerm}
               setSearchTerm={handleSearchTermChange}
-              classes="h-[32px] text-sm btn-class"
+              classes="h-[32px] text-sm tab-pill"
             />
           )}
         </div>
@@ -452,7 +452,7 @@ export default function EntityNotesAndLogs({
           <input
             type="text"
             placeholder="New note"
-            className="flex-1 btn-class"
+            className="flex-1 tab-pill"
             value={newNote}
             onChange={(e) => setNewNote(e.target.value)}
             onKeyDown={(e) => e.key === "Enter" && handleAddNote()}
@@ -461,7 +461,7 @@ export default function EntityNotesAndLogs({
           <button
             type="button"
             onClick={handleAddNote}
-            className="btn-class-dark w-[120px] cursor-pointer bg-ebmaa-purple text-white disabled:opacity-60 hover:bg-ebmaa-purple/70"
+            className="tab-pill-dark w-[120px] cursor-pointer bg-ebmaa-purple text-white disabled:opacity-60 hover:bg-ebmaa-purple/70"
             disabled={isSubmitting || !newNote.trim() || !user?.user_id}
           >
             {isSubmitting ? "Adding..." : "Add Note"}

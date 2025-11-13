@@ -7,8 +7,8 @@ const ExpandedRowActions = ({ mainActions = [], actions = [], selectedBatch, onE
       {/* Left Side: View Batch Button */}
       <button
         type="button"
-        className={`btn-class-dark min-w-[140px] text-white ${
-          selectedBatch ? "bg-ebmaa-purple hover:bg-ebmaa-purple-light" : "bg-gray-blue-300 cursor-not-allowed"
+        className={`button-pill ${
+          selectedBatch ? "" : "bg-gray-blue-300 cursor-not-allowed"
         }`}
         onClick={(event) => {
           event.stopPropagation();
@@ -25,7 +25,7 @@ const ExpandedRowActions = ({ mainActions = [], actions = [], selectedBatch, onE
         {actions.length > 0 && actions.map((action) => (
           <button
             key={action.name}
-            className="btn-class-dark bg-gray-500 text-white hover:bg-green-active min-w-[140px]"
+            className="button-pill cursor-pointer"
             onClick={() => onExecute(action, selectedBatch)}
           >
             {action.label}
@@ -36,7 +36,7 @@ const ExpandedRowActions = ({ mainActions = [], actions = [], selectedBatch, onE
         {mainActions.map((action) => (
           <button
             key={action.name}
-            className="btn-class-dark bg-green-500 text-white hover:bg-green-active min-w-[140px]"
+            className="button-pill cursor-pointer"
             onClick={() => onExecute(action, selectedBatch)}
           >
             {action.label}

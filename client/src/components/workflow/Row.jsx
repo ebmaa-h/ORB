@@ -14,16 +14,23 @@ const METHOD_OPTIONS = [
   "other",
 ];
 
-const EDITABLE_FIELDS = new Set([
+const EDITABLE_FIELD_ORDER = [
   "batch_size",
   "client_id",
   "date_received",
   "method_received",
-  "bank_statements",
+  "cc_availability",
   "added_on_drive",
   "corrections",
-  "cc_availability",
-]);
+  "bank_statements",
+];
+
+const EDITABLE_FIELDS = new Set(EDITABLE_FIELD_ORDER);
+
+const EDITABLE_FIELD_ORDER_MAP = EDITABLE_FIELD_ORDER.reduce((acc, field, index) => {
+  acc[field] = index;
+  return acc;
+}, {});
 
 const formatDateForInput = (value) => {
   if (!value) return "";
@@ -111,10 +118,15 @@ const Row = ({
   }, [normalizedInitial, normalizedCurrent]);
 
   const busy = saving || archiving;
-  const editableColumns = useMemo(
-    () => expandedColumns.filter((col) => EDITABLE_FIELDS.has(col.name)),
-    [expandedColumns],
-  );
+  const editableColumns = useMemo(() => {
+    return expandedColumns
+      .filter((col) => EDITABLE_FIELDS.has(col.name))
+      .sort((a, b) => {
+        const orderA = EDITABLE_FIELD_ORDER_MAP[a.name] ?? Number.MAX_SAFE_INTEGER;
+        const orderB = EDITABLE_FIELD_ORDER_MAP[b.name] ?? Number.MAX_SAFE_INTEGER;
+        return orderA - orderB;
+      });
+  }, [expandedColumns]);
   const systemColumns = useMemo(
     () => expandedColumns.filter((col) => !EDITABLE_FIELDS.has(col.name)),
     [expandedColumns],
@@ -193,13 +205,13 @@ const Row = ({
               onChange={(e) => updateField(field, e.target.value)}
               disabled={clients.length === 0}
             >
-              <option value="" disabled>
+              {/* <option value="" disabled className=" text-sm">
                 {clients.length === 0 ? "Loading clients..." : "Select client"}
-              </option>
+              </option> */}
               {clients.map((client) => {
                 const label = `Dr ${(client.first || "").trim()} ${(client.last || "").trim()}`.trim();
                 return (
-                  <option key={client.client_id} value={client.client_id}>
+                  <option className="text-gray-dark text-sm" key={client.client_id} value={client.client_id}>
                     {label || `Client #${client.client_id}`}
                   </option>
                 );
@@ -227,7 +239,7 @@ const Row = ({
             onChange={(e) => updateField(field, e.target.value)}
           >
             {METHOD_OPTIONS.map((option) => (
-              <option key={option} value={option}>
+              <option key={option} value={option} className="text-gray-dark text-sm">
                 {option.charAt(0).toUpperCase() + option.slice(1)}
               </option>
             ))}
@@ -268,7 +280,7 @@ const Row = ({
   return (
     <>
       <tr
-        className={`cursor-pointer hover:bg-gray-50 text-gray-900 ${
+        className={`cursor-pointer hover:bg-gray-50  ${
           isExpanded ? "border-x border-gray-blue-200 bg-gray-50" : "border-b  border-gray-blue-200"
         } ${isSelected ? "bg-gray-50" : ""}`}
         onClick={() => {
@@ -282,7 +294,7 @@ const Row = ({
 
           if (col.name === "client_name") {
             return (
-              <td key={col.name} className="px-2 py-2 align-top text-sm text-gray-900">
+              <td key={col.name} className="px-2 py-2 align-top text-sm ">
                 <span className="font-semibold">{batch.client_first} {batch.client_last}</span>
                 <br />
                 <span className="text-xs uppercase tracking-wide text-gray-blue-600">{batch.client_type}</span>
@@ -291,7 +303,7 @@ const Row = ({
           }
 
           return (
-            <td key={col.name} className="px-2 py-2 align-top text-sm text-gray-900">
+            <td key={col.name} className="px-2 py-2 align-top text-sm text-gray-dark">
               <span>{value ?? ""}</span>
             </td>
           );
@@ -327,7 +339,7 @@ const Row = ({
                     {systemColumns.map((col) => (
                       <div key={col.name} className="text-sm text-gray-900">
                         <span className="text-xs uppercase tracking-wide text-gray-blue-600 block">{col.label}</span>
-                        <span className="font-semibold">{renderDisplayValue(col)}</span>
+                        <span className="">{renderDisplayValue(col)}</span>
                       </div>
                     ))}
                   </div>
@@ -339,7 +351,7 @@ const Row = ({
               <div className="mt-4 flex flex-wrap items-center gap-3 justify-between">
                 <button
                   type="button"
-                  className="btn-class-dark text-s min-w-[80px] bg-red-500 text-white hover:bg-red-500/70"
+                  className="button-pill tab-pill-white-hover cursor-pointer hover:bg-red"
                   onClick={(e) => {
                     e.stopPropagation();
                     handleArchive();
@@ -350,7 +362,7 @@ const Row = ({
                 </button>
                 <button
                   type="button"
-                  className="btn-class-dark min-w-[130px] bg-green-500 text-white hover:bg-green-active"
+                  className="button-pill cursor-pointer hover:bg-green hover:text-white"
                   onClick={(e) => {
                     e.stopPropagation();
                     handleSave();

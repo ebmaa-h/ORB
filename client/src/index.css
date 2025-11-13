@@ -4,16 +4,16 @@
 
 @layer components {
   .link-class {
-    @apply border-b border-white py-1 px-2 hover:border-ebmaa-purple transition duration-300; 
+    @apply border-b border-white py-1 px-2 hover:border-gray-blue-600 transition duration-300; 
   }
-  .btn-class {
-    @apply border rounded border-gray-blue-200 py-1 px-2 hover:border-ebmaa-purple transition duration-300 cursor-pointer ; 
+  /* .tab-pill {
+    @apply border rounded border-gray-blue-200 py-1 px-2 hover:border-gray-blue-600 transition duration-300 cursor-pointer ; 
   }
-  .btn-class-dark {
-    @apply  rounded  py-1 px-2 hover:border-ebmaa-purple transition duration-300 cursor-pointer; 
-  }
+  .tab-pill-dark {
+    @apply  rounded  py-1 px-2 hover:border-gray-blue-600 transition duration-300 cursor-pointer; 
+  } */
   .active-link {
-    @apply border-ebmaa-purple border-b;
+    @apply border-gray-blue-600 border-b;
   }
 
   /* .container-col {
@@ -35,22 +35,52 @@
     @apply flex flex-row gap-2 p-4 my-4 bg-white border-b border-gray-blue-100 rounded w-full items-center;
   }
   .tab-panel {
-    @apply flex flex-wrap gap-3 items-center p-4 my-4 bg-white border border-gray-blue-200 rounded-lg shadow-sm;
+    @apply flex flex-wrap gap-3 items-center p-4 my-4 bg-white border border-gray-blue-200 rounded shadow-sm;
+  }
+  .input-pill {
+    @apply px-3 py-1.5 text-sm font-semibold rounded-full border-gray-blue-200 border text-gray-blue-600 bg-white transition-colors duration-200 hover:border;
   }
   .tab-pill {
-    @apply px-3 py-1.5 text-sm font-semibold rounded-full border border-gray-blue-100 text-gray-blue-600 bg-white transition-colors duration-200;
+    @apply px-3 py-1.5 text-sm font-semibold rounded-full border border-white text-gray-blue-600 bg-white transition-colors duration-200 hover:border;
+  }
+  .button-pill {
+    @apply px-3 py-1.5 text-sm font-semibold rounded-full border text-gray-blue-600 bg-white transition-colors duration-200 hover:bg-gray-blue-600 hover:text-white;
+  }
+  .tab-pill-link {
+    @apply px-3 py-1.5 text-sm font-semibold rounded-full border border-white text-gray-blue-600 bg-white transition-colors duration-200 hover:border hover:border-gray-blue-600 hover:text-gray-blue-600;
   }
   .tab-pill:not(:disabled):hover {
-    @apply border-ebmaa-purple text-ebmaa-purple;
+    @apply border-gray-blue-600 text-gray-blue-600;
+  }
+  .tab-pill.tab-pill-white-hover:not(:disabled):hover {
+    @apply text-white;
   }
   .tab-pill-active {
-    @apply border-ebmaa-purple bg-ebmaa-purple/10 text-ebmaa-purple shadow-sm;
+    @apply border-gray-blue-600 bg-gray-blue-600/10 text-gray-blue-600 shadow-sm;
   }
   .tab-pill-disabled {
     @apply cursor-not-allowed border-gray-blue-200 text-gray-blue-400 bg-gray-50;
   }
+  .nav-dropdown-trigger {
+    @apply px-4 py-1.5 text-sm font-semibold rounded-full  text-gray-blue-700 bg-white flex items-center gap-2 transition-colors duration-200 hover:border-gray-blue-600 hover:text-gray-blue-600;
+  }
+  .nav-dropdown-trigger-active {
+    @apply border-gray-blue-600 text-gray-blue-600 bg-gray-blue-600/10;
+  }
+  .nav-dropdown-panel {
+    @apply mt-2 w-56 rounded-xl bg-white shadow-xl z-20 flex flex-col overflow-hidden;
+  }
+  .nav-dropdown-item {
+    @apply w-full text-left px-4 py-2 text-sm text-gray-blue-700 transition-colors duration-150;
+  }
+  .nav-dropdown-item:hover {
+    @apply bg-gray-blue-100;
+  }
+  .nav-dropdown-item-active {
+    @apply bg-gray-blue-600/5 text-gray-blue-600 font-semibold;
+  }
 }
- /* text-sm text-center min-w-[100px] rounded hover:border hover:border-ebmaa-purple */
+ /* text-sm text-center min-w-[100px] rounded hover:border hover:border-gray-blue-600 */
 
 * {
   padding: 0;

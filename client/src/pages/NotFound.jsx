@@ -51,7 +51,7 @@ export default function NotFound() {
           <button
             onClick={handleClick}
             type="button"
-            className="btn-class px-6"
+            className="tab-pill px-6"
           >
             {buttonText}
           </button>

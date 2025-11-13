@@ -15,7 +15,7 @@ export default function LoginBox() {
         <button
           onClick={handleGoogleLogin}
           type='button'
-          className='btn-class px-6'
+          className='button-pill px-6'
         >
           Login
         </button>
