@@ -1,3 +1,4 @@
+/* eslint-disable react/prop-types */
 // src/components/Workflow/WorkflowTable.jsx
 import React, { useCallback, useEffect, useState } from "react";
 import Row from "./Row";

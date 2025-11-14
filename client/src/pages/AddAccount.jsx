@@ -443,57 +443,64 @@ const hydratePersonForm = (data = {}) => ({
               const hasPersonData = Boolean(profilePersons.mainMember || profilePersons.dependants.length);
               return (
                 <div key={profile.profileId} className="border border-gray-blue-100 rounded-lg p-4 bg-gray-blue-50/30">
-                  <div className="flex flex-wrap items-center justify-between gap-4">
-                    <div>
                       <p className="text-xs uppercase text-gray-blue-600">Medical Aid</p>
-                      <p className="text-sm font-semibold text-gray-dark">
-                        {profile.medicalAid?.name || "Unknown"} ({profile.medicalAidNr || "N/A"})
-                      </p>
-                      <p className="text-xs text-gray-blue-600">
-                        Plan: {profile.plan?.name || profile.plan?.code || "N/A"}
-                      </p>
+                  <div className="rounded border border-gray-blue-100 bg-white px-3 py-3 mt-2">
+                    <div className="flex flex-wrap items-center justify-between gap-4">
+                      <div>
+                        <p className="text-sm font-semibold text-gray-dark">
+                          {profile.medicalAid?.name || "Unknown"} ({profile.medicalAidNr || "N/A"})
+                        </p>
+                        <p className="text-xs text-gray-blue-600">
+                          Plan: {profile.plan?.name || profile.plan?.code || "N/A"}
+                        </p>
+                      </div>
+                      <button type="button" className="tab-pill" onClick={() => handleImport(profile, null)}>
+                        Import Medical Aid Info
+                      </button>
                     </div>
-                    <button type="button" className="button-pill" onClick={() => handleImport(profile, null)}>
-                      Import Profile
-                    </button>
                   </div>
-
-                  {profile.accounts?.length ? (
-                    <div className="mt-4 flex flex-col gap-3">
-                      {profile.accounts.map((account) => {
-                        const memberName = formatPersonName(account.member);
-                        const memberMeta = formatPersonMeta(account.member);
-                        const patientName = formatPersonName(account.patient);
-                        const patientMeta = formatPersonMeta(account.patient);
-                        return (
-                          <div key={account.accountId} className="rounded border border-gray-blue-100 p-3 bg-white">
-                            <div className="flex flex-wrap items-center justify-between gap-4">
-                              <div>
-                                <p className="text-xs uppercase text-gray-blue-600">Account #{account.accountId}</p>
-                                <p className="text-sm text-gray-blue-700">
-                                  Member: <span className="font-semibold">{memberName}</span>
-                                  {memberMeta && (
-                                    <span className="text-xs text-gray-blue-600 ml-2 inline-block">{memberMeta}</span>
-                                  )}
-                                </p>
-                                <p className="text-sm text-gray-blue-700">
-                                  Patient: <span className="font-semibold">{patientName}</span>
-                                  {patientMeta && (
-                                    <span className="text-xs text-gray-blue-600 ml-2 inline-block">{patientMeta}</span>
-                                  )}
-                                </p>
+                  <div className="mt-4 flex flex-col gap-2">
+                    <p className="text-xs uppercase text-gray-blue-600">Accounts</p>
+                    {profile.accounts?.length ? (
+                      <div className="flex flex-col gap-3">
+                        {profile.accounts.map((account) => {
+                          const memberName = formatPersonName(account.member);
+                          const memberMeta = formatPersonMeta(account.member);
+                          const patientName = formatPersonName(account.patient);
+                          const patientMeta = formatPersonMeta(account.patient);
+                          return (
+                            
+                            <div key={account.accountId} className="rounded border border-gray-blue-100 p-3 bg-white">
+                              <div className="flex flex-wrap items-center justify-between gap-4">
+                                <div>
+                                  <p className="text-xs uppercase text-gray-blue-600">Account #{account.accountId}</p>
+                                  <p className="text-sm text-gray-blue-700">
+                                    Member: <span className="font-semibold">{memberName}</span>
+                                    {memberMeta && (
+                                      <span className="text-xs text-gray-blue-600 ml-2 inline-block">{memberMeta}</span>
+                                    )}
+                                  </p>
+                                  <p className="text-sm text-gray-blue-700">
+                                    Patient: <span className="font-semibold">{patientName}</span>
+                                    {patientMeta && (
+                                      <span className="text-xs text-gray-blue-600 ml-2 inline-block">{patientMeta}</span>
+                                    )}
+                                  </p>
+                                </div>
+                                <button type="button" className="tab-pill" onClick={() => handleImport(profile, account)}>
+                                  Import Account
+                                </button>
                               </div>
-                              <button type="button" className="tab-pill" onClick={() => handleImport(profile, account)}>
-                                Import Account
-                              </button>
                             </div>
-                          </div>
-                        );
-                      })}
-                    </div>
-                  ) : (
-                    <p className="text-sm text-gray-blue-600 mt-4">No accounts for this client. You can still import the profile details.</p>
-                  )}
+                          );
+                        })}
+                      </div>
+                    ) : (
+                      <div className="rounded border border-gray-blue-100 bg-white px-3 py-2">
+                        <p className="text-sm text-gray-blue-600">No accounts.</p>
+                      </div>
+                    )}
+                  </div>
 
                   {hasPersonData && (
                     <div className="mt-4 flex flex-col gap-2">
@@ -509,7 +516,7 @@ const hydratePersonForm = (data = {}) => ({
                             </div>
                             <div className="flex items-center gap-2 flex-wrap justify-end">
                               {profilePersons.mainMember.roles.length > 0 && (
-                                <span className="text-[11px] uppercase tracking-wide text-gray-blue-600">
+                                <span className="text-[11px] uppercase tracking-wide text-gray-900">
                                   {profilePersons.mainMember.roles.join(", ")}
                                 </span>
                               )}
@@ -545,7 +552,7 @@ const hydratePersonForm = (data = {}) => ({
                                 </div>
                                 <div className="flex items-center gap-2 flex-wrap justify-end">
                                   {roles.length > 0 && (
-                                    <span className="text-[11px] uppercase tracking-wide text-gray-blue-600">
+                                    <span className="text-[11px] uppercase tracking-wide text-gray-900">
                                       {roles.join(", ")}
                                     </span>
                                   )}
