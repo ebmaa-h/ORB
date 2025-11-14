@@ -414,425 +414,428 @@ const hydratePersonForm = (data = {}) => ({
           ))}
         </div>
       </section>
-
-      <section className="container-col m-0">
-        <div className="flex flex-wrap items-center gap-4">
-          <div className="flex-1 min-w-[220px]">
-            <SearchBar searchTerm={searchTerm} setSearchTerm={setSearchTerm} classes="w-full" />
+      {/* SECTION 1 // SEARCH SECTION */}
+      <div className="flex flex-row-reverse gap-4 lg:basis-2/4 mb-4">
+        <section className="container-col m-0 flex w-full lg:basis-2/4 lg:flex-none">
+          <div className="flex flex-wrap items-center gap-4">
+            <div className="flex-1 min-w-[220px]">
+              <SearchBar searchTerm={searchTerm} setSearchTerm={setSearchTerm} classes="w-full" />
+            </div>
+            <button
+              type="button"
+              className="button-pill"
+              onClick={handleSearchProfiles}
+              disabled={searchLoading || !batch.client_id}
+            >
+              {searchLoading ? "Searching..." : "Search Profiles"}
+            </button>
           </div>
-          <button
-            type="button"
-            className="button-pill"
-            onClick={handleSearchProfiles}
-            disabled={searchLoading || !batch.client_id}
-          >
-            {searchLoading ? "Searching..." : "Search Profiles"}
-          </button>
-        </div>
-        {searchError && <p className="text-sm text-red-600">{searchError}</p>}
-        {!batch.client_id && (
-          <p className="text-sm text-red-600">This batch is missing a client reference, so lookups are disabled.</p>
-        )}
-
-        <div className="flex flex-col gap-4 mt-4">
-          {profiles.length === 0 && !searchLoading ? (
-            <p className="text-sm text-gray-blue-600">Search for existing profiles or accounts by medical aid number, ID, or surname.</p>
-          ) : (
-            profiles.map((profile) => {
-              const profilePersons = buildProfilePersons(profile);
-              const hasPersonData = Boolean(profilePersons.mainMember || profilePersons.dependants.length);
-              return (
-                <div key={profile.profileId} className="border border-gray-blue-100 rounded-lg p-4 bg-gray-blue-50/30">
-                      <p className="text-xs uppercase text-gray-blue-600">Medical Aid</p>
-                  <div className="rounded border border-gray-blue-100 bg-white px-3 py-3 mt-2">
-                    <div className="flex flex-wrap items-center justify-between gap-4">
-                      <div>
-                        <p className="text-sm font-semibold text-gray-dark">
-                          {profile.medicalAid?.name || "Unknown"} ({profile.medicalAidNr || "N/A"})
-                        </p>
-                        <p className="text-xs text-gray-blue-600">
-                          Plan: {profile.plan?.name || profile.plan?.code || "N/A"}
-                        </p>
+          {searchError && <p className="text-sm text-red-600">{searchError}</p>}
+          {!batch.client_id && (
+            <p className="text-sm text-red-600">This batch is missing a client reference, so lookups are disabled.</p>
+          )}
+          <div className="flex flex-col gap-4 mt-4">
+            {profiles.length === 0 && !searchLoading ? (
+              <p className="text-sm text-gray-blue-600">Search for existing profiles or accounts by medical aid number, ID, or surname.</p>
+            ) : (
+              profiles.map((profile) => {
+                const profilePersons = buildProfilePersons(profile);
+                const hasPersonData = Boolean(profilePersons.mainMember || profilePersons.dependants.length);
+                return (
+                  <div key={profile.profileId} className="border border-gray-blue-100 rounded-lg p-4 bg-gray-100">
+                        <p className="text-xs uppercase text-gray-blue-600">Medical Aid</p>
+                    <div className="rounded border border-gray-blue-100 bg-white px-3 py-3 mt-2">
+                      <div className="flex flex-wrap items-center justify-between gap-4">
+                        <div>
+                          <p className="text-sm font-semibold text-gray-dark">
+                            {profile.medicalAid?.name || "Unknown"} ({profile.medicalAidNr || "N/A"})
+                          </p>
+                          <p className="text-xs text-gray-blue-600">
+                            Plan: {profile.plan?.name || profile.plan?.code || "N/A"}
+                          </p>
+                        </div>
+                        <button type="button" className="tab-pill" onClick={() => handleImport(profile, null)}>
+                          Import Medical Aid Info
+                        </button>
                       </div>
-                      <button type="button" className="tab-pill" onClick={() => handleImport(profile, null)}>
-                        Import Medical Aid Info
-                      </button>
                     </div>
-                  </div>
-                  <div className="mt-4 flex flex-col gap-2">
-                    <p className="text-xs uppercase text-gray-blue-600">Accounts</p>
-                    {profile.accounts?.length ? (
-                      <div className="flex flex-col gap-3">
-                        {profile.accounts.map((account) => {
-                          const memberName = formatPersonName(account.member);
-                          const memberMeta = formatPersonMeta(account.member);
-                          const patientName = formatPersonName(account.patient);
-                          const patientMeta = formatPersonMeta(account.patient);
-                          return (
-                            
-                            <div key={account.accountId} className="rounded border border-gray-blue-100 p-3 bg-white">
-                              <div className="flex flex-wrap items-center justify-between gap-4">
-                                <div>
-                                  <p className="text-xs uppercase text-gray-blue-600">Account #{account.accountId}</p>
-                                  <p className="text-sm text-gray-blue-700">
-                                    Member: <span className="font-semibold">{memberName}</span>
-                                    {memberMeta && (
-                                      <span className="text-xs text-gray-blue-600 ml-2 inline-block">{memberMeta}</span>
-                                    )}
-                                  </p>
-                                  <p className="text-sm text-gray-blue-700">
-                                    Patient: <span className="font-semibold">{patientName}</span>
-                                    {patientMeta && (
-                                      <span className="text-xs text-gray-blue-600 ml-2 inline-block">{patientMeta}</span>
-                                    )}
-                                  </p>
-                                </div>
-                                <button type="button" className="tab-pill" onClick={() => handleImport(profile, account)}>
-                                  Import Account
-                                </button>
-                              </div>
-                            </div>
-                          );
-                        })}
-                      </div>
-                    ) : (
-                      <div className="rounded border border-gray-blue-100 bg-white px-3 py-2">
-                        <p className="text-sm text-gray-blue-600">No accounts.</p>
-                      </div>
-                    )}
-                  </div>
-
-                  {hasPersonData && (
                     <div className="mt-4 flex flex-col gap-2">
-                      <p className="text-xs uppercase text-gray-blue-600">Main Member & Dependants</p>
-                      {profilePersons.mainMember && (
+                      <p className="text-xs uppercase text-gray-blue-600">Accounts</p>
+                      {profile.accounts?.length ? (
+                        <div className="flex flex-col gap-3">
+                          {profile.accounts.map((account) => {
+                            const memberName = formatPersonName(account.member);
+                            const memberMeta = formatPersonMeta(account.member);
+                            const patientName = formatPersonName(account.patient);
+                            const patientMeta = formatPersonMeta(account.patient);
+                            return (
+                              
+                              <div key={account.accountId} className="rounded border border-gray-blue-100 p-3 bg-white">
+                                <div className="flex flex-wrap items-center justify-between gap-4">
+                                  <div>
+                                    <p className="text-xs uppercase text-gray-blue-600">Account #{account.accountId}</p>
+                                    <p className="text-sm text-gray-blue-700">
+                                      Member: <span className="font-semibold">{memberName}</span>
+                                      {memberMeta && (
+                                        <span className="text-xs text-gray-blue-600 ml-2 inline-block">{memberMeta}</span>
+                                      )}
+                                    </p>
+                                    <p className="text-sm text-gray-blue-700">
+                                      Patient: <span className="font-semibold">{patientName}</span>
+                                      {patientMeta && (
+                                        <span className="text-xs text-gray-blue-600 ml-2 inline-block">{patientMeta}</span>
+                                      )}
+                                    </p>
+                                  </div>
+                                  <button type="button" className="tab-pill" onClick={() => handleImport(profile, account)}>
+                                    Import Account
+                                  </button>
+                                </div>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      ) : (
                         <div className="rounded border border-gray-blue-100 bg-white px-3 py-2">
-                          <div className="flex flex-wrap items-center justify-between gap-2">
-                            <div>
-                              <p className="text-sm font-semibold text-gray-dark">{profilePersons.mainMember.name}</p>
-                              {profilePersons.mainMember.meta && (
-                                <p className="text-xs text-gray-blue-600">{profilePersons.mainMember.meta}</p>
-                              )}
-                            </div>
-                            <div className="flex items-center gap-2 flex-wrap justify-end">
-                              {profilePersons.mainMember.roles.length > 0 && (
-                                <span className="text-[11px] uppercase tracking-wide text-gray-900">
-                                  {profilePersons.mainMember.roles.join(", ")}
-                                </span>
-                              )}
-                              <div className="flex items-center gap-2">
-                                <button
-                                  type="button"
-                                  className="tab-pill"
-                                  onClick={() => handleImportProfilePerson(profilePersons.mainMember.person, "member")}
-                                >
-                                  Import Member
-                                </button>
-                                <button
-                                  type="button"
-                                  className="tab-pill"
-                                  onClick={() => handleImportProfilePerson(profilePersons.mainMember.person, "patient")}
-                                >
-                                  Import Patient
-                                </button>
+                          <p className="text-sm text-gray-blue-600">No accounts.</p>
+                        </div>
+                      )}
+                    </div>
+
+                    {hasPersonData && (
+                      <div className="mt-4 flex flex-col gap-2">
+                        <p className="text-xs uppercase text-gray-blue-600">Main Member & Dependants</p>
+                        {profilePersons.mainMember && (
+                          <div className="rounded border border-gray-blue-100 bg-white px-3 py-2">
+                            <div className="flex flex-wrap items-center justify-between gap-2">
+                              <div>
+                                <p className="text-sm font-semibold text-gray-dark">{profilePersons.mainMember.name}</p>
+                                {profilePersons.mainMember.meta && (
+                                  <p className="text-xs text-gray-blue-600">{profilePersons.mainMember.meta}</p>
+                                )}
+                              </div>
+                              <div className="flex items-center gap-2 flex-wrap justify-end">
+                                {profilePersons.mainMember.roles.length > 0 && (
+                                  <span className="text-[11px] uppercase tracking-wide text-gray-900">
+                                    {profilePersons.mainMember.roles.join(", ")}
+                                  </span>
+                                )}
+                                <div className="flex items-center gap-2">
+                                  <button
+                                    type="button"
+                                    className="tab-pill"
+                                    onClick={() => handleImportProfilePerson(profilePersons.mainMember.person, "member")}
+                                  >
+                                    Import Member
+                                  </button>
+                                  <button
+                                    type="button"
+                                    className="tab-pill"
+                                    onClick={() => handleImportProfilePerson(profilePersons.mainMember.person, "patient")}
+                                  >
+                                    Import Patient
+                                  </button>
+                                </div>
                               </div>
                             </div>
                           </div>
-                        </div>
-                      )}
+                        )}
 
-                      {profilePersons.dependants.length > 0 && (
-                        <div className="flex flex-col gap-2">
-                          {profilePersons.dependants.map(({ key, name, meta, roles, person }) => (
-                            <div key={key} className="rounded border border-gray-blue-100 bg-white px-3 py-2">
-                              <div className="flex flex-wrap items-center justify-between gap-2">
-                                <div>
-                                  <p className="text-sm font-semibold text-gray-dark">{name}</p>
-                                  {meta && <p className="text-xs text-gray-blue-600">{meta}</p>}
-                                </div>
-                                <div className="flex items-center gap-2 flex-wrap justify-end">
-                                  {roles.length > 0 && (
-                                    <span className="text-[11px] uppercase tracking-wide text-gray-900">
-                                      {roles.join(", ")}
-                                    </span>
-                                  )}
-                                  <div className="flex items-center gap-2">
-                                    <button
-                                      type="button"
-                                      className="tab-pill"
-                                      onClick={() => handleImportProfilePerson(person, "member")}
-                                    >
-                                      Import Member
-                                    </button>
-                                    <button
-                                      type="button"
-                                      className="tab-pill"
-                                      onClick={() => handleImportProfilePerson(person, "patient")}
-                                    >
-                                      Import Patient
-                                    </button>
+                        {profilePersons.dependants.length > 0 && (
+                          <div className="flex flex-col gap-2">
+                            {profilePersons.dependants.map(({ key, name, meta, roles, person }) => (
+                              <div key={key} className="rounded border border-gray-blue-100 bg-white px-3 py-2">
+                                <div className="flex flex-wrap items-center justify-between gap-2">
+                                  <div>
+                                    <p className="text-sm font-semibold text-gray-dark">{name}</p>
+                                    {meta && <p className="text-xs text-gray-blue-600">{meta}</p>}
+                                  </div>
+                                  <div className="flex items-center gap-2 flex-wrap justify-end">
+                                    {roles.length > 0 && (
+                                      <span className="text-[11px] uppercase tracking-wide text-gray-900">
+                                        {roles.join(", ")}
+                                      </span>
+                                    )}
+                                    <div className="flex items-center gap-2">
+                                      <button
+                                        type="button"
+                                        className="tab-pill"
+                                        onClick={() => handleImportProfilePerson(person, "member")}
+                                      >
+                                        Import Member
+                                      </button>
+                                      <button
+                                        type="button"
+                                        className="tab-pill"
+                                        onClick={() => handleImportProfilePerson(person, "patient")}
+                                      >
+                                        Import Patient
+                                      </button>
+                                    </div>
                                   </div>
                                 </div>
                               </div>
-                            </div>
-                          ))}
-                        </div>
-                      )}
-                    </div>
-                  )}
-                </div>
-              );
-            })
-          )}
-        </div>
-      </section>
-
-      <section className="container-col m-0">
-        <p className="text-xs uppercase tracking-wide text-gray-blue-600">Medical Aid</p>
-        <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
-          <div className="flex flex-col gap-1">
-            <label className="text-xs text-gray-blue-600">Medical Aid Number</label>
-            <input
-              type="text"
-              className="input-pill"
-              value={medicalAidForm.medicalAidNr}
-              onChange={(e) => setMedicalAidForm((prev) => ({ ...prev, medicalAidNr: e.target.value }))}
-            />
-          </div>
-          <div className="flex flex-col gap-1">
-            <label className="text-xs text-gray-blue-600">Medical Aid</label>
-            <select
-              className="input-pill"
-              value={medicalAidForm.medicalAidId}
-              onChange={(e) => handleMedicalAidSelectChange(e.target.value)}
-              disabled={medicalAidCatalog.length === 0}
-            >
-              <option value="">{medicalAidCatalog.length ? "Select medical aid" : "Loading..."}</option>
-              {medicalAidCatalog.map((aid) => (
-                <option key={aid.id} value={aid.id}>
-                  {aid.name}
-                </option>
-              ))}
-            </select>
-          </div>
-          <div className="flex flex-col gap-1">
-            <label className="text-xs text-gray-blue-600">Plan</label>
-            <select
-              className="input-pill"
-              value={medicalAidForm.planId}
-              onChange={(e) => handleMedicalAidPlanSelectChange(e.target.value)}
-              disabled={!selectedMedicalAid || availablePlans.length === 0}
-            >
-              <option value="">
-                {selectedMedicalAid
-                  ? availablePlans.length
-                    ? "Select plan"
-                    : "No plans available"
-                  : "Select medical aid first"}
-              </option>
-              {availablePlans.map((plan) => (
-                <option key={plan.id} value={plan.id}>
-                  {plan.name || plan.code || `Plan ${plan.id}`}
-                  {plan.name && plan.code ? ` (${plan.code})` : ""}
-                </option>
-              ))}
-            </select>
-          </div>
-        </div>
-      </section>
-
-      <section className="container-col m-0">
-        <p className="text-xs uppercase tracking-wide text-gray-blue-600">Main Member</p>
-        <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
-          <div className="flex flex-col gap-1">
-            <label className="text-xs text-gray-blue-600">Record ID (optional)</label>
-            <input
-              type="text"
-              className="input-pill"
-              value={memberForm.recordId}
-              onChange={onPersonFieldChange(setMemberForm, "recordId")}
-            />
-          </div>
-          <div className="flex flex-col gap-1">
-            <label className="text-xs text-gray-blue-600">First Name</label>
-            <input type="text" className="input-pill" value={memberForm.first} onChange={onPersonFieldChange(setMemberForm, "first")} />
-          </div>
-          <div className="flex flex-col gap-1">
-            <label className="text-xs text-gray-blue-600">Last Name</label>
-            <input type="text" className="input-pill" value={memberForm.last} onChange={onPersonFieldChange(setMemberForm, "last")} />
-          </div>
-          <div className="flex flex-col gap-1">
-            <label className="text-xs text-gray-blue-600">ID Number</label>
-            <input type="text" className="input-pill" value={memberForm.idNumber} onChange={onPersonFieldChange(setMemberForm, "idNumber")} />
-          </div>
-          <div className="flex flex-col gap-1">
-            <label className="text-xs text-gray-blue-600">DOB</label>
-            <input
-              type="date"
-              className="input-pill"
-              value={memberForm.dateOfBirth}
-              onChange={onPersonFieldChange(setMemberForm, "dateOfBirth")}
-            />
-          </div>
-          <div className="flex flex-col gap-1">
-            <label className="text-xs text-gray-blue-600">Dependent #</label>
-            <input
-              type="text"
-              className="input-pill"
-              value={memberForm.dependentNumber}
-              onChange={onPersonFieldChange(setMemberForm, "dependentNumber")}
-            />
-          </div>
-        </div>
-      </section>
-
-      <section className="container-col m-0">
-        <p className="text-xs uppercase tracking-wide text-gray-blue-600">Patient</p>
-        <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
-          <div className="flex flex-col gap-1">
-            <label className="text-xs text-gray-blue-600">Record ID (optional)</label>
-            <input
-              type="text"
-              className="input-pill"
-              value={patientForm.recordId}
-              onChange={onPersonFieldChange(setPatientForm, "recordId")}
-            />
-          </div>
-          <div className="flex flex-col gap-1">
-            <label className="text-xs text-gray-blue-600">First Name</label>
-            <input type="text" className="input-pill" value={patientForm.first} onChange={onPersonFieldChange(setPatientForm, "first")} />
-          </div>
-          <div className="flex flex-col gap-1">
-            <label className="text-xs text-gray-blue-600">Last Name</label>
-            <input type="text" className="input-pill" value={patientForm.last} onChange={onPersonFieldChange(setPatientForm, "last")} />
-          </div>
-          <div className="flex flex-col gap-1">
-            <label className="text-xs text-gray-blue-600">ID Number</label>
-            <input type="text" className="input-pill" value={patientForm.idNumber} onChange={onPersonFieldChange(setPatientForm, "idNumber")} />
-          </div>
-          <div className="flex flex-col gap-1">
-            <label className="text-xs text-gray-blue-600">DOB</label>
-            <input
-              type="date"
-              className="input-pill"
-              value={patientForm.dateOfBirth}
-              onChange={onPersonFieldChange(setPatientForm, "dateOfBirth")}
-            />
-          </div>
-          <div className="flex flex-col gap-1">
-            <label className="text-xs text-gray-blue-600">Dependent #</label>
-            <input
-              type="text"
-              className="input-pill"
-              value={patientForm.dependentNumber}
-              onChange={onPersonFieldChange(setPatientForm, "dependentNumber")}
-            />
-          </div>
-        </div>
-      </section>
-
-      <section className="container-col m-0 mb-4">
-        <p className="text-xs uppercase tracking-wide text-gray-blue-600">Invoice Details</p>
-        <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
-          <div className="flex flex-col gap-1">
-            <label className="text-xs text-gray-blue-600">Nr in Batch</label>
-            <input
-              type="number"
-              className="input-pill"
-              value={invoiceForm.nrInBatch}
-              onChange={(e) => setInvoiceForm((prev) => ({ ...prev, nrInBatch: e.target.value }))}
-            />
-          </div>
-          <div className="flex flex-col gap-1">
-            <label className="text-xs text-gray-blue-600">Date of Service</label>
-            <input
-              type="date"
-              className="input-pill"
-              value={invoiceForm.dateOfService}
-              onChange={(e) => setInvoiceForm((prev) => ({ ...prev, dateOfService: e.target.value }))}
-            />
-          </div>
-          <div className="flex flex-col gap-1 relative" ref={statusDropdownRef}>
-            <label className="text-xs text-gray-blue-600">Status</label>
-            <button
-              type="button"
-              className="input-pill flex items-center justify-between gap-2"
-              onClick={() => setIsStatusDropdownOpen((prev) => !prev)}
-            >
-              <span>{invoiceForm.status}</span>
-              <svg
-                className={`w-4 h-4 transform transition-transform ${isStatusDropdownOpen ? "rotate-180" : ""}`}
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
-              </svg>
-            </button>
-            {isStatusDropdownOpen && (
-              <div className="nav-dropdown-panel w-full absolute left-0 top-full">
-                {STATUS_OPTIONS.map((option) => (
-                  <button
-                    key={option}
-                    type="button"
-                    className={`nav-dropdown-item ${invoiceForm.status === option ? "nav-dropdown-item-active" : ""}`}
-                    onClick={() => handleStatusSelect(option)}
-                  >
-                    {option}
-                  </button>
-                ))}
-              </div>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                );
+              })
             )}
           </div>
-          <div className="flex flex-col gap-1">
-            <label className="text-xs text-gray-blue-600">Balance</label>
-            <input
-              type="number"
-              className="input-pill"
-              value={invoiceForm.balance}
-              onChange={(e) => setInvoiceForm((prev) => ({ ...prev, balance: e.target.value }))}
-            />
+        </section>
+
+        {/* SECTION 2 // INFO SECTION */}
+        <div className="flex flex-col gap-4 w-full lg:basis-2/4">
+        <section className="container-col m-0">
+          <p className="text-xs uppercase tracking-wide text-gray-blue-600">Medical Aid</p>
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
+            <div className="flex flex-col gap-1">
+              <label className="text-xs text-gray-blue-600">Medical Aid Number</label>
+              <input
+                type="text"
+                className="input-pill"
+                value={medicalAidForm.medicalAidNr}
+                onChange={(e) => setMedicalAidForm((prev) => ({ ...prev, medicalAidNr: e.target.value }))}
+              />
+            </div>
+            <div className="flex flex-col gap-1">
+              <label className="text-xs text-gray-blue-600">Medical Aid</label>
+              <select
+                className="input-pill"
+                value={medicalAidForm.medicalAidId}
+                onChange={(e) => handleMedicalAidSelectChange(e.target.value)}
+                disabled={medicalAidCatalog.length === 0}
+              >
+                <option value="">{medicalAidCatalog.length ? "Select medical aid" : "Loading..."}</option>
+                {medicalAidCatalog.map((aid) => (
+                  <option key={aid.id} value={aid.id}>
+                    {aid.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div className="flex flex-col gap-1">
+              <label className="text-xs text-gray-blue-600">Plan</label>
+              <select
+                className="input-pill"
+                value={medicalAidForm.planId}
+                onChange={(e) => handleMedicalAidPlanSelectChange(e.target.value)}
+                disabled={!selectedMedicalAid || availablePlans.length === 0}
+              >
+                <option value="">
+                  {selectedMedicalAid
+                    ? availablePlans.length
+                      ? "Select plan"
+                      : "No plans available"
+                    : "Select medical aid first"}
+                </option>
+                {availablePlans.map((plan) => (
+                  <option key={plan.id} value={plan.id}>
+                    {plan.name || plan.code || `Plan ${plan.id}`}
+                    {plan.name && plan.code ? ` (${plan.code})` : ""}
+                  </option>
+                ))}
+              </select>
+            </div>
           </div>
-          <div className="flex flex-col gap-1">
-            <label className="text-xs text-gray-blue-600">File #</label>
-            <input
-              type="text"
-              className="input-pill"
-              value={invoiceForm.fileNr}
-              onChange={(e) => setInvoiceForm((prev) => ({ ...prev, fileNr: e.target.value }))}
-            />
+        </section>
+        <section className="container-col m-0">
+          <p className="text-xs uppercase tracking-wide text-gray-blue-600">Main Member</p>
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
+            <div className="flex flex-col gap-1">
+              <label className="text-xs text-gray-blue-600">Record ID (optional)</label>
+              <input
+                type="text"
+                className="input-pill"
+                value={memberForm.recordId}
+                onChange={onPersonFieldChange(setMemberForm, "recordId")}
+              />
+            </div>
+            <div className="flex flex-col gap-1">
+              <label className="text-xs text-gray-blue-600">First Name</label>
+              <input type="text" className="input-pill" value={memberForm.first} onChange={onPersonFieldChange(setMemberForm, "first")} />
+            </div>
+            <div className="flex flex-col gap-1">
+              <label className="text-xs text-gray-blue-600">Last Name</label>
+              <input type="text" className="input-pill" value={memberForm.last} onChange={onPersonFieldChange(setMemberForm, "last")} />
+            </div>
+            <div className="flex flex-col gap-1">
+              <label className="text-xs text-gray-blue-600">ID Number</label>
+              <input type="text" className="input-pill" value={memberForm.idNumber} onChange={onPersonFieldChange(setMemberForm, "idNumber")} />
+            </div>
+            <div className="flex flex-col gap-1">
+              <label className="text-xs text-gray-blue-600">DOB</label>
+              <input
+                type="date"
+                className="input-pill"
+                value={memberForm.dateOfBirth}
+                onChange={onPersonFieldChange(setMemberForm, "dateOfBirth")}
+              />
+            </div>
+            <div className="flex flex-col gap-1">
+              <label className="text-xs text-gray-blue-600">Dependent #</label>
+              <input
+                type="text"
+                className="input-pill"
+                value={memberForm.dependentNumber}
+                onChange={onPersonFieldChange(setMemberForm, "dependentNumber")}
+              />
+            </div>
           </div>
-          <div className="flex flex-col gap-1">
-            <label className="text-xs text-gray-blue-600">Auth #</label>
-            <input
-              type="text"
-              className="input-pill"
-              value={invoiceForm.authNr}
-              onChange={(e) => setInvoiceForm((prev) => ({ ...prev, authNr: e.target.value }))}
-            />
+        </section>
+
+        <section className="container-col m-0">
+          <p className="text-xs uppercase tracking-wide text-gray-blue-600">Patient</p>
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
+            <div className="flex flex-col gap-1">
+              <label className="text-xs text-gray-blue-600">Record ID (optional)</label>
+              <input
+                type="text"
+                className="input-pill"
+                value={patientForm.recordId}
+                onChange={onPersonFieldChange(setPatientForm, "recordId")}
+              />
+            </div>
+            <div className="flex flex-col gap-1">
+              <label className="text-xs text-gray-blue-600">First Name</label>
+              <input type="text" className="input-pill" value={patientForm.first} onChange={onPersonFieldChange(setPatientForm, "first")} />
+            </div>
+            <div className="flex flex-col gap-1">
+              <label className="text-xs text-gray-blue-600">Last Name</label>
+              <input type="text" className="input-pill" value={patientForm.last} onChange={onPersonFieldChange(setPatientForm, "last")} />
+            </div>
+            <div className="flex flex-col gap-1">
+              <label className="text-xs text-gray-blue-600">ID Number</label>
+              <input type="text" className="input-pill" value={patientForm.idNumber} onChange={onPersonFieldChange(setPatientForm, "idNumber")} />
+            </div>
+            <div className="flex flex-col gap-1">
+              <label className="text-xs text-gray-blue-600">DOB</label>
+              <input
+                type="date"
+                className="input-pill"
+                value={patientForm.dateOfBirth}
+                onChange={onPersonFieldChange(setPatientForm, "dateOfBirth")}
+              />
+            </div>
+            <div className="flex flex-col gap-1">
+              <label className="text-xs text-gray-blue-600">Dependent #</label>
+              <input
+                type="text"
+                className="input-pill"
+                value={patientForm.dependentNumber}
+                onChange={onPersonFieldChange(setPatientForm, "dependentNumber")}
+              />
+            </div>
           </div>
-        </div>
-        {lastImported && (
-          <p className="text-xs text-gray-blue-600 mt-3">
-            Imported from profile #{lastImported.profileId}
-            {lastImported.accountId ? ` / account #${lastImported.accountId}` : ""}
-          </p>
-        )}
-        {saveError && <p className="text-sm text-red-600 mt-3">{saveError}</p>}
-        <div className="flex justify-end gap-3 mt-4">
-          <button type="button" className="button-pill" onClick={() => navigate(-1)} disabled={saving}>
-            Cancel
-          </button>
-          <button
-            type="button"
-            className={`tab-pill text-white px-4 ${canSave ? "bg-ebmaa-purple" : "bg-gray-400 cursor-not-allowed"}`}
-            onClick={handleSave}
-            disabled={!canSave || saving}
-          >
-            {saving ? "Saving..." : "Save Invoice"}
-          </button>
-        </div>
-      </section>
+        </section>
+
+        <section className="container-col m-0 mb-4">
+          <p className="text-xs uppercase tracking-wide text-gray-blue-600">Invoice Details</p>
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
+            <div className="flex flex-col gap-1">
+              <label className="text-xs text-gray-blue-600">Nr in Batch</label>
+              <input
+                type="number"
+                className="input-pill"
+                value={invoiceForm.nrInBatch}
+                onChange={(e) => setInvoiceForm((prev) => ({ ...prev, nrInBatch: e.target.value }))}
+              />
+            </div>
+            <div className="flex flex-col gap-1">
+              <label className="text-xs text-gray-blue-600">Date of Service</label>
+              <input
+                type="date"
+                className="input-pill"
+                value={invoiceForm.dateOfService}
+                onChange={(e) => setInvoiceForm((prev) => ({ ...prev, dateOfService: e.target.value }))}
+              />
+            </div>
+            <div className="flex flex-col gap-1 relative" ref={statusDropdownRef}>
+              <label className="text-xs text-gray-blue-600">Status</label>
+              <button
+                type="button"
+                className="input-pill flex items-center justify-between gap-2"
+                onClick={() => setIsStatusDropdownOpen((prev) => !prev)}
+              >
+                <span>{invoiceForm.status}</span>
+                <svg
+                  className={`w-4 h-4 transform transition-transform ${isStatusDropdownOpen ? "rotate-180" : ""}`}
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
+                </svg>
+              </button>
+              {isStatusDropdownOpen && (
+                <div className="nav-dropdown-panel w-full absolute left-0 top-full">
+                  {STATUS_OPTIONS.map((option) => (
+                    <button
+                      key={option}
+                      type="button"
+                      className={`nav-dropdown-item ${invoiceForm.status === option ? "nav-dropdown-item-active" : ""}`}
+                      onClick={() => handleStatusSelect(option)}
+                    >
+                      {option}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+            <div className="flex flex-col gap-1">
+              <label className="text-xs text-gray-blue-600">Balance</label>
+              <input
+                type="number"
+                className="input-pill"
+                value={invoiceForm.balance}
+                onChange={(e) => setInvoiceForm((prev) => ({ ...prev, balance: e.target.value }))}
+              />
+            </div>
+            <div className="flex flex-col gap-1">
+              <label className="text-xs text-gray-blue-600">File #</label>
+              <input
+                type="text"
+                className="input-pill"
+                value={invoiceForm.fileNr}
+                onChange={(e) => setInvoiceForm((prev) => ({ ...prev, fileNr: e.target.value }))}
+              />
+            </div>
+            <div className="flex flex-col gap-1">
+              <label className="text-xs text-gray-blue-600">Auth #</label>
+              <input
+                type="text"
+                className="input-pill"
+                value={invoiceForm.authNr}
+                onChange={(e) => setInvoiceForm((prev) => ({ ...prev, authNr: e.target.value }))}
+              />
+            </div>
+          </div>
+          {lastImported && (
+            <p className="text-xs text-gray-blue-600 mt-3">
+              Imported from profile #{lastImported.profileId}
+              {lastImported.accountId ? ` / account #${lastImported.accountId}` : ""}
+            </p>
+          )}
+          {saveError && <p className="text-sm text-red-600 mt-3">{saveError}</p>}
+          <div className="flex justify-end gap-3 mt-4">
+            <button type="button" className="button-pill" onClick={() => navigate(-1)} disabled={saving}>
+              Cancel
+            </button>
+            <button
+              type="button"
+              className={`tab-pill text-white px-4 ${canSave ? "bg-ebmaa-purple" : "bg-gray-400 cursor-not-allowed"}`}
+              onClick={handleSave}
+              disabled={!canSave || saving}
+            >
+              {saving ? "Saving..." : "Save Invoice"}
+            </button>
+          </div>
+        </section>
+      </div>
+      </div>
     </div>
   );
 };
