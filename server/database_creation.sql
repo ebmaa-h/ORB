@@ -385,9 +385,10 @@ CREATE TABLE invoices (
     nr_in_batch INT,
     date_of_service DATE,
     status ENUM('Open','Archived') DEFAULT 'Open',
+    type ENUM('foreign','urgent_normal','urgent_other', 'other', 'normal'),
     ref_client_id INT NULL,
     file_nr VARCHAR(255) NULL,
-    balance DECIMAL(10, 2) DEFAULT 0.00,
+    balance DECIMAL(10,2) DEFAULT 0.00,
     auth_nr VARCHAR(255),
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
@@ -395,6 +396,7 @@ CREATE TABLE invoices (
     FOREIGN KEY (account_id) REFERENCES accounts(account_id),
     FOREIGN KEY (ref_client_id) REFERENCES ref_clients(ref_client_id)
 );
+
 
 
 -- Inserting sample data for permissions

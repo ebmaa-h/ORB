@@ -10,6 +10,7 @@ const BASE_INVOICE_SELECT = `
     i.file_nr,
     i.balance,
     i.auth_nr,
+    i.type AS invoice_type,
     i.created_at,
     i.updated_at,
     a.profile_id,

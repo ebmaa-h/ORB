@@ -30,6 +30,7 @@ const ENDPOINTS = {
   // batchInvoices
   batchInvoices: (batchId) => `${API_URL}/batches/${batchId}/invoices`,
   batchAccountCreate: (batchId) => `${API_URL}/batches/${batchId}/accounts`,
+  batchInvoiceUpdate: (batchId, invoiceId) => `${API_URL}/batches/${batchId}/invoices/${invoiceId}`,
   accountSearch: `${API_URL}/accounts/search`,
   medicalAidCatalog: `${API_URL}/accounts/catalog/medical-aids`,
 

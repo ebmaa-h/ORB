@@ -105,6 +105,7 @@ const AccountModel = {
       fileNr = null,
       balance = 0,
       authNr = null,
+      type = 'normal',
     } = invoice || {};
 
     const [result] = await connection.query(queries.INSERT_INVOICE, [
@@ -117,6 +118,7 @@ const AccountModel = {
       fileNr || null,
       balance || 0,
       authNr || null,
+      type || null,
     ]);
     return result.insertId;
   },
@@ -136,6 +138,90 @@ const AccountModel = {
   getAllMedicalAidPlans: async () => {
     const [rows] = await db.query(queries.SELECT_ALL_MEDICAL_AID_PLANS);
     return rows;
+  },
+
+  updateProfile: async (connection, { profileId, medicalAidId, planId, medicalAidNr }) => {
+    if (!profileId) return;
+    await connection.query(queries.UPDATE_PROFILE, [
+      medicalAidId || null,
+      planId || null,
+      medicalAidNr,
+      profileId,
+    ]);
+  },
+
+  updatePersonRecord: async (connection, recordId, person) => {
+    if (!recordId) return;
+    const {
+      first = null,
+      last = null,
+      title = null,
+      date_of_birth = null,
+      gender = null,
+      id_type = null,
+      id_nr = null,
+    } = person || {};
+    await connection.query(queries.UPDATE_PERSON, [
+      first || null,
+      last || null,
+      title || null,
+      date_of_birth || null,
+      gender || null,
+      id_type || null,
+      id_nr || null,
+      recordId,
+    ]);
+  },
+
+  upsertProfilePersonMap: async (connection, { profileId, recordId, isMainMember, dependentNr }) => {
+    if (!profileId || !recordId) return;
+    const [result] = await connection.query(queries.UPDATE_PROFILE_PERSON_MAP, [
+      isMainMember ? 1 : 0,
+      dependentNr || null,
+      profileId,
+      recordId,
+    ]);
+    if (result.affectedRows === 0) {
+      await connection.query(queries.INSERT_PROFILE_PERSON_MAP, [
+        profileId,
+        recordId,
+        isMainMember ? 1 : 0,
+        dependentNr || null,
+      ]);
+    }
+  },
+
+  deleteProfilePersonMap: async (connection, { profileId, recordId }) => {
+    if (!profileId || !recordId) return;
+    await connection.query(queries.DELETE_PROFILE_PERSON_MAP, [profileId, recordId]);
+  },
+
+  updateInvoice: async (connection, invoice) => {
+    const {
+      invoiceId,
+      accountId,
+      nrInBatch = null,
+      dateOfService = null,
+      status = 'Open',
+      refClientId = null,
+      fileNr = null,
+      balance = 0,
+      authNr = null,
+      type = 'normal',
+    } = invoice || {};
+    if (!invoiceId) return;
+    await connection.query(queries.UPDATE_INVOICE, [
+      accountId || null,
+      nrInBatch || null,
+      dateOfService || null,
+      status || 'Open',
+      refClientId || null,
+      fileNr || null,
+      balance || 0,
+      authNr || null,
+      type || null,
+      invoiceId,
+    ]);
   },
 };
 

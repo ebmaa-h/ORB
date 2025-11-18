@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
 import EntityNotesAndLogs from "../components/ui/EntityNotesAndLogs";
 import SearchBar from "../components/ui/SearchBar";
@@ -155,6 +155,19 @@ const BatchView = () => {
   const searchActive = Boolean(searchTerm.trim());
   const isBatchTab = activeTab === TAB_KEYS.BATCH;
 
+  const handleViewInvoice = useCallback(
+    (invoice) => {
+      if (!batch?.batch_id) return;
+      navigate(`/batches/${batch.batch_id}/accounts/new`, {
+        state: {
+          batch,
+          invoice,
+        },
+      });
+    },
+    [batch, navigate],
+  );
+
   if (!batch) {
     return (
       <section className="container-col">
@@ -285,12 +298,7 @@ const BatchView = () => {
                     <p className="text-lg font-semibold text-gray-dark">#{invoice.invoice_id}</p>
                     <p className="text-xs text-gray-blue-600">Nr in batch: {invoice.nr_in_batch || "N/A"}</p>
                   </div>
-                  <button
-                    type="button"
-                    className="tab-pill min-w-[150px] opacity-70 cursor-not-allowed"
-                    disabled
-                    title="Coming soon"
-                  >
+                  <button type="button" className="tab-pill min-w-[150px]" onClick={() => handleViewInvoice(invoice)}>
                     View Invoice
                   </button>
                 </div>

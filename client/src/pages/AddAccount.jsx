@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useRef, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
 import SearchBar from "../components/ui/SearchBar";
 import axiosClient from "../utils/axiosClient";
@@ -17,6 +17,31 @@ const defaultPerson = () => ({
 });
 
 const STATUS_OPTIONS = ["Open", "Archived"];
+
+const INVOICE_TYPE_LABELS = {
+  normal: "Normal",
+  other: "Other",
+  foreign: "Foreign",
+  urgent_normal: "Urgent (Normal)",
+  urgent_other: "Urgent (Other)",
+};
+
+const normalizeBatchFlag = (value) => {
+  if (typeof value === "boolean") return value;
+  if (value === null || value === undefined) return false;
+  if (typeof value === "number") return value === 1;
+  if (typeof value === "string") {
+    const normalized = value.trim().toLowerCase();
+    return ["1", "true", "yes"].includes(normalized);
+  }
+  return false;
+};
+
+const isForeignUrgentBatchType = (batch) => {
+  if (!batch) return false;
+  if (batch.parent_batch_id) return true;
+  return normalizeBatchFlag(batch.is_pure_foreign_urgent);
+};
 
 const formatPersonName = (person) => {
   if (!person) return "N/A";
@@ -128,6 +153,9 @@ const AddAccount = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const batch = location.state?.batch || null;
+  const existingInvoice = location.state?.invoice || null;
+  const existingInvoiceType = existingInvoice?.invoice_type || existingInvoice?.type || "";
+  const isViewingInvoice = Boolean(existingInvoice?.invoice_id);
 
   const [searchTerm, setSearchTerm] = useState("");
   const [searchLoading, setSearchLoading] = useState(false);
@@ -136,6 +164,8 @@ const AddAccount = () => {
 
   const [memberForm, setMemberForm] = useState(defaultPerson);
   const [patientForm, setPatientForm] = useState(defaultPerson);
+  const [isPatientSameAsMember, setIsPatientSameAsMember] = useState(false);
+  const [isMemberEditable, setIsMemberEditable] = useState(true);
   const [medicalAidForm, setMedicalAidForm] = useState({
     medicalAidId: "",
     planId: "",
@@ -149,6 +179,7 @@ const AddAccount = () => {
     fileNr: "",
     balance: "",
     authNr: "",
+    type: "",
   });
   const [saving, setSaving] = useState(false);
   const [saveError, setSaveError] = useState("");
@@ -156,6 +187,20 @@ const AddAccount = () => {
   const [lastImported, setLastImported] = useState(null);
   const [isStatusDropdownOpen, setIsStatusDropdownOpen] = useState(false);
   const statusDropdownRef = useRef(null);
+  const isForeignUrgentBatch = useMemo(() => isForeignUrgentBatchType(batch), [batch]);
+  const invoiceTypeOptions = useMemo(() => {
+    const base = isForeignUrgentBatch ? ["foreign", "urgent_normal", "urgent_other"] : ["normal", "other"];
+    if (existingInvoiceType && !base.includes(existingInvoiceType)) {
+      return [...base, existingInvoiceType];
+    }
+    return base;
+  }, [isForeignUrgentBatch, existingInvoiceType]);
+  const selectedInvoiceType = invoiceForm.type;
+  const isIdentityLocked = !selectedInvoiceType || ["normal", "urgent_normal"].includes(selectedInvoiceType);
+  const memberFieldsDisabled = isIdentityLocked || !isMemberEditable;
+  const medicalAidFieldsDisabled = isIdentityLocked;
+  const patientFieldsDisabled = isIdentityLocked || isPatientSameAsMember;
+  const canImportData = Boolean(selectedInvoiceType);
 
   useEffect(() => {
     let cancelled = false;
@@ -202,6 +247,14 @@ const AddAccount = () => {
     };
   }, [batch]);
 
+  useEffect(() => {
+    if (existingInvoice) return;
+    if (isForeignUrgentBatch) return;
+    if (!invoiceForm.type) {
+      setInvoiceForm((prev) => ({ ...prev, type: "normal" }));
+    }
+  }, [existingInvoice, isForeignUrgentBatch, invoiceForm.type]);
+
   const clientDisplayName = useMemo(() => formatClientDisplayName(batch), [batch]);
 
   useEffect(() => {
@@ -213,6 +266,59 @@ const AddAccount = () => {
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
+
+  useEffect(() => {
+    if (!existingInvoice) return;
+    const memberData = {
+      recordId: existingInvoice.main_member_record_id,
+      first: existingInvoice.main_member_first,
+      last: existingInvoice.main_member_last,
+      title: existingInvoice.main_member_title,
+      dateOfBirth: existingInvoice.main_member_dob,
+      gender: existingInvoice.main_member_gender,
+      idType: existingInvoice.main_member_id_type,
+      idNumber: existingInvoice.main_member_id_nr,
+      dependentNumber: existingInvoice.main_member_dependent_nr,
+    };
+    const patientData = existingInvoice.patient_record_id
+      ? {
+          recordId: existingInvoice.patient_record_id,
+          first: existingInvoice.patient_first,
+          last: existingInvoice.patient_last,
+          title: existingInvoice.patient_title,
+          dateOfBirth: existingInvoice.patient_dob,
+          gender: existingInvoice.patient_gender,
+          idType: existingInvoice.patient_id_type,
+          idNumber: existingInvoice.patient_id_nr,
+          dependentNumber: existingInvoice.patient_dependent_nr,
+        }
+      : null;
+    const samePerson =
+      !existingInvoice.patient_record_id || existingInvoice.patient_record_id === existingInvoice.main_member_record_id;
+    const patientSource = patientData || (samePerson ? { ...memberData, dependentNumber: existingInvoice.patient_dependent_nr || memberData.dependentNumber } : null);
+
+    setMemberForm(hydratePersonForm(memberData));
+    setPatientForm(patientSource ? hydratePersonForm(patientSource) : defaultPerson());
+    setIsPatientSameAsMember(samePerson);
+    setMedicalAidForm({
+      medicalAidId: existingInvoice.medical_aid_id ? String(existingInvoice.medical_aid_id) : "",
+      planId: existingInvoice.plan_id ? String(existingInvoice.plan_id) : "",
+      medicalAidNr: existingInvoice.medical_aid_nr || "",
+    });
+    setInvoiceForm({
+      nrInBatch: existingInvoice.nr_in_batch || "",
+      dateOfService: normalizeDateForInput(existingInvoice.date_of_service),
+      status: existingInvoice.status || "Open",
+      fileNr: existingInvoice.file_nr || "",
+      balance:
+        existingInvoice.balance !== null && existingInvoice.balance !== undefined
+          ? String(existingInvoice.balance)
+          : "",
+      authNr: existingInvoice.auth_nr || "",
+      type: existingInvoiceType || "",
+    });
+    setIsMemberEditable(false);
+  }, [existingInvoice]);
 
   if (!batch) {
     return (
@@ -298,9 +404,15 @@ const hydratePersonForm = (data = {}) => ({
       : "",
 });
 
-  const handleImport = (profile, account = null) => {
+  const handleInvoiceTypeSelect = (type) => {
+    setInvoiceForm((prev) => ({ ...prev, type: prev.type === type ? "" : type }));
+  };
+
+  const handleImport = (profile, account = null, options = { includeMember: false }) => {
+    if (!selectedInvoiceType) return;
     if (!profile) return;
-    const memberSource = account?.member || profile.mainMember || {};
+    const includeMember = Boolean(options.includeMember);
+    const memberSource = includeMember ? profile.mainMember || {} : account?.member || profile.mainMember || {};
     const patientSource = account?.patient || null;
 
     setMedicalAidForm({
@@ -310,6 +422,7 @@ const hydratePersonForm = (data = {}) => ({
     });
     setMemberForm(hydratePersonForm(memberSource));
     setPatientForm(patientSource ? hydratePersonForm(patientSource) : defaultPerson());
+    setIsMemberEditable(!includeMember);
     setLastImported({
       profileId: profile.profileId,
       accountId: account?.accountId || null,
@@ -323,6 +436,7 @@ const hydratePersonForm = (data = {}) => ({
 
   const canSave = useMemo(() => {
     return (
+      Boolean(invoiceForm.type) &&
       Boolean(medicalAidForm.medicalAidNr) &&
       Boolean(memberForm.first && memberForm.last) &&
       Boolean(invoiceForm.dateOfService) &&
@@ -335,6 +449,7 @@ const hydratePersonForm = (data = {}) => ({
     setSaving(true);
     setSaveError("");
     try {
+      const patientPayload = buildPatientPayload();
       const payload = {
         invoice: {
           nrInBatch: invoiceForm.nrInBatch ? Number(invoiceForm.nrInBatch) : null,
@@ -343,17 +458,23 @@ const hydratePersonForm = (data = {}) => ({
           fileNr: invoiceForm.fileNr,
           balance: invoiceForm.balance ? Number(invoiceForm.balance) : 0,
           authNr: invoiceForm.authNr,
+          type: invoiceForm.type,
         },
         member: memberForm,
-        patient: patientForm,
+        patient: patientPayload,
         medicalAid: {
           medicalAidId: medicalAidForm.medicalAidId ? Number(medicalAidForm.medicalAidId) : null,
           planId: medicalAidForm.planId ? Number(medicalAidForm.planId) : null,
           medicalAidNr: medicalAidForm.medicalAidNr,
         },
+        patientSameAsMember: isPatientSameAsMember,
       };
 
-      await axiosClient.post(ENDPOINTS.batchAccountCreate(batch.batch_id), payload);
+      if (existingInvoice?.invoice_id) {
+        await axiosClient.put(ENDPOINTS.batchInvoiceUpdate(batch.batch_id, existingInvoice.invoice_id), payload);
+      } else {
+        await axiosClient.post(ENDPOINTS.batchAccountCreate(batch.batch_id), payload);
+      }
       navigate(`/batches/${batch.batch_id}`, { state: { batch } });
     } catch (err) {
       setSaveError(err?.response?.data?.error || "Failed to create invoice");
@@ -382,8 +503,47 @@ const hydratePersonForm = (data = {}) => ({
     }));
   };
 
+  const syncPatientFromMember = useCallback(() => {
+    setPatientForm((prev) => {
+      const next = { ...memberForm };
+      const prevKeys = Object.keys(prev);
+      const nextKeys = Object.keys(next);
+      const sameLength = prevKeys.length === nextKeys.length;
+      const hasDifferences = !sameLength || nextKeys.some((key) => next[key] !== prev[key]);
+      return hasDifferences ? next : prev;
+    });
+  }, [memberForm]);
+
+  useEffect(() => {
+    if (!isPatientSameAsMember) return;
+    syncPatientFromMember();
+  }, [isPatientSameAsMember, syncPatientFromMember]);
+
+  const handlePatientSameAsMemberChange = (checked) => {
+    setIsPatientSameAsMember(checked);
+    if (checked) {
+      syncPatientFromMember();
+    }
+  };
+
+  // Avoid duplicating person records when patient/member are the same
+  const buildPatientPayload = useCallback(() => {
+    if (!isPatientSameAsMember) {
+      return patientForm;
+    }
+    const recordId = patientForm.recordId || memberForm.recordId || null;
+    if (recordId) {
+      return {
+        recordId,
+        dependentNumber: patientForm.dependentNumber || memberForm.dependentNumber || "",
+      };
+    }
+    return {};
+  }, [isPatientSameAsMember, patientForm, memberForm]);
+
   const handleImportProfilePerson = (person, target = "patient") => {
-    if (!person) return;
+    if (!person || !selectedInvoiceType) return;
+    if (target === "patient" && isPatientSameAsMember) return;
     const hydrated = hydratePersonForm(person);
     if (target === "member") {
       setMemberForm(hydrated);
@@ -413,6 +573,11 @@ const hydratePersonForm = (data = {}) => ({
             </div>
           ))}
         </div>
+        {isViewingInvoice && existingInvoice && (
+          <div className="mt-4 rounded border border-blue-200 bg-blue-50 px-4 py-3 text-sm text-blue-900">
+            Editing invoice #{existingInvoice.invoice_id}. Updating will overwrite the current details.
+          </div>
+        )}
       </section>
       {/* SECTION 1 // SEARCH SECTION */}
       <div className="flex flex-row-reverse gap-4 lg:basis-2/4 mb-4">
@@ -454,54 +619,16 @@ const hydratePersonForm = (data = {}) => ({
                             Plan: {profile.plan?.name || profile.plan?.code || "N/A"}
                           </p>
                         </div>
-                        <button type="button" className="tab-pill" onClick={() => handleImport(profile, null)}>
-                          Import Medical Aid Info
+                        <button
+                          type="button"
+                          className={`tab-pill ${!canImportData ? "opacity-50 cursor-not-allowed" : ""}`}
+                          onClick={() => handleImport(profile, null, { includeMember: true })}
+                          disabled={!canImportData}
+                        >
+                          Import Profile
                         </button>
                       </div>
                     </div>
-                    <div className="mt-4 flex flex-col gap-2">
-                      <p className="text-xs uppercase text-gray-blue-600">Accounts</p>
-                      {profile.accounts?.length ? (
-                        <div className="flex flex-col gap-3">
-                          {profile.accounts.map((account) => {
-                            const memberName = formatPersonName(account.member);
-                            const memberMeta = formatPersonMeta(account.member);
-                            const patientName = formatPersonName(account.patient);
-                            const patientMeta = formatPersonMeta(account.patient);
-                            return (
-                              
-                              <div key={account.accountId} className="rounded border border-gray-blue-100 p-3 bg-white">
-                                <div className="flex flex-wrap items-center justify-between gap-4">
-                                  <div>
-                                    <p className="text-xs uppercase text-gray-blue-600">Account #{account.accountId}</p>
-                                    <p className="text-sm text-gray-blue-700">
-                                      Member: <span className="font-semibold">{memberName}</span>
-                                      {memberMeta && (
-                                        <span className="text-xs text-gray-blue-600 ml-2 inline-block">{memberMeta}</span>
-                                      )}
-                                    </p>
-                                    <p className="text-sm text-gray-blue-700">
-                                      Patient: <span className="font-semibold">{patientName}</span>
-                                      {patientMeta && (
-                                        <span className="text-xs text-gray-blue-600 ml-2 inline-block">{patientMeta}</span>
-                                      )}
-                                    </p>
-                                  </div>
-                                  <button type="button" className="tab-pill" onClick={() => handleImport(profile, account)}>
-                                    Import Account
-                                  </button>
-                                </div>
-                              </div>
-                            );
-                          })}
-                        </div>
-                      ) : (
-                        <div className="rounded border border-gray-blue-100 bg-white px-3 py-2">
-                          <p className="text-sm text-gray-blue-600">No accounts.</p>
-                        </div>
-                      )}
-                    </div>
-
                     {hasPersonData && (
                       <div className="mt-4 flex flex-col gap-2">
                         <p className="text-xs uppercase text-gray-blue-600">Main Member & Dependants</p>
@@ -523,15 +650,11 @@ const hydratePersonForm = (data = {}) => ({
                                 <div className="flex items-center gap-2">
                                   <button
                                     type="button"
-                                    className="tab-pill"
-                                    onClick={() => handleImportProfilePerson(profilePersons.mainMember.person, "member")}
-                                  >
-                                    Import Member
-                                  </button>
-                                  <button
-                                    type="button"
-                                    className="tab-pill"
+                                    className={`tab-pill ${
+                                      !canImportData || isPatientSameAsMember ? "opacity-50 cursor-not-allowed" : ""
+                                    }`}
                                     onClick={() => handleImportProfilePerson(profilePersons.mainMember.person, "patient")}
+                                    disabled={!canImportData || isPatientSameAsMember}
                                   >
                                     Import Patient
                                   </button>
@@ -559,15 +682,13 @@ const hydratePersonForm = (data = {}) => ({
                                     <div className="flex items-center gap-2">
                                       <button
                                         type="button"
-                                        className="tab-pill"
-                                        onClick={() => handleImportProfilePerson(person, "member")}
-                                      >
-                                        Import Member
-                                      </button>
-                                      <button
-                                        type="button"
-                                        className="tab-pill"
+                                        className={`tab-pill ${
+                                          !canImportData || isPatientSameAsMember
+                                            ? "opacity-50 cursor-not-allowed"
+                                            : ""
+                                        }`}
                                         onClick={() => handleImportProfilePerson(person, "patient")}
+                                        disabled={!canImportData || isPatientSameAsMember}
                                       >
                                         Import Patient
                                       </button>
@@ -590,24 +711,49 @@ const hydratePersonForm = (data = {}) => ({
         {/* SECTION 2 // INFO SECTION */}
         <div className="flex flex-col gap-4 w-full lg:basis-2/4">
         <section className="container-col m-0">
+          <p className="text-xs uppercase tracking-wide text-gray-blue-600">Invoice Type</p>
+          <div className="flex flex-wrap gap-3 mt-2">
+            {invoiceTypeOptions.map((option) => (
+              <label
+                key={option}
+                className={`flex items-center gap-2 text-sm cursor-pointer ${
+                  invoiceForm.type === option ? "text-ebmaa-purple font-semibold" : "text-gray-700"
+                }`}
+              >
+                <input
+                  type="checkbox"
+                  className="h-4 w-4"
+                  checked={invoiceForm.type === option}
+                  onChange={() => handleInvoiceTypeSelect(option)}
+                />
+                <span>{INVOICE_TYPE_LABELS[option] || option}</span>
+              </label>
+            ))}
+          </div>
+          {isForeignUrgentBatch && !invoiceForm.type && (
+            <p className="text-xs text-gray-blue-600 mt-2">Select a type to start editing account details.</p>
+          )}
+        </section>
+        <section className="container-col m-0">
           <p className="text-xs uppercase tracking-wide text-gray-blue-600">Medical Aid</p>
           <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
             <div className="flex flex-col gap-1">
               <label className="text-xs text-gray-blue-600">Medical Aid Number</label>
               <input
                 type="text"
-                className="input-pill"
+                className={`input-pill ${medicalAidFieldsDisabled ? "bg-gray-100 cursor-not-allowed" : ""}`}
                 value={medicalAidForm.medicalAidNr}
                 onChange={(e) => setMedicalAidForm((prev) => ({ ...prev, medicalAidNr: e.target.value }))}
+                disabled={medicalAidFieldsDisabled}
               />
             </div>
             <div className="flex flex-col gap-1">
               <label className="text-xs text-gray-blue-600">Medical Aid</label>
               <select
-                className="input-pill"
+                className={`input-pill ${medicalAidFieldsDisabled ? "bg-gray-100 cursor-not-allowed" : ""}`}
                 value={medicalAidForm.medicalAidId}
                 onChange={(e) => handleMedicalAidSelectChange(e.target.value)}
-                disabled={medicalAidCatalog.length === 0}
+                disabled={medicalAidFieldsDisabled || medicalAidCatalog.length === 0}
               >
                 <option value="">{medicalAidCatalog.length ? "Select medical aid" : "Loading..."}</option>
                 {medicalAidCatalog.map((aid) => (
@@ -620,10 +766,10 @@ const hydratePersonForm = (data = {}) => ({
             <div className="flex flex-col gap-1">
               <label className="text-xs text-gray-blue-600">Plan</label>
               <select
-                className="input-pill"
+                className={`input-pill ${medicalAidFieldsDisabled ? "bg-gray-100 cursor-not-allowed" : ""}`}
                 value={medicalAidForm.planId}
                 onChange={(e) => handleMedicalAidPlanSelectChange(e.target.value)}
-                disabled={!selectedMedicalAid || availablePlans.length === 0}
+                disabled={medicalAidFieldsDisabled || !selectedMedicalAid || availablePlans.length === 0}
               >
                 <option value="">
                   {selectedMedicalAid
@@ -646,87 +792,120 @@ const hydratePersonForm = (data = {}) => ({
           <p className="text-xs uppercase tracking-wide text-gray-blue-600">Main Member</p>
           <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
             <div className="flex flex-col gap-1">
-              <label className="text-xs text-gray-blue-600">Record ID (optional)</label>
+              <label className="text-xs text-gray-blue-600">First Name</label>
               <input
                 type="text"
-                className="input-pill"
-                value={memberForm.recordId}
-                onChange={onPersonFieldChange(setMemberForm, "recordId")}
+                className={`input-pill ${memberFieldsDisabled ? "bg-gray-100 cursor-not-allowed" : ""}`}
+                value={memberForm.first}
+                onChange={onPersonFieldChange(setMemberForm, "first")}
+                disabled={memberFieldsDisabled}
               />
             </div>
             <div className="flex flex-col gap-1">
-              <label className="text-xs text-gray-blue-600">First Name</label>
-              <input type="text" className="input-pill" value={memberForm.first} onChange={onPersonFieldChange(setMemberForm, "first")} />
-            </div>
-            <div className="flex flex-col gap-1">
               <label className="text-xs text-gray-blue-600">Last Name</label>
-              <input type="text" className="input-pill" value={memberForm.last} onChange={onPersonFieldChange(setMemberForm, "last")} />
+              <input
+                type="text"
+                className={`input-pill ${memberFieldsDisabled ? "bg-gray-100 cursor-not-allowed" : ""}`}
+                value={memberForm.last}
+                onChange={onPersonFieldChange(setMemberForm, "last")}
+                disabled={memberFieldsDisabled}
+              />
             </div>
             <div className="flex flex-col gap-1">
               <label className="text-xs text-gray-blue-600">ID Number</label>
-              <input type="text" className="input-pill" value={memberForm.idNumber} onChange={onPersonFieldChange(setMemberForm, "idNumber")} />
+              <input
+                type="text"
+                className={`input-pill ${memberFieldsDisabled ? "bg-gray-100 cursor-not-allowed" : ""}`}
+                value={memberForm.idNumber}
+                onChange={onPersonFieldChange(setMemberForm, "idNumber")}
+                disabled={memberFieldsDisabled}
+              />
             </div>
             <div className="flex flex-col gap-1">
               <label className="text-xs text-gray-blue-600">DOB</label>
               <input
                 type="date"
-                className="input-pill"
+                className={`input-pill ${memberFieldsDisabled ? "bg-gray-100 cursor-not-allowed" : ""}`}
                 value={memberForm.dateOfBirth}
                 onChange={onPersonFieldChange(setMemberForm, "dateOfBirth")}
+                disabled={memberFieldsDisabled}
               />
             </div>
             <div className="flex flex-col gap-1">
               <label className="text-xs text-gray-blue-600">Dependent #</label>
               <input
                 type="text"
-                className="input-pill"
+                className={`input-pill ${memberFieldsDisabled ? "bg-gray-100 cursor-not-allowed" : ""}`}
                 value={memberForm.dependentNumber}
                 onChange={onPersonFieldChange(setMemberForm, "dependentNumber")}
+                disabled={memberFieldsDisabled}
               />
             </div>
           </div>
         </section>
 
         <section className="container-col m-0">
-          <p className="text-xs uppercase tracking-wide text-gray-blue-600">Patient</p>
+          <div className="flex items-center justify-between gap-3">
+            <p className="text-xs uppercase tracking-wide text-gray-blue-600">Patient</p>
+            <label className="flex items-center gap-2 text-xs text-gray-blue-600 select-none">
+              <input
+                type="checkbox"
+                className="h-4 w-4"
+                checked={isPatientSameAsMember}
+                onChange={(e) => handlePatientSameAsMemberChange(e.target.checked)}
+              />
+              Patient &amp; member same
+            </label>
+          </div>
           <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
             <div className="flex flex-col gap-1">
-              <label className="text-xs text-gray-blue-600">Record ID (optional)</label>
+              <label className="text-xs text-gray-blue-600">First Name</label>
               <input
                 type="text"
-                className="input-pill"
-                value={patientForm.recordId}
-                onChange={onPersonFieldChange(setPatientForm, "recordId")}
+                className={`input-pill ${patientFieldsDisabled ? "bg-gray-100 cursor-not-allowed" : ""}`}
+                value={patientForm.first}
+                onChange={onPersonFieldChange(setPatientForm, "first")}
+                disabled={patientFieldsDisabled}
               />
             </div>
             <div className="flex flex-col gap-1">
-              <label className="text-xs text-gray-blue-600">First Name</label>
-              <input type="text" className="input-pill" value={patientForm.first} onChange={onPersonFieldChange(setPatientForm, "first")} />
-            </div>
-            <div className="flex flex-col gap-1">
               <label className="text-xs text-gray-blue-600">Last Name</label>
-              <input type="text" className="input-pill" value={patientForm.last} onChange={onPersonFieldChange(setPatientForm, "last")} />
+              <input
+                type="text"
+                className={`input-pill ${patientFieldsDisabled ? "bg-gray-100 cursor-not-allowed" : ""}`}
+                value={patientForm.last}
+                onChange={onPersonFieldChange(setPatientForm, "last")}
+                disabled={patientFieldsDisabled}
+              />
             </div>
             <div className="flex flex-col gap-1">
               <label className="text-xs text-gray-blue-600">ID Number</label>
-              <input type="text" className="input-pill" value={patientForm.idNumber} onChange={onPersonFieldChange(setPatientForm, "idNumber")} />
+              <input
+                type="text"
+                className={`input-pill ${patientFieldsDisabled ? "bg-gray-100 cursor-not-allowed" : ""}`}
+                value={patientForm.idNumber}
+                onChange={onPersonFieldChange(setPatientForm, "idNumber")}
+                disabled={patientFieldsDisabled}
+              />
             </div>
             <div className="flex flex-col gap-1">
               <label className="text-xs text-gray-blue-600">DOB</label>
               <input
                 type="date"
-                className="input-pill"
+                className={`input-pill ${patientFieldsDisabled ? "bg-gray-100 cursor-not-allowed" : ""}`}
                 value={patientForm.dateOfBirth}
                 onChange={onPersonFieldChange(setPatientForm, "dateOfBirth")}
+                disabled={patientFieldsDisabled}
               />
             </div>
             <div className="flex flex-col gap-1">
               <label className="text-xs text-gray-blue-600">Dependent #</label>
               <input
                 type="text"
-                className="input-pill"
+                className={`input-pill ${patientFieldsDisabled ? "bg-gray-100 cursor-not-allowed" : ""}`}
                 value={patientForm.dependentNumber}
                 onChange={onPersonFieldChange(setPatientForm, "dependentNumber")}
+                disabled={patientFieldsDisabled}
               />
             </div>
           </div>
@@ -739,9 +918,10 @@ const hydratePersonForm = (data = {}) => ({
               <label className="text-xs text-gray-blue-600">Nr in Batch</label>
               <input
                 type="number"
-                className="input-pill"
+                className="input-pill bg-gray-100 cursor-not-allowed"
                 value={invoiceForm.nrInBatch}
-                onChange={(e) => setInvoiceForm((prev) => ({ ...prev, nrInBatch: e.target.value }))}
+                readOnly
+                disabled
               />
             </div>
             <div className="flex flex-col gap-1">
@@ -830,7 +1010,7 @@ const hydratePersonForm = (data = {}) => ({
               onClick={handleSave}
               disabled={!canSave || saving}
             >
-              {saving ? "Saving..." : "Save Invoice"}
+              {saving ? "Saving..." : existingInvoice ? "Update Invoice" : "Save Invoice"}
             </button>
           </div>
         </section>

@@ -155,8 +155,38 @@ const INSERT_INVOICE = `
     ref_client_id,
     file_nr,
     balance,
-    auth_nr
-  ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+    auth_nr,
+    type
+  ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+`;
+
+const UPDATE_PROFILE = `
+  UPDATE profiles
+  SET medical_aid_id = ?, plan_id = ?, medical_aid_nr = ?
+  WHERE profile_id = ?
+`;
+
+const UPDATE_PERSON = `
+  UPDATE person_records
+  SET first = ?, last = ?, title = ?, date_of_birth = ?, gender = ?, id_type = ?, id_nr = ?
+  WHERE record_id = ?
+`;
+
+const UPDATE_PROFILE_PERSON_MAP = `
+  UPDATE profile_person_map
+  SET is_main_member = ?, dependent_nr = ?
+  WHERE profile_id = ? AND record_id = ?
+`;
+
+const DELETE_PROFILE_PERSON_MAP = `
+  DELETE FROM profile_person_map
+  WHERE profile_id = ? AND record_id = ?
+`;
+
+const UPDATE_INVOICE = `
+  UPDATE invoices
+  SET account_id = ?, nr_in_batch = ?, date_of_service = ?, status = ?, ref_client_id = ?, file_nr = ?, balance = ?, auth_nr = ?, type = ?
+  WHERE invoice_id = ?
 `;
 
 module.exports = {
@@ -172,4 +202,9 @@ module.exports = {
   buildProfilePersonsQuery,
   SELECT_ALL_MEDICAL_AIDS,
   SELECT_ALL_MEDICAL_AID_PLANS,
+  UPDATE_PROFILE,
+  UPDATE_PERSON,
+  UPDATE_PROFILE_PERSON_MAP,
+  DELETE_PROFILE_PERSON_MAP,
+  UPDATE_INVOICE,
 };

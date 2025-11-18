@@ -14,6 +14,7 @@ router.get('/clients', wc.listClients);
 router.patch('/:batchId/update', wc.updateReceptionBatch);
 router.get('/:batchId/invoices', invoiceController.getBatchInvoices);
 router.post('/:batchId/accounts', accountController.createBatchAccount);
+router.put('/:batchId/invoices/:invoiceId', accountController.updateBatchInvoice);
 router.get('/:department', wc.departmentBatches);
 // router.get('/reception', wc.receptionForeignUrgentBatches);
 
