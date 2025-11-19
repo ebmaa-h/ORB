@@ -443,7 +443,7 @@ export default function EntityNotesAndLogs({
             </div>
           ))
         ) : (
-          <p>No notes or logs captured yet.</p>
+          <p>No logs.</p>
         )}
       </div>
 

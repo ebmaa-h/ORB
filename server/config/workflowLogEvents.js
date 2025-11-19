@@ -99,6 +99,27 @@ const WORKFLOW_LOG_EVENT_CONFIG = {
       isReceptionDraft,
     }),
   },
+  ACCOUNT_INFO_CHANGED: {
+    action: 'account_info_changed',
+    buildMessage: ({ invoiceId, accountId, eventType }) => {
+      if (!invoiceId) return 'Invoice updated';
+      if (eventType === 'create') {
+        return accountId
+          ? `Invoice #${invoiceId} created for account #${accountId}`
+          : `Invoice #${invoiceId} created`;
+      }
+      return accountId
+        ? `Invoice #${invoiceId} updated for account #${accountId}`
+        : `Invoice #${invoiceId} updated`;
+    },
+    buildMetadata: ({ batchId, invoiceId, accountId, profileId, changes }) => ({
+      batch_id: batchId,
+      invoice_id: invoiceId,
+      account_id: accountId,
+      profile_id: profileId,
+      changes: changes || {},
+    }),
+  },
 };
 
 const WORKFLOW_LOG_EVENTS = Object.freeze(

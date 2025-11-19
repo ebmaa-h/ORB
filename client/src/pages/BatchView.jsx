@@ -10,6 +10,26 @@ const TAB_KEYS = {
   NOTES: "notes",
 };
 
+const FU_INVOICE_TYPES = new Set(["foreign", "urgent_normal", "urgent_other"]);
+
+const toForeignUrgentSequence = (invoices = []) => {
+  let counter = 0;
+  return invoices.reduce((map, invoice) => {
+    const invoiceId = invoice?.invoice_id;
+    if (!invoiceId) return map;
+    if (!isForeignUrgentInvoice(invoice)) return map;
+    counter += 1;
+    map.set(invoiceId, counter);
+    return map;
+  }, new Map());
+};
+
+const isForeignUrgentInvoice = (invoice) => {
+  if (!invoice) return false;
+  const type = (invoice.invoice_type || invoice.type || "").toLowerCase();
+  return FU_INVOICE_TYPES.has(type);
+};
+
 const toNumber = (value) => {
   const parsed = Number(value);
   return Number.isFinite(parsed) ? parsed : 0;
@@ -97,6 +117,8 @@ const BatchView = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const batch = location.state?.batch || null;
+  const parentBatchId = batch?.parent_batch_id || null;
+  const isForeignUrgentChild = Boolean(parentBatchId);
   const [invoices, setInvoices] = useState([]);
   const [invoicesLoading, setInvoicesLoading] = useState(false);
   const [invoicesError, setInvoicesError] = useState("");
@@ -105,13 +127,17 @@ const BatchView = () => {
 
   const infoItems = useMemo(() => {
     if (!batch) return [];
-    return [
+    const items = [
       { label: "Batch ID", value: batch.batch_id ? `#${batch.batch_id}` : "N/A" },
       { label: "Batch Size", value: computeBatchSize(batch) },
       { label: "Client", value: formatClientName(batch) },
       { label: "Date Received", value: formatDate(batch.date_received) },
     ];
-  }, [batch]);
+    if (isForeignUrgentChild && parentBatchId) {
+      items.splice(1, 0, { label: "Parent Batch", value: `#${parentBatchId}` });
+    }
+    return items;
+  }, [batch, isForeignUrgentChild, parentBatchId]);
 
   useEffect(() => {
     if (!batch?.batch_id) {
@@ -146,13 +172,25 @@ const BatchView = () => {
     };
   }, [batch]);
 
-  const invoiceCount = invoices.length;
-  const batchSize = Number(batch?.batch_size || 0);
+  const normalizedBatchId = Number(batch?.batch_id || 0);
+  const relevantInvoices = useMemo(() => {
+    if (!normalizedBatchId) return [];
+    return invoices.filter((invoice) => {
+      if (Number(invoice.batch_id) !== normalizedBatchId) return false;
+      const isFuInvoice = isForeignUrgentInvoice(invoice);
+      return isForeignUrgentChild ? isFuInvoice : !isFuInvoice;
+    });
+  }, [invoices, normalizedBatchId, isForeignUrgentChild]);
+  const trimmedSearch = searchTerm.trim();
+  const searchActive = Boolean(trimmedSearch);
   const filteredInvoices = useMemo(() => {
-    if (!searchTerm.trim()) return invoices;
-    return invoices.filter((invoice) => invoiceMatchesSearch(invoice, searchTerm.trim()));
-  }, [invoices, searchTerm]);
-  const searchActive = Boolean(searchTerm.trim());
+    if (!searchActive) return relevantInvoices;
+    return relevantInvoices.filter((invoice) => invoiceMatchesSearch(invoice, trimmedSearch));
+  }, [relevantInvoices, trimmedSearch, searchActive]);
+  const foreignUrgentSequence = useMemo(() => toForeignUrgentSequence(relevantInvoices), [relevantInvoices]);
+  const displayInvoices = isForeignUrgentChild ? filteredInvoices.slice(0, 1) : filteredInvoices;
+  const invoiceCount = displayInvoices.length;
+  const batchSize = isForeignUrgentChild ? 1 : Number(batch?.batch_size || 0);
   const isBatchTab = activeTab === TAB_KEYS.BATCH;
 
   const handleViewInvoice = useCallback(
@@ -275,8 +313,7 @@ const BatchView = () => {
             <p className="text-sm text-gray-blue-600">Current Invoices / Batch Size</p>
           </div>
           <div className="text-right">
-            {/* <p className="text-xs uppercase tracking-wide text-gray-blue-600">Client ID</p>
-            <p className="text-lg font-semibold text-gray-dark">{batch.client_id || "N/A"}</p> */}
+            {/* reserved for future summary */}
           </div>
         </div>
 
@@ -290,14 +327,24 @@ const BatchView = () => {
           <p className="text-sm text-gray-blue-700">No invoices match your search.</p>
         ) : (
           <div className="flex flex-col gap-4">
-            {filteredInvoices.map((invoice) => (
+            {displayInvoices.map((invoice) => (
               <div key={invoice.invoice_id} className="border border-gray-blue-100 rounded p-4 bg-gray-blue-50/30">
                 <div className="flex flex-wrap items-center justify-between gap-4">
-                  <div>
-                    <p className="text-xs uppercase text-gray-blue-600">Invoice</p>
-                    <p className="text-lg font-semibold text-gray-dark">#{invoice.invoice_id}</p>
-                    <p className="text-xs text-gray-blue-600">Nr in batch: {invoice.nr_in_batch || "N/A"}</p>
-                  </div>
+                  {isForeignUrgentChild ? (
+                    <div>
+                      <p className="text-xs uppercase text-gray-blue-600">Foreign &amp; Urgent Account</p>
+                      <p className="text-lg font-semibold text-gray-dark">Invoice #1</p>
+                      <p className="text-xs text-gray-blue-600">Nr in batch: 1</p>
+                    </div>
+                  ) : (
+                    <div>
+                      <p className="text-xs uppercase text-gray-blue-600">Invoice</p>
+                      <p className="text-lg font-semibold text-gray-dark">#{invoice.invoice_id}</p>
+                      <p className="text-xs text-gray-blue-600">
+                        Nr in batch: {invoice.nr_in_batch || "N/A"}
+                      </p>
+                    </div>
+                  )}
                   <button type="button" className="tab-pill min-w-[150px]" onClick={() => handleViewInvoice(invoice)}>
                     View Invoice
                   </button>
@@ -345,10 +392,12 @@ const BatchView = () => {
         <div className="mt-6 flex justify-end">
           <button
             type="button"
-            className="button-pill min-w-[160px]"
+            className="button-pill min-w-[160px] disabled:opacity-60"
             onClick={() => navigate(`/batches/${batch.batch_id}/accounts/new`, { state: { batch } })}
+            disabled={isForeignUrgentChild && invoiceCount >= 1}
+            title={isForeignUrgentChild && invoiceCount >= 1 ? "Foreign & urgent batches allow one account" : ""}
           >
-            Add Account
+            {isForeignUrgentChild ? "Add Foreign/Urgent Account" : "Add Account"}
           </button>
         </div>
       </section>

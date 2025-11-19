@@ -1,5 +1,6 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
+import EntityNotesAndLogs from "../components/ui/EntityNotesAndLogs";
 import SearchBar from "../components/ui/SearchBar";
 import axiosClient from "../utils/axiosClient";
 import ENDPOINTS from "../utils/apiEndpoints";
@@ -41,6 +42,19 @@ const isForeignUrgentBatchType = (batch) => {
   if (!batch) return false;
   if (batch.parent_batch_id) return true;
   return normalizeBatchFlag(batch.is_pure_foreign_urgent);
+};
+
+const FOREIGN_URGENT_INVOICE_TYPES = new Set(["foreign", "urgent_normal", "urgent_other"]);
+
+const isForeignUrgentInvoice = (invoice) => {
+  if (!invoice) return false;
+  const type = (invoice.invoice_type || invoice.type || "").toLowerCase();
+  return FOREIGN_URGENT_INVOICE_TYPES.has(type);
+};
+
+const TAB_KEYS = {
+  ACCOUNT: "account",
+  NOTES: "notes",
 };
 
 const formatPersonName = (person) => {
@@ -157,6 +171,7 @@ const AddAccount = () => {
   const existingInvoiceType = existingInvoice?.invoice_type || existingInvoice?.type || "";
   const isViewingInvoice = Boolean(existingInvoice?.invoice_id);
 
+  const [activeTab, setActiveTab] = useState(TAB_KEYS.ACCOUNT);
   const [searchTerm, setSearchTerm] = useState("");
   const [searchLoading, setSearchLoading] = useState(false);
   const [searchError, setSearchError] = useState("");
@@ -230,11 +245,16 @@ const AddAccount = () => {
         const res = await axiosClient.get(ENDPOINTS.batchInvoices(batch.batch_id));
         if (cancelled) return;
         const list = Array.isArray(res.data) ? res.data : res.data?.invoices;
-        const count = Array.isArray(list) ? list.length : 0;
+        const scoped = Array.isArray(list)
+          ? list.filter((invoice) =>
+              isForeignUrgentBatch ? isForeignUrgentInvoice(invoice) : !isForeignUrgentInvoice(invoice),
+            )
+          : [];
+        const count = scoped.length;
         setInvoiceCount(count);
         setInvoiceForm((prev) => ({
           ...prev,
-          nrInBatch: prev.nrInBatch || count + 1,
+          nrInBatch: isForeignUrgentBatch ? 1 : prev.nrInBatch || count + 1,
         }));
       } catch (err) {
         console.error("Failed to load invoices for numbering:", err);
@@ -245,7 +265,7 @@ const AddAccount = () => {
     return () => {
       cancelled = true;
     };
-  }, [batch]);
+  }, [batch, isForeignUrgentBatch]);
 
   useEffect(() => {
     if (existingInvoice) return;
@@ -343,6 +363,9 @@ const AddAccount = () => {
     { label: "Client ID", value: batch.client_id || "N/A" },
     { label: "Invoice Count", value: invoiceCount },
   ];
+  const departmentKey = (batch.current_department || "").toLowerCase();
+  const batchTypeKey = isForeignUrgentBatch ? "foreign_urgent" : "normal";
+  const invoiceEntityId = existingInvoice?.invoice_id ? String(existingInvoice.invoice_id) : null;
 
   const selectedMedicalAid = useMemo(() => {
     if (!medicalAidForm.medicalAidId) return null;
@@ -553,141 +576,168 @@ const hydratePersonForm = (data = {}) => ({
   };
 
   return (
-    <div className="flex flex-col gap-4">
-      <section className="container-col">
-        <div className="flex flex-wrap items-center justify-between gap-6">
-          <div>
-            <p className="text-xs uppercase tracking-wide text-gray-blue-600">Add Account / Invoice</p>
-            <h1 className="text-2xl font-semibold text-gray-dark">Batch #{batch.batch_id}</h1>
-            <p className="text-sm text-gray-blue-600">{clientDisplayName}</p>
-          </div>
+    <div className="flex flex-col">
+      <div className="tab-panel w-full mb-0">
+        <div className="flex gap-2 flex-wrap items-center">
+          <button
+            type="button"
+            className={`tab-pill ${activeTab === TAB_KEYS.ACCOUNT ? "tab-pill-active" : ""}`}
+            onClick={() => setActiveTab(TAB_KEYS.ACCOUNT)}
+          >
+            View Account
+          </button>
+          <button
+            type="button"
+            className={`tab-pill ${activeTab === TAB_KEYS.NOTES ? "tab-pill-active" : ""}`}
+            onClick={() => setActiveTab(TAB_KEYS.NOTES)}
+          >
+            Notes & Logs
+          </button>
+        </div>
+
+        <span className="hidden h-6 w-px bg-gray-blue-100 md:block" aria-hidden="true" />
+
+        <div className="flex gap-2 flex-wrap items-center">
+          <button type="button" className="tab-pill tab-pill-disabled" disabled title="Coming soon">
+            CRQ
+          </button>
+        </div>
+
+        <span className="hidden h-6 w-px bg-gray-blue-100 md:block" aria-hidden="true" />
+
+        <div className="flex gap-2 flex-wrap items-center ml-auto">
           <button type="button" className="button-pill min-w-[100px]" onClick={() => navigate(-1)}>
             Back
           </button>
         </div>
-        <div className="flex flex-wrap gap-6 mt-4">
-          {infoItems.map((item) => (
-            <div key={item.label}>
-              <p className="text-xs uppercase tracking-wide text-gray-blue-600">{item.label}</p>
-              <p className="text-lg font-semibold text-gray-dark">{item.value}</p>
-            </div>
-          ))}
-        </div>
-        {isViewingInvoice && existingInvoice && (
-          <div className="mt-4 rounded border border-blue-200 bg-blue-50 px-4 py-3 text-sm text-blue-900">
-            Editing invoice #{existingInvoice.invoice_id}. Updating will overwrite the current details.
-          </div>
-        )}
-      </section>
-      {/* SECTION 1 // SEARCH SECTION */}
-      <div className="flex flex-row-reverse gap-4 lg:basis-2/4 mb-4">
-        <section className="container-col m-0 flex w-full lg:basis-2/4 lg:flex-none">
-          <div className="flex flex-wrap items-center gap-4">
-            <div className="flex-1 min-w-[220px]">
-              <SearchBar searchTerm={searchTerm} setSearchTerm={setSearchTerm} classes="w-full" />
-            </div>
-            <button
-              type="button"
-              className="button-pill"
-              onClick={handleSearchProfiles}
-              disabled={searchLoading || !batch.client_id}
-            >
-              {searchLoading ? "Searching..." : "Search Profiles"}
-            </button>
-          </div>
-          {searchError && <p className="text-sm text-red-600">{searchError}</p>}
-          {!batch.client_id && (
-            <p className="text-sm text-red-600">This batch is missing a client reference, so lookups are disabled.</p>
-          )}
-          <div className="flex flex-col gap-4 mt-4">
-            {profiles.length === 0 && !searchLoading ? (
-              <p className="text-sm text-gray-blue-600">Search for existing profiles or accounts by medical aid number, ID, or surname.</p>
-            ) : (
-              profiles.map((profile) => {
-                const profilePersons = buildProfilePersons(profile);
-                const hasPersonData = Boolean(profilePersons.mainMember || profilePersons.dependants.length);
-                return (
-                  <div key={profile.profileId} className="border border-gray-blue-100 rounded-lg p-4 bg-gray-100">
-                        <p className="text-xs uppercase text-gray-blue-600">Medical Aid</p>
-                    <div className="rounded border border-gray-blue-100 bg-white px-3 py-3 mt-2">
-                      <div className="flex flex-wrap items-center justify-between gap-4">
-                        <div>
-                          <p className="text-sm font-semibold text-gray-dark">
-                            {profile.medicalAid?.name || "Unknown"} ({profile.medicalAidNr || "N/A"})
-                          </p>
-                          <p className="text-xs text-gray-blue-600">
-                            Plan: {profile.plan?.name || profile.plan?.code || "N/A"}
-                          </p>
-                        </div>
-                        <button
-                          type="button"
-                          className={`tab-pill ${!canImportData ? "opacity-50 cursor-not-allowed" : ""}`}
-                          onClick={() => handleImport(profile, null, { includeMember: true })}
-                          disabled={!canImportData}
-                        >
-                          Import Profile
-                        </button>
-                      </div>
+      </div>
+      {activeTab === TAB_KEYS.ACCOUNT ? (
+        <>
+          <section className="container-col mb-4">
+            <div className="flex flex-col gap-6 lg:flex-row lg:items-start">
+              <div className="flex-1">
+                <p className="text-xs uppercase tracking-wide text-gray-blue-600">Add Account / Invoice</p>
+                <h1 className="text-2xl font-semibold text-gray-dark">Batch #{batch.batch_id}</h1>
+                <p className="text-sm text-gray-blue-600">{clientDisplayName}</p>
+                <div className="flex flex-wrap gap-6 mt-4">
+                  {infoItems.map((item) => (
+                    <div key={item.label}>
+                      <p className="text-xs uppercase tracking-wide text-gray-blue-600">{item.label}</p>
+                      <p className="text-lg font-semibold text-gray-dark">{item.value}</p>
                     </div>
-                    {hasPersonData && (
-                      <div className="mt-4 flex flex-col gap-2">
-                        <p className="text-xs uppercase text-gray-blue-600">Main Member & Dependants</p>
-                        {profilePersons.mainMember && (
-                          <div className="rounded border border-gray-blue-100 bg-white px-3 py-2">
-                            <div className="flex flex-wrap items-center justify-between gap-2">
-                              <div>
-                                <p className="text-sm font-semibold text-gray-dark">{profilePersons.mainMember.name}</p>
-                                {profilePersons.mainMember.meta && (
-                                  <p className="text-xs text-gray-blue-600">{profilePersons.mainMember.meta}</p>
-                                )}
-                              </div>
-                              <div className="flex items-center gap-2 flex-wrap justify-end">
-                                {profilePersons.mainMember.roles.length > 0 && (
-                                  <span className="text-[11px] uppercase tracking-wide text-gray-900">
-                                    {profilePersons.mainMember.roles.join(", ")}
-                                  </span>
-                                )}
-                                <div className="flex items-center gap-2">
-                                  <button
-                                    type="button"
-                                    className={`tab-pill ${
-                                      !canImportData || isPatientSameAsMember ? "opacity-50 cursor-not-allowed" : ""
-                                    }`}
-                                    onClick={() => handleImportProfilePerson(profilePersons.mainMember.person, "patient")}
-                                    disabled={!canImportData || isPatientSameAsMember}
-                                  >
-                                    Import Patient
-                                  </button>
-                                </div>
-                              </div>
+                  ))}
+                </div>
+                {isViewingInvoice && existingInvoice && (
+                  <div className="mt-4 rounded border border-blue-200 bg-blue-50 px-4 py-3 text-sm text-blue-900">
+                    Editing invoice #{existingInvoice.invoice_id}. Updating will overwrite the current details.
+                  </div>
+                )}
+              </div>
+              <div className="w-full lg:max-w-[340px]">
+                <p className="text-xs uppercase tracking-wide text-gray-blue-600">Invoice Type</p>
+                <div className="flex flex-wrap gap-3 mt-2">
+                  {invoiceTypeOptions.map((option) => (
+                    <label
+                      key={option}
+                      className={`flex items-center gap-2 text-sm cursor-pointer ${
+                        invoiceForm.type === option ? "text-ebmaa-purple font-semibold" : "text-gray-700"
+                      }`}
+                    >
+                      <input
+                        type="checkbox"
+                        className="h-4 w-4"
+                        checked={invoiceForm.type === option}
+                        onChange={() => handleInvoiceTypeSelect(option)}
+                      />
+                      <span>{INVOICE_TYPE_LABELS[option] || option}</span>
+                    </label>
+                  ))}
+                </div>
+                {isForeignUrgentBatch && !invoiceForm.type && (
+                  <p className="text-xs text-gray-blue-600 mt-2">Select a type to start editing account details.</p>
+                )}
+              </div>
+            </div>
+          </section>
+          {/* SECTION 1 // SEARCH SECTION */}
+          <div className="flex flex-row-reverse gap-4 lg:basis-2/4 mb-4">
+            <section className="container-col m-0 flex w-full lg:basis-2/4 lg:flex-none">
+              <div className="flex flex-wrap items-center gap-4">
+                <div className="flex-1 min-w-[220px]">
+                  <SearchBar searchTerm={searchTerm} setSearchTerm={setSearchTerm} classes="w-full" />
+                </div>
+                <button
+                  type="button"
+                  className="button-pill"
+                  onClick={handleSearchProfiles}
+                  disabled={searchLoading || !batch.client_id}
+                >
+                  {searchLoading ? "Searching..." : "Search Profiles"}
+                </button>
+              </div>
+              {searchError && <p className="text-sm text-red-600">{searchError}</p>}
+              {!batch.client_id && (
+                <p className="text-sm text-red-600">This batch is missing a client reference, so lookups are disabled.</p>
+              )}
+              <div className="flex flex-col gap-4 mt-4">
+                {profiles.length === 0 && !searchLoading ? (
+                  <p className="text-sm text-gray-blue-600">
+                    Search for existing profiles or accounts by medical aid number, ID, or surname.
+                  </p>
+                ) : (
+                  profiles.map((profile) => {
+                    const profilePersons = buildProfilePersons(profile);
+                    const hasPersonData = Boolean(profilePersons.mainMember || profilePersons.dependants.length);
+                    return (
+                      <div key={profile.profileId} className="border border-gray-blue-100 rounded-lg p-4 bg-gray-100">
+                        <p className="text-xs uppercase text-gray-blue-600">Medical Aid</p>
+                        <div className="rounded border border-gray-blue-100 bg-white px-3 py-3 mt-2">
+                          <div className="flex flex-wrap items-center justify-between gap-4">
+                            <div>
+                              <p className="text-sm font-semibold text-gray-dark">
+                                {profile.medicalAid?.name || "Unknown"} ({profile.medicalAidNr || "N/A"})
+                              </p>
+                              <p className="text-xs text-gray-blue-600">
+                                Plan: {profile.plan?.name || profile.plan?.code || "N/A"}
+                              </p>
                             </div>
+                            <button
+                              type="button"
+                              className={`tab-pill ${!canImportData ? "opacity-50 cursor-not-allowed" : ""}`}
+                              onClick={() => handleImport(profile, null, { includeMember: true })}
+                              disabled={!canImportData}
+                            >
+                              Import Profile
+                            </button>
                           </div>
-                        )}
-
-                        {profilePersons.dependants.length > 0 && (
-                          <div className="flex flex-col gap-2">
-                            {profilePersons.dependants.map(({ key, name, meta, roles, person }) => (
-                              <div key={key} className="rounded border border-gray-blue-100 bg-white px-3 py-2">
+                        </div>
+                        {hasPersonData && (
+                          <div className="mt-4 flex flex-col gap-2">
+                            <p className="text-xs uppercase text-gray-blue-600">Main Member & Dependants</p>
+                            {profilePersons.mainMember && (
+                              <div className="rounded border border-gray-blue-100 bg-white px-3 py-2">
                                 <div className="flex flex-wrap items-center justify-between gap-2">
                                   <div>
-                                    <p className="text-sm font-semibold text-gray-dark">{name}</p>
-                                    {meta && <p className="text-xs text-gray-blue-600">{meta}</p>}
+                                    <p className="text-sm font-semibold text-gray-dark">{profilePersons.mainMember.name}</p>
+                                    {profilePersons.mainMember.meta && (
+                                      <p className="text-xs text-gray-blue-600">{profilePersons.mainMember.meta}</p>
+                                    )}
                                   </div>
                                   <div className="flex items-center gap-2 flex-wrap justify-end">
-                                    {roles.length > 0 && (
+                                    {profilePersons.mainMember.roles.length > 0 && (
                                       <span className="text-[11px] uppercase tracking-wide text-gray-900">
-                                        {roles.join(", ")}
+                                        {profilePersons.mainMember.roles.join(", ")}
                                       </span>
                                     )}
                                     <div className="flex items-center gap-2">
                                       <button
                                         type="button"
                                         className={`tab-pill ${
-                                          !canImportData || isPatientSameAsMember
-                                            ? "opacity-50 cursor-not-allowed"
-                                            : ""
+                                          !canImportData || isPatientSameAsMember ? "opacity-50 cursor-not-allowed" : ""
                                         }`}
-                                        onClick={() => handleImportProfilePerson(person, "patient")}
+                                        onClick={() =>
+                                          handleImportProfilePerson(profilePersons.mainMember.person, "patient")
+                                        }
                                         disabled={!canImportData || isPatientSameAsMember}
                                       >
                                         Import Patient
@@ -696,44 +746,54 @@ const hydratePersonForm = (data = {}) => ({
                                   </div>
                                 </div>
                               </div>
-                            ))}
+                            )}
+
+                            {profilePersons.dependants.length > 0 && (
+                              <div className="flex flex-col gap-2">
+                                {profilePersons.dependants.map(({ key, name, meta, roles, person }) => (
+                                  <div key={key} className="rounded border border-gray-blue-100 bg-white px-3 py-2">
+                                    <div className="flex flex-wrap items-center justify-between gap-2">
+                                      <div>
+                                        <p className="text-sm font-semibold text-gray-dark">{name}</p>
+                                        {meta && <p className="text-xs text-gray-blue-600">{meta}</p>}
+                                      </div>
+                                      <div className="flex items-center gap-2 flex-wrap justify-end">
+                                        {roles.length > 0 && (
+                                          <span className="text-[11px] uppercase tracking-wide text-gray-900">
+                                            {roles.join(", ")}
+                                          </span>
+                                        )}
+                                        <div className="flex items-center gap-2">
+                                          <button
+                                            type="button"
+                                            className={`tab-pill ${
+                                              !canImportData || isPatientSameAsMember
+                                                ? "opacity-50 cursor-not-allowed"
+                                                : ""
+                                            }`}
+                                            onClick={() => handleImportProfilePerson(person, "patient")}
+                                            disabled={!canImportData || isPatientSameAsMember}
+                                          >
+                                            Import Patient
+                                          </button>
+                                        </div>
+                                      </div>
+                                    </div>
+                                  </div>
+                                ))}
+                              </div>
+                            )}
                           </div>
                         )}
                       </div>
-                    )}
-                  </div>
-                );
-              })
-            )}
-          </div>
-        </section>
+                    );
+                  })
+                )}
+              </div>
+            </section>
 
-        {/* SECTION 2 // INFO SECTION */}
-        <div className="flex flex-col gap-4 w-full lg:basis-2/4">
-        <section className="container-col m-0">
-          <p className="text-xs uppercase tracking-wide text-gray-blue-600">Invoice Type</p>
-          <div className="flex flex-wrap gap-3 mt-2">
-            {invoiceTypeOptions.map((option) => (
-              <label
-                key={option}
-                className={`flex items-center gap-2 text-sm cursor-pointer ${
-                  invoiceForm.type === option ? "text-ebmaa-purple font-semibold" : "text-gray-700"
-                }`}
-              >
-                <input
-                  type="checkbox"
-                  className="h-4 w-4"
-                  checked={invoiceForm.type === option}
-                  onChange={() => handleInvoiceTypeSelect(option)}
-                />
-                <span>{INVOICE_TYPE_LABELS[option] || option}</span>
-              </label>
-            ))}
-          </div>
-          {isForeignUrgentBatch && !invoiceForm.type && (
-            <p className="text-xs text-gray-blue-600 mt-2">Select a type to start editing account details.</p>
-          )}
-        </section>
+            {/* SECTION 2 // INFO SECTION */}
+            <div className="flex flex-col gap-4 w-full lg:basis-2/4">
         <section className="container-col m-0">
           <p className="text-xs uppercase tracking-wide text-gray-blue-600">Medical Aid</p>
           <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
@@ -1014,8 +1074,25 @@ const hydratePersonForm = (data = {}) => ({
             </button>
           </div>
         </section>
-      </div>
-      </div>
+            </div>
+          </div>
+        </>
+      ) : invoiceEntityId ? (
+        <EntityNotesAndLogs
+          entityId={invoiceEntityId}
+          entityType="invoice"
+          department={departmentKey}
+          batchType={batchTypeKey}
+          title="Account Notes & Logs"
+          headerDescription={`Tracking updates for invoice #${invoiceEntityId}`}
+          showSearchInput={false}
+          className="mt-4"
+        />
+      ) : (
+        <section className="container-col">
+          <p className="text-sm text-gray-blue-700">Save this account to start capturing notes and logs.</p>
+        </section>
+      )}
     </div>
   );
 };

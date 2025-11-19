@@ -2,6 +2,7 @@ const db = require('../config/db');
 const AccountModel = require('../models/accountModel');
 const Invoice = require('../models/invoiceModel');
 const Batch = require('../models/batchModel');
+const { logInvoiceChange } = require('../utils/invoiceChangeLogger');
 
 const toPositiveInt = (value) => {
   const parsed = Number(value);
@@ -305,6 +306,15 @@ const accountController = {
         await connection.commit();
 
         const createdInvoice = await Invoice.getById(invoiceId);
+        await logInvoiceChange({
+          userId: req.user?.user_id || null,
+          batch,
+          accountId,
+          profileId,
+          previousInvoice: null,
+          nextInvoice: createdInvoice,
+          eventType: 'create',
+        });
         res.status(201).json({
           message: 'Invoice created successfully',
           invoice: createdInvoice,
@@ -470,6 +480,15 @@ const accountController = {
         await connection.commit();
 
         const updatedInvoice = await Invoice.getById(invoiceId);
+        await logInvoiceChange({
+          userId: req.user?.user_id || null,
+          batch,
+          accountId: targetAccountId,
+          profileId,
+          previousInvoice: existingInvoice,
+          nextInvoice: updatedInvoice,
+          eventType: 'update',
+        });
         res.json({
           message: 'Invoice updated successfully',
           invoice: updatedInvoice,
