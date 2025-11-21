@@ -46,6 +46,27 @@ const isForeignUrgentBatchType = (batch) => {
 
 const FOREIGN_URGENT_INVOICE_TYPES = new Set(["foreign", "urgent_normal", "urgent_other"]);
 
+const DEFAULT_BALANCE_VALUE = "0,00";
+
+const parseBalanceInput = (value) => {
+  if (value === null || value === undefined) return 0;
+  if (typeof value === "number") return Number.isFinite(value) ? value : 0;
+  const trimmed = typeof value === "string" ? value.trim() : String(value);
+  if (!trimmed) return 0;
+
+  let normalized = trimmed.replace(/\s+/g, "");
+  const hasComma = normalized.includes(",");
+  const hasDot = normalized.includes(".");
+  if (hasComma && !hasDot) {
+    normalized = normalized.replace(/\./g, "").replace(",", ".");
+  } else {
+    normalized = normalized.replace(/,/g, "");
+  }
+
+  const parsed = Number(normalized);
+  return Number.isFinite(parsed) ? parsed : 0;
+};
+
 const isForeignUrgentInvoice = (invoice) => {
   if (!invoice) return false;
   const type = (invoice.invoice_type || invoice.type || "").toLowerCase();
@@ -55,6 +76,11 @@ const isForeignUrgentInvoice = (invoice) => {
 const TAB_KEYS = {
   ACCOUNT: "account",
   NOTES: "notes",
+};
+
+const VIEW_MODES = {
+  ACCOUNT: "account",
+  PERSON: "person",
 };
 
 const formatPersonName = (person) => {
@@ -173,9 +199,27 @@ const AddAccount = () => {
 
   const [activeTab, setActiveTab] = useState(TAB_KEYS.ACCOUNT);
   const [searchTerm, setSearchTerm] = useState("");
+  const latestSearchTermRef = useRef("");
+  const handleSearchTermChange = useCallback((value) => {
+    latestSearchTermRef.current = value;
+    setSearchTerm(value);
+  }, []);
   const [searchLoading, setSearchLoading] = useState(false);
   const [searchError, setSearchError] = useState("");
   const [profiles, setProfiles] = useState([]);
+  const [viewMode, setViewMode] = useState(VIEW_MODES.ACCOUNT);
+  const [personEditor, setPersonEditor] = useState({
+    profileId: null,
+    recordId: null,
+    isMainMember: false,
+    dependentNumber: "",
+    data: defaultPerson(),
+    saving: false,
+    error: "",
+  });
+  const [newProfileDraft, setNewProfileDraft] = useState(null);
+  const [newProfileSaving, setNewProfileSaving] = useState(false);
+  const [newProfileError, setNewProfileError] = useState("");
 
   const [memberForm, setMemberForm] = useState(defaultPerson);
   const [patientForm, setPatientForm] = useState(defaultPerson);
@@ -192,7 +236,7 @@ const AddAccount = () => {
     dateOfService: "",
     status: "Open",
     fileNr: "",
-    balance: "",
+    balance: DEFAULT_BALANCE_VALUE,
     authNr: "",
     type: "",
   });
@@ -211,11 +255,10 @@ const AddAccount = () => {
     return base;
   }, [isForeignUrgentBatch, existingInvoiceType]);
   const selectedInvoiceType = invoiceForm.type;
-  const isIdentityLocked = !selectedInvoiceType || ["normal", "urgent_normal"].includes(selectedInvoiceType);
-  const memberFieldsDisabled = isIdentityLocked || !isMemberEditable;
-  const medicalAidFieldsDisabled = isIdentityLocked;
-  const patientFieldsDisabled = isIdentityLocked || isPatientSameAsMember;
-  const canImportData = Boolean(selectedInvoiceType);
+  const memberFieldsDisabled = false;
+  const medicalAidFieldsDisabled = false;
+  const patientFieldsDisabled = isPatientSameAsMember;
+  const canImportData = true;
 
   useEffect(() => {
     let cancelled = false;
@@ -338,6 +381,14 @@ const AddAccount = () => {
       type: existingInvoiceType || "",
     });
     setIsMemberEditable(false);
+    if (existingInvoice.profile_id) {
+      setLastImported({
+        profileId: String(existingInvoice.profile_id),
+        accountId: existingInvoice.account_id || null,
+      });
+    } else {
+      setLastImported(null);
+    }
   }, [existingInvoice]);
 
   if (!batch) {
@@ -366,6 +417,7 @@ const AddAccount = () => {
   const departmentKey = (batch.current_department || "").toLowerCase();
   const batchTypeKey = isForeignUrgentBatch ? "foreign_urgent" : "normal";
   const invoiceEntityId = existingInvoice?.invoice_id ? String(existingInvoice.invoice_id) : null;
+  const lockedProfileId = lastImported?.profileId ? String(lastImported.profileId) : null;
 
   const selectedMedicalAid = useMemo(() => {
     if (!medicalAidForm.medicalAidId) return null;
@@ -377,12 +429,25 @@ const AddAccount = () => {
     [selectedMedicalAid],
   );
 
-  const handleSearchProfiles = async () => {
+  const handleSearchProfiles = async (overrideTerm = null) => {
     if (!batch.client_id) {
       setSearchError("Client ID unavailable for this batch.");
       return;
     }
-    if (!searchTerm.trim()) {
+    let normalizedOverride = overrideTerm;
+    if (
+      normalizedOverride &&
+      typeof normalizedOverride === "object" &&
+      (typeof normalizedOverride.preventDefault === "function" || typeof normalizedOverride.stopPropagation === "function")
+    ) {
+      normalizedOverride = null;
+    }
+    const rawTermSource =
+      normalizedOverride !== null && normalizedOverride !== undefined
+        ? normalizedOverride
+        : latestSearchTermRef.current || searchTerm;
+    const rawTerm = typeof rawTermSource === "string" ? rawTermSource : String(rawTermSource || "");
+    if (!rawTerm.trim()) {
       setProfiles([]);
       setSearchError("");
       return;
@@ -391,9 +456,10 @@ const AddAccount = () => {
     setSearchError("");
     try {
       const res = await axiosClient.get(ENDPOINTS.accountSearch, {
-        params: { clientId: batch.client_id, q: searchTerm.trim() },
+        params: { clientId: batch.client_id, q: rawTerm.trim() },
       });
       setProfiles(res.data?.profiles || []);
+      setNewProfileDraft(null);
     } catch (err) {
       setSearchError(err?.response?.data?.error || "Failed to search profiles");
       setProfiles([]);
@@ -401,6 +467,7 @@ const AddAccount = () => {
       setSearchLoading(false);
     }
   };
+
 
   useEffect(() => {
     if (!medicalAidForm.planId) return;
@@ -411,6 +478,25 @@ const AddAccount = () => {
       setMedicalAidForm((prev) => ({ ...prev, planId: "" }));
     }
   }, [medicalAidCatalog, medicalAidForm.medicalAidId, medicalAidForm.planId]);
+
+  useEffect(() => {
+    if (!isViewingInvoice || !existingInvoice?.medical_aid_nr) return;
+    const preset = existingInvoice.medical_aid_nr;
+    handleSearchTermChange(preset);
+    handleSearchProfiles(preset);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isViewingInvoice, existingInvoice?.medical_aid_nr]);
+
+  useEffect(() => {
+    if (!newProfileDraft?.medicalAidId) return;
+    const draftAid = medicalAidCatalog.find((aid) => String(aid.id) === String(newProfileDraft.medicalAidId));
+    if (!draftAid) return;
+    const planExists = (draftAid.plans || []).some((plan) => String(plan.id) === String(newProfileDraft.planId));
+    if (!planExists) {
+      setNewProfileDraft((prev) => (prev ? { ...prev, planId: "" } : prev));
+    }
+  }, [medicalAidCatalog, newProfileDraft?.medicalAidId, newProfileDraft?.planId]);
+
 
 const hydratePersonForm = (data = {}) => ({
   recordId: data.recordId || "",
@@ -434,6 +520,9 @@ const hydratePersonForm = (data = {}) => ({
   const handleImport = (profile, account = null, options = { includeMember: false }) => {
     if (!selectedInvoiceType) return;
     if (!profile) return;
+    const normalizedProfileId = profile.profileId ? String(profile.profileId) : null;
+    if (lockedProfileId && normalizedProfileId && lockedProfileId !== normalizedProfileId) return;
+
     const includeMember = Boolean(options.includeMember);
     const memberSource = includeMember ? profile.mainMember || {} : account?.member || profile.mainMember || {};
     const patientSource = account?.patient || null;
@@ -447,9 +536,22 @@ const hydratePersonForm = (data = {}) => ({
     setPatientForm(patientSource ? hydratePersonForm(patientSource) : defaultPerson());
     setIsMemberEditable(!includeMember);
     setLastImported({
-      profileId: profile.profileId,
+      profileId: normalizedProfileId,
       accountId: account?.accountId || null,
     });
+  };
+
+  const handleClearImportedAccount = () => {
+    setMedicalAidForm({
+      medicalAidId: "",
+      planId: "",
+      medicalAidNr: "",
+    });
+    setMemberForm(defaultPerson());
+    setPatientForm(defaultPerson());
+    setIsMemberEditable(true);
+    setIsPatientSameAsMember(false);
+    setLastImported(null);
   };
 
   const onPersonFieldChange = (setter, field) => (e) => {
@@ -458,12 +560,17 @@ const hydratePersonForm = (data = {}) => ({
   };
 
   const canSave = useMemo(() => {
+    const hasBalanceInput =
+      typeof invoiceForm.balance === "string"
+        ? invoiceForm.balance.trim() !== ""
+        : invoiceForm.balance !== null && invoiceForm.balance !== undefined;
+
     return (
       Boolean(invoiceForm.type) &&
       Boolean(medicalAidForm.medicalAidNr) &&
       Boolean(memberForm.first && memberForm.last) &&
       Boolean(invoiceForm.dateOfService) &&
-      invoiceForm.balance !== ""
+      hasBalanceInput
     );
   }, [medicalAidForm, memberForm, invoiceForm]);
 
@@ -479,7 +586,7 @@ const hydratePersonForm = (data = {}) => ({
           dateOfService: invoiceForm.dateOfService,
           status: invoiceForm.status,
           fileNr: invoiceForm.fileNr,
-          balance: invoiceForm.balance ? Number(invoiceForm.balance) : 0,
+          balance: parseBalanceInput(invoiceForm.balance),
           authNr: invoiceForm.authNr,
           type: invoiceForm.type,
         },
@@ -564,9 +671,15 @@ const hydratePersonForm = (data = {}) => ({
     return {};
   }, [isPatientSameAsMember, patientForm, memberForm]);
 
-  const handleImportProfilePerson = (person, target = "patient") => {
+  const handleImportProfilePerson = (person, target = "patient", profileId = null) => {
     if (!person || !selectedInvoiceType) return;
-    if (target === "patient" && isPatientSameAsMember) return;
+    if (profileId) {
+      const normalizedProfileId = String(profileId);
+      if (lockedProfileId && lockedProfileId !== normalizedProfileId) return;
+    }
+    if (target === "patient" && isPatientSameAsMember) {
+      setIsPatientSameAsMember(false);
+    }
     const hydrated = hydratePersonForm(person);
     if (target === "member") {
       setMemberForm(hydrated);
@@ -575,9 +688,204 @@ const hydratePersonForm = (data = {}) => ({
     }
   };
 
+  const resetPersonEditor = useCallback(() => {
+    setPersonEditor({
+      profileId: null,
+      recordId: null,
+      isMainMember: false,
+      dependentNumber: "",
+      data: defaultPerson(),
+      saving: false,
+      error: "",
+    });
+  }, []);
+
+  const openPersonEditor = (person = defaultPerson(), options = {}) => {
+    const profileId = options.profileId || person.profileId || lastImported?.profileId || null;
+    const dependentNumber =
+      options.dependentNumber !== undefined && options.dependentNumber !== null
+        ? options.dependentNumber
+        : person.dependentNumber || person.dependent_nr || "";
+    setPersonEditor({
+      profileId: profileId ? String(profileId) : null,
+      recordId: person.recordId || null,
+      isMainMember: Boolean(options.isMainMember ?? person.isMainMember),
+      dependentNumber: dependentNumber === null || dependentNumber === undefined ? "" : String(dependentNumber),
+      data: hydratePersonForm({ ...person, dependentNumber }),
+      saving: false,
+      error: "",
+    });
+    setViewMode(VIEW_MODES.PERSON);
+  };
+
+  const handlePersonFieldChange = (field) => (e) => {
+    const value = e.target.value;
+    setPersonEditor((prev) => ({
+      ...prev,
+      data: {
+        ...prev.data,
+        [field]: value,
+      },
+    }));
+  };
+
+  const handlePersonDependentChange = (value) => {
+    setPersonEditor((prev) => ({ ...prev, dependentNumber: value }));
+  };
+
+  const handlePersonRoleChange = (isMainMember) => {
+    setPersonEditor((prev) => ({ ...prev, isMainMember }));
+  };
+
+  const handlePersonSave = async () => {
+    if (!personEditor.profileId) {
+      setPersonEditor((prev) => ({ ...prev, error: "Select a profile before saving a person." }));
+      return;
+    }
+    const payload = {
+      person: {
+        ...personEditor.data,
+        dependentNumber: personEditor.dependentNumber,
+      },
+      isMainMember: personEditor.isMainMember,
+      dependentNumber: personEditor.dependentNumber,
+    };
+    setPersonEditor((prev) => ({ ...prev, saving: true, error: "" }));
+    try {
+      let recordId = personEditor.recordId;
+      const normalizedProfileId = personEditor.profileId;
+      if (personEditor.recordId) {
+        const res = await axiosClient.put(
+          ENDPOINTS.updateProfilePerson(normalizedProfileId, personEditor.recordId),
+          payload,
+        );
+        recordId = res.data?.person?.recordId || personEditor.recordId;
+      } else {
+        const res = await axiosClient.post(ENDPOINTS.createProfilePerson(normalizedProfileId), payload);
+        recordId = res.data?.person?.recordId;
+      }
+      setPersonEditor((prev) => ({ ...prev, recordId }));
+      await handleSearchProfiles();
+    } catch (err) {
+      setPersonEditor((prev) => ({
+        ...prev,
+        error: err?.response?.data?.error || "Failed to save person",
+      }));
+    } finally {
+      setPersonEditor((prev) => ({ ...prev, saving: false }));
+    }
+  };
+
+  const handlePersonCancel = () => {
+    resetPersonEditor();
+    setViewMode(VIEW_MODES.ACCOUNT);
+  };
+
+  const importPersonToCurrentProfile = (person, options = {}) => {
+    if (!person) return;
+    if (!personEditor.profileId) {
+      setPersonEditor((prev) => ({ ...prev, error: "Select or create a profile in Person View first." }));
+      setViewMode(VIEW_MODES.PERSON);
+      return;
+    }
+    const dependentNumber =
+      options.dependentNumber !== undefined && options.dependentNumber !== null
+        ? options.dependentNumber
+        : person.dependentNumber || person.dependent_nr || "";
+    setPersonEditor((prev) => ({
+      ...prev,
+      data: hydratePersonForm({ ...person, dependentNumber }),
+      recordId: person.recordId || null,
+      dependentNumber: dependentNumber === null || dependentNumber === undefined ? "" : String(dependentNumber),
+      isMainMember: Boolean(options.isMainMember ?? person.isMainMember),
+      error: "",
+    }));
+    setViewMode(VIEW_MODES.PERSON);
+  };
+
+  const startNewProfileDraft = () => {
+    const preferredAid = medicalAidCatalog.find((aid) => (aid.name || "").toLowerCase() === "gems");
+    const fallbackAid = preferredAid || medicalAidCatalog[0] || null;
+    const defaultAidId = fallbackAid ? String(fallbackAid.id) : "";
+    const defaultPlanId = fallbackAid?.plans?.length ? String(fallbackAid.plans[0].id) : "";
+    setNewProfileError("");
+    setNewProfileDraft({
+      medicalAidId: defaultAidId,
+      planId: defaultPlanId,
+      medicalAidNr: searchTerm.trim(),
+    });
+  };
+
+  const handleNewProfileFieldChange = (field) => (e) => {
+    const value = e.target.value;
+    setNewProfileDraft((prev) => ({ ...prev, [field]: value }));
+  };
+
+  const handleCreateNewProfile = async () => {
+    if (!newProfileDraft?.medicalAidNr) {
+      setNewProfileError("Medical aid number is required for a new profile.");
+      return;
+    }
+    setNewProfileSaving(true);
+    setNewProfileError("");
+    try {
+      const payload = {
+        medicalAidId: newProfileDraft.medicalAidId ? Number(newProfileDraft.medicalAidId) : null,
+        planId: newProfileDraft.planId ? Number(newProfileDraft.planId) : null,
+        medicalAidNr: newProfileDraft.medicalAidNr,
+      };
+      const res = await axiosClient.post(ENDPOINTS.createProfile, payload);
+      const profileId = res.data?.profile?.profileId;
+      const aid = medicalAidCatalog.find((a) => String(a.id) === String(newProfileDraft.medicalAidId));
+      const plan = (aid?.plans || []).find((p) => String(p.id) === String(newProfileDraft.planId));
+      const newProfile = {
+        profileId,
+        medicalAidNr: newProfileDraft.medicalAidNr,
+        medicalAid: aid ? { id: aid.id, name: aid.name } : null,
+        plan: plan ? { id: plan.id, name: plan.name || plan.plan_name, code: plan.code || plan.plan_code } : null,
+        accounts: [],
+        profilePersons: [],
+      };
+      setProfiles([newProfile]);
+      setLastImported({ profileId: String(profileId), accountId: null });
+      setPersonEditor((prev) => ({
+        ...prev,
+        profileId: profileId ? String(profileId) : null,
+        recordId: null,
+        data: defaultPerson(),
+        dependentNumber: "",
+        isMainMember: false,
+      }));
+      setViewMode(VIEW_MODES.PERSON);
+    } catch (err) {
+      setNewProfileError(err?.response?.data?.error || "Failed to create profile");
+    } finally {
+      setNewProfileSaving(false);
+    }
+  };
+
   return (
     <div className="flex flex-col">
-      <div className="tab-panel w-full mb-0">
+      <div className="tab-panel w-full mb-4">
+        <div className="flex gap-2 flex-wrap items-center">
+          <button
+            type="button"
+            className={`tab-pill ${viewMode === VIEW_MODES.ACCOUNT ? "tab-pill-active" : ""}`}
+            onClick={() => setViewMode(VIEW_MODES.ACCOUNT)}
+          >
+            Account View
+          </button>
+          <button
+            type="button"
+            className={`tab-pill ${viewMode === VIEW_MODES.PERSON ? "tab-pill-active" : ""}`}
+            onClick={() => setViewMode(VIEW_MODES.PERSON)}
+          >
+            Person View
+          </button>
+        </div>
+
+        <span className="h-6 w-px bg-gray-blue-100" aria-hidden="true" />
+
         <div className="flex gap-2 flex-wrap items-center">
           <button
             type="button"
@@ -613,58 +921,12 @@ const hydratePersonForm = (data = {}) => ({
       </div>
       {activeTab === TAB_KEYS.ACCOUNT ? (
         <>
-          <section className="container-col mb-4">
-            <div className="flex flex-col gap-6 lg:flex-row lg:items-start">
-              <div className="flex-1">
-                <p className="text-xs uppercase tracking-wide text-gray-blue-600">Add Account / Invoice</p>
-                <h1 className="text-2xl font-semibold text-gray-dark">Batch #{batch.batch_id}</h1>
-                <p className="text-sm text-gray-blue-600">{clientDisplayName}</p>
-                <div className="flex flex-wrap gap-6 mt-4">
-                  {infoItems.map((item) => (
-                    <div key={item.label}>
-                      <p className="text-xs uppercase tracking-wide text-gray-blue-600">{item.label}</p>
-                      <p className="text-lg font-semibold text-gray-dark">{item.value}</p>
-                    </div>
-                  ))}
-                </div>
-                {isViewingInvoice && existingInvoice && (
-                  <div className="mt-4 rounded border border-blue-200 bg-blue-50 px-4 py-3 text-sm text-blue-900">
-                    Editing invoice #{existingInvoice.invoice_id}. Updating will overwrite the current details.
-                  </div>
-                )}
-              </div>
-              <div className="w-full lg:max-w-[340px]">
-                <p className="text-xs uppercase tracking-wide text-gray-blue-600">Invoice Type</p>
-                <div className="flex flex-wrap gap-3 mt-2">
-                  {invoiceTypeOptions.map((option) => (
-                    <label
-                      key={option}
-                      className={`flex items-center gap-2 text-sm cursor-pointer ${
-                        invoiceForm.type === option ? "text-ebmaa-purple font-semibold" : "text-gray-700"
-                      }`}
-                    >
-                      <input
-                        type="checkbox"
-                        className="h-4 w-4"
-                        checked={invoiceForm.type === option}
-                        onChange={() => handleInvoiceTypeSelect(option)}
-                      />
-                      <span>{INVOICE_TYPE_LABELS[option] || option}</span>
-                    </label>
-                  ))}
-                </div>
-                {isForeignUrgentBatch && !invoiceForm.type && (
-                  <p className="text-xs text-gray-blue-600 mt-2">Select a type to start editing account details.</p>
-                )}
-              </div>
-            </div>
-          </section>
           {/* SECTION 1 // SEARCH SECTION */}
           <div className="flex flex-row-reverse gap-4 lg:basis-2/4 mb-4">
             <section className="container-col m-0 flex w-full lg:basis-2/4 lg:flex-none">
               <div className="flex flex-wrap items-center gap-4">
                 <div className="flex-1 min-w-[220px]">
-                  <SearchBar searchTerm={searchTerm} setSearchTerm={setSearchTerm} classes="w-full" />
+                  <SearchBar searchTerm={searchTerm} setSearchTerm={handleSearchTermChange} classes="w-full" />
                 </div>
                 <button
                   type="button"
@@ -674,22 +936,119 @@ const hydratePersonForm = (data = {}) => ({
                 >
                   {searchLoading ? "Searching..." : "Search Profiles"}
                 </button>
+                <button type="button" className="button-pill opacity-60 cursor-not-allowed" disabled>
+                  Import from Medical Aid
+                </button>
               </div>
               {searchError && <p className="text-sm text-red-600">{searchError}</p>}
               {!batch.client_id && (
                 <p className="text-sm text-red-600">This batch is missing a client reference, so lookups are disabled.</p>
               )}
               <div className="flex flex-col gap-4 mt-4">
+                {newProfileDraft && (
+                  <div className="border border-gray-blue-100 rounded-lg p-4 bg-white">
+                    <p className="text-xs uppercase text-gray-blue-600">New Profile (Private/Other)</p>
+                    <div className="grid grid-cols-1 gap-3 md:grid-cols-3 mt-3">
+                      <div className="flex flex-col gap-1">
+                        <label className="text-xs text-gray-blue-600">Medical Aid Number</label>
+                        <input
+                          type="text"
+                          className="input-pill"
+                          value={newProfileDraft.medicalAidNr}
+                          onChange={handleNewProfileFieldChange("medicalAidNr")}
+                        />
+                      </div>
+                      <div className="flex flex-col gap-1">
+                        <label className="text-xs text-gray-blue-600">Medical Aid</label>
+                        <select
+                          className="input-pill"
+                          value={newProfileDraft.medicalAidId}
+                          onChange={handleNewProfileFieldChange("medicalAidId")}
+                        >
+                          <option value="">Select medical aid</option>
+                          {medicalAidCatalog.map((aid) => (
+                            <option key={aid.id} value={aid.id}>
+                              {aid.name}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+                      <div className="flex flex-col gap-1">
+                        <label className="text-xs text-gray-blue-600">Plan</label>
+                        {(() => {
+                          const draftAid = medicalAidCatalog.find(
+                            (aid) => String(aid.id) === String(newProfileDraft.medicalAidId),
+                          );
+                          const plans = draftAid?.plans || [];
+                          return (
+                            <select
+                              className="input-pill"
+                              value={newProfileDraft.planId}
+                              onChange={handleNewProfileFieldChange("planId")}
+                            >
+                              <option value="">{plans.length ? "Select plan" : "No plans"}</option>
+                              {plans.map((plan) => (
+                                <option key={plan.id} value={plan.id}>
+                                  {plan.name || plan.plan_name || plan.code || plan.plan_code || `Plan ${plan.id}`}
+                                </option>
+                              ))}
+                            </select>
+                          );
+                        })()}
+                      </div>
+                    </div>
+                    {newProfileError && <p className="text-sm text-red-600 mt-2">{newProfileError}</p>}
+                    <div className="flex gap-2 mt-3">
+                      <button
+                        type="button"
+                        className="button-pill"
+                        onClick={() => setNewProfileDraft(null)}
+                        disabled={newProfileSaving}
+                      >
+                        Cancel
+                      </button>
+                      <button
+                        type="button"
+                        className="tab-pill text-white px-4 bg-ebmaa-purple"
+                        onClick={handleCreateNewProfile}
+                        disabled={newProfileSaving}
+                      >
+                        {newProfileSaving ? "Creating..." : "Create Profile"}
+                      </button>
+                    </div>
+                  </div>
+                )}
                 {profiles.length === 0 && !searchLoading ? (
-                  <p className="text-sm text-gray-blue-600">
-                    Search for existing profiles or accounts by medical aid number, ID, or surname.
-                  </p>
+                  <div className="flex flex-col gap-2">
+                    <p className="text-sm text-gray-blue-600">
+                      Search for existing profiles or accounts by medical aid number, ID, or surname.
+                    </p>
+                    {invoiceForm.type === "other" && (
+                      <button type="button" className="tab-pill w-fit" onClick={startNewProfileDraft}>
+                        New Profile
+                      </button>
+                    )}
+                  </div>
                 ) : (
                   profiles.map((profile) => {
                     const profilePersons = buildProfilePersons(profile);
                     const hasPersonData = Boolean(profilePersons.mainMember || profilePersons.dependants.length);
+                    const clientAccounts = (profile.accounts || []).filter((account) => {
+                      if (!batch?.client_id) return true;
+                      return String(account.clientId) === String(batch.client_id);
+                    });
+                    const accountsHeading = batch?.client_id
+                      ? `Accounts for Client #${batch.client_id}`
+                      : "Accounts";
+                    const hasAccountsForClient = clientAccounts.length > 0;
+                    const normalizedProfileId = profile.profileId ? String(profile.profileId) : null;
+                    const isProfileLockedOut =
+                      Boolean(lockedProfileId && normalizedProfileId && lockedProfileId !== normalizedProfileId);
+                    const profileCardClasses = `border border-gray-blue-100 rounded-lg p-4 bg-gray-100 ${
+                      isProfileLockedOut ? "opacity-60" : ""
+                    }`;
                     return (
-                      <div key={profile.profileId} className="border border-gray-blue-100 rounded-lg p-4 bg-gray-100">
+                      <div key={profile.profileId} className={profileCardClasses}>
                         <p className="text-xs uppercase text-gray-blue-600">Medical Aid</p>
                         <div className="rounded border border-gray-blue-100 bg-white px-3 py-3 mt-2">
                           <div className="flex flex-wrap items-center justify-between gap-4">
@@ -701,16 +1060,23 @@ const hydratePersonForm = (data = {}) => ({
                                 Plan: {profile.plan?.name || profile.plan?.code || "N/A"}
                               </p>
                             </div>
-                            <button
-                              type="button"
-                              className={`tab-pill ${!canImportData ? "opacity-50 cursor-not-allowed" : ""}`}
-                              onClick={() => handleImport(profile, null, { includeMember: true })}
-                              disabled={!canImportData}
-                            >
-                              Import Profile
-                            </button>
+                              {viewMode === VIEW_MODES.ACCOUNT && (
+                                <button
+                                  type="button"
+                                  className={`tab-pill ${
+                                    (!canImportData || isProfileLockedOut) ? "opacity-50 cursor-not-allowed" : ""
+                                  }`}
+                                  onClick={() => {
+                                    if (!canImportData || isProfileLockedOut) return;
+                                    handleImport(profile, null, { includeMember: true });
+                                  }}
+                                  disabled={!canImportData || isProfileLockedOut}
+                                >
+                                  Import Profile
+                                </button>
+                              )}
+                            </div>
                           </div>
-                        </div>
                         {hasPersonData && (
                           <div className="mt-4 flex flex-col gap-2">
                             <p className="text-xs uppercase text-gray-blue-600">Main Member & Dependants</p>
@@ -718,7 +1084,19 @@ const hydratePersonForm = (data = {}) => ({
                               <div className="rounded border border-gray-blue-100 bg-white px-3 py-2">
                                 <div className="flex flex-wrap items-center justify-between gap-2">
                                   <div>
-                                    <p className="text-sm font-semibold text-gray-dark">{profilePersons.mainMember.name}</p>
+                                    <button
+                                      type="button"
+                                      className="text-sm font-semibold text-gray-dark underline"
+                                      onClick={() =>
+                                        openPersonEditor(profilePersons.mainMember.person, {
+                                          profileId: profile.profileId,
+                                          isMainMember: true,
+                                          dependentNumber: profilePersons.mainMember.dependentNumber,
+                                        })
+                                      }
+                                    >
+                                      {profilePersons.mainMember.name}
+                                    </button>
                                     {profilePersons.mainMember.meta && (
                                       <p className="text-xs text-gray-blue-600">{profilePersons.mainMember.meta}</p>
                                     )}
@@ -730,18 +1108,37 @@ const hydratePersonForm = (data = {}) => ({
                                       </span>
                                     )}
                                     <div className="flex items-center gap-2">
-                                      <button
-                                        type="button"
-                                        className={`tab-pill ${
-                                          !canImportData || isPatientSameAsMember ? "opacity-50 cursor-not-allowed" : ""
-                                        }`}
-                                        onClick={() =>
-                                          handleImportProfilePerson(profilePersons.mainMember.person, "patient")
-                                        }
-                                        disabled={!canImportData || isPatientSameAsMember}
-                                      >
-                                        Import Patient
-                                      </button>
+                                      {viewMode === VIEW_MODES.ACCOUNT ? (
+                                        <button
+                                          type="button"
+                                          className={`tab-pill ${
+                                            !canImportData || isProfileLockedOut ? "opacity-50 cursor-not-allowed" : ""
+                                          }`}
+                                          onClick={() =>
+                                            handleImportProfilePerson(
+                                              profilePersons.mainMember.person,
+                                              "patient",
+                                              profile.profileId,
+                                            )
+                                          }
+                                          disabled={!canImportData || isProfileLockedOut}
+                                        >
+                                          Import Patient
+                                        </button>
+                                      ) : (
+                                        <button
+                                          type="button"
+                                          className="tab-pill"
+                                          onClick={() =>
+                                            importPersonToCurrentProfile(profilePersons.mainMember.person, {
+                                              isMainMember: true,
+                                              dependentNumber: profilePersons.mainMember.dependentNumber,
+                                            })
+                                          }
+                                        >
+                                          Import Person
+                                        </button>
+                                      )}
                                     </div>
                                   </div>
                                 </div>
@@ -754,7 +1151,19 @@ const hydratePersonForm = (data = {}) => ({
                                   <div key={key} className="rounded border border-gray-blue-100 bg-white px-3 py-2">
                                     <div className="flex flex-wrap items-center justify-between gap-2">
                                       <div>
-                                        <p className="text-sm font-semibold text-gray-dark">{name}</p>
+                                        <button
+                                          type="button"
+                                          className="text-sm font-semibold text-gray-dark underline"
+                                          onClick={() =>
+                                            openPersonEditor(person, {
+                                              profileId: profile.profileId,
+                                              isMainMember: false,
+                                              dependentNumber: person.dependentNumber,
+                                            })
+                                          }
+                                        >
+                                          {name}
+                                        </button>
                                         {meta && <p className="text-xs text-gray-blue-600">{meta}</p>}
                                       </div>
                                       <div className="flex items-center gap-2 flex-wrap justify-end">
@@ -764,27 +1173,137 @@ const hydratePersonForm = (data = {}) => ({
                                           </span>
                                         )}
                                         <div className="flex items-center gap-2">
-                                          <button
-                                            type="button"
-                                            className={`tab-pill ${
-                                              !canImportData || isPatientSameAsMember
-                                                ? "opacity-50 cursor-not-allowed"
-                                                : ""
-                                            }`}
-                                            onClick={() => handleImportProfilePerson(person, "patient")}
-                                            disabled={!canImportData || isPatientSameAsMember}
-                                          >
-                                            Import Patient
-                                          </button>
+                                          {viewMode === VIEW_MODES.ACCOUNT ? (
+                                            <button
+                                              type="button"
+                                              className={`tab-pill ${
+                                                !canImportData || isProfileLockedOut ? "opacity-50 cursor-not-allowed" : ""
+                                              }`}
+                                              onClick={() =>
+                                                handleImportProfilePerson(person, "patient", profile.profileId)
+                                              }
+                                              disabled={!canImportData || isProfileLockedOut}
+                                            >
+                                              Import Patient
+                                            </button>
+                                          ) : (
+                                            <button
+                                              type="button"
+                                              className="tab-pill"
+                                              onClick={() =>
+                                                importPersonToCurrentProfile(person, {
+                                                  isMainMember: false,
+                                                  dependentNumber: person.dependentNumber,
+                                                })
+                                              }
+                                            >
+                                              Import Person
+                                            </button>
+                                          )}
                                         </div>
                                       </div>
                                     </div>
                                   </div>
                                 ))}
+                                <button
+                                  type="button"
+                                  className="tab-pill w-fit"
+                                  onClick={() =>
+                                    openPersonEditor(defaultPerson(), {
+                                      profileId: profile.profileId,
+                                      isMainMember: false,
+                                    })
+                                  }
+                                >
+                                  + Add Dependant
+                                </button>
                               </div>
+                            )}
+                            {profilePersons.dependants.length === 0 && (
+                              <button
+                                type="button"
+                                className="tab-pill w-fit"
+                                onClick={() =>
+                                  openPersonEditor(defaultPerson(), {
+                                    profileId: profile.profileId,
+                                    isMainMember: false,
+                                  })
+                                }
+                              >
+                                + Add Dependant
+                              </button>
                             )}
                           </div>
                         )}
+
+                        <div className="mt-4 flex flex-col gap-2">
+                          <p className="text-xs uppercase text-gray-blue-600">{accountsHeading}</p>
+                          {hasAccountsForClient ? (
+                            clientAccounts.map((account) => {
+                              const memberName = formatPersonName(account.member);
+                              const memberMeta = formatPersonMeta(account.member, { includeDependent: true });
+                              const hasPatient =
+                                account.patient &&
+                                (account.patient.first ||
+                                  account.patient.last ||
+                                  account.patient.recordId ||
+                                  account.patient.idNumber);
+                              const patientName = hasPatient ? formatPersonName(account.patient) : memberName;
+                              const patientMeta = hasPatient
+                                ? formatPersonMeta(account.patient, { includeDependent: true })
+                                : "";
+                              const key =
+                                account.accountId ||
+                                `${profile.profileId}-${account.clientId || "client"}-${account.mainMemberId || "mm"}-${
+                                  account.patientId || "patient"
+                                }`;
+                              return (
+                                <div
+                                  key={key}
+                                  className="rounded border border-gray-blue-100 bg-white px-3 py-3"
+                                >
+                                  <div className="flex flex-wrap items-start justify-between gap-3">
+                                    <div className="space-y-1">
+                                      <p className="text-xs uppercase text-gray-blue-600">
+                                        Account #{account.accountId || "N/A"}
+                                      </p>
+                                      <p className="text-sm font-semibold text-gray-dark">Member: {memberName}</p>
+                                      {memberMeta && <p className="text-xs text-gray-blue-600">{memberMeta}</p>}
+                                      <p className="text-sm font-semibold text-gray-dark">
+                                        Patient: {hasPatient ? patientName : "Same as member"}
+                                      </p>
+                                      {hasPatient && patientMeta && (
+                                        <p className="text-xs text-gray-blue-600">{patientMeta}</p>
+                                      )}
+                                    </div>
+                                    <div className="flex flex-col items-end gap-2 min-w-[140px]">
+                                      <p className="text-xs text-gray-blue-600">
+                                        Client #{account.clientId || batch?.client_id || "N/A"}
+                                      </p>
+                                      {viewMode === VIEW_MODES.ACCOUNT && (
+                                        <button
+                                          type="button"
+                                          className={`tab-pill ${
+                                            !canImportData || isProfileLockedOut ? "opacity-50 cursor-not-allowed" : ""
+                                          }`}
+                                          onClick={() => {
+                                            if (!canImportData || isProfileLockedOut) return;
+                                            handleImport(profile, account);
+                                          }}
+                                          disabled={!canImportData || isProfileLockedOut}
+                                        >
+                                          Use Account
+                                        </button>
+                                      )}
+                                    </div>
+                                  </div>
+                                </div>
+                              );
+                            })
+                          ) : (
+                            <p className="text-xs text-gray-blue-600">No accounts for this client yet.</p>
+                          )}
+                        </div>
                       </div>
                     );
                   })
@@ -793,288 +1312,474 @@ const hydratePersonForm = (data = {}) => ({
             </section>
 
             {/* SECTION 2 // INFO SECTION */}
-            <div className="flex flex-col gap-4 w-full lg:basis-2/4">
-        <section className="container-col m-0">
-          <p className="text-xs uppercase tracking-wide text-gray-blue-600">Medical Aid</p>
-          <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
-            <div className="flex flex-col gap-1">
-              <label className="text-xs text-gray-blue-600">Medical Aid Number</label>
-              <input
-                type="text"
-                className={`input-pill ${medicalAidFieldsDisabled ? "bg-gray-100 cursor-not-allowed" : ""}`}
-                value={medicalAidForm.medicalAidNr}
-                onChange={(e) => setMedicalAidForm((prev) => ({ ...prev, medicalAidNr: e.target.value }))}
-                disabled={medicalAidFieldsDisabled}
-              />
-            </div>
-            <div className="flex flex-col gap-1">
-              <label className="text-xs text-gray-blue-600">Medical Aid</label>
-              <select
-                className={`input-pill ${medicalAidFieldsDisabled ? "bg-gray-100 cursor-not-allowed" : ""}`}
-                value={medicalAidForm.medicalAidId}
-                onChange={(e) => handleMedicalAidSelectChange(e.target.value)}
-                disabled={medicalAidFieldsDisabled || medicalAidCatalog.length === 0}
-              >
-                <option value="">{medicalAidCatalog.length ? "Select medical aid" : "Loading..."}</option>
-                {medicalAidCatalog.map((aid) => (
-                  <option key={aid.id} value={aid.id}>
-                    {aid.name}
-                  </option>
-                ))}
-              </select>
-            </div>
-            <div className="flex flex-col gap-1">
-              <label className="text-xs text-gray-blue-600">Plan</label>
-              <select
-                className={`input-pill ${medicalAidFieldsDisabled ? "bg-gray-100 cursor-not-allowed" : ""}`}
-                value={medicalAidForm.planId}
-                onChange={(e) => handleMedicalAidPlanSelectChange(e.target.value)}
-                disabled={medicalAidFieldsDisabled || !selectedMedicalAid || availablePlans.length === 0}
-              >
-                <option value="">
-                  {selectedMedicalAid
-                    ? availablePlans.length
-                      ? "Select plan"
-                      : "No plans available"
-                    : "Select medical aid first"}
-                </option>
-                {availablePlans.map((plan) => (
-                  <option key={plan.id} value={plan.id}>
-                    {plan.name || plan.code || `Plan ${plan.id}`}
-                    {plan.name && plan.code ? ` (${plan.code})` : ""}
-                  </option>
-                ))}
-              </select>
-            </div>
-          </div>
-        </section>
-        <section className="container-col m-0">
-          <p className="text-xs uppercase tracking-wide text-gray-blue-600">Main Member</p>
-          <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
-            <div className="flex flex-col gap-1">
-              <label className="text-xs text-gray-blue-600">First Name</label>
-              <input
-                type="text"
-                className={`input-pill ${memberFieldsDisabled ? "bg-gray-100 cursor-not-allowed" : ""}`}
-                value={memberForm.first}
-                onChange={onPersonFieldChange(setMemberForm, "first")}
-                disabled={memberFieldsDisabled}
-              />
-            </div>
-            <div className="flex flex-col gap-1">
-              <label className="text-xs text-gray-blue-600">Last Name</label>
-              <input
-                type="text"
-                className={`input-pill ${memberFieldsDisabled ? "bg-gray-100 cursor-not-allowed" : ""}`}
-                value={memberForm.last}
-                onChange={onPersonFieldChange(setMemberForm, "last")}
-                disabled={memberFieldsDisabled}
-              />
-            </div>
-            <div className="flex flex-col gap-1">
-              <label className="text-xs text-gray-blue-600">ID Number</label>
-              <input
-                type="text"
-                className={`input-pill ${memberFieldsDisabled ? "bg-gray-100 cursor-not-allowed" : ""}`}
-                value={memberForm.idNumber}
-                onChange={onPersonFieldChange(setMemberForm, "idNumber")}
-                disabled={memberFieldsDisabled}
-              />
-            </div>
-            <div className="flex flex-col gap-1">
-              <label className="text-xs text-gray-blue-600">DOB</label>
-              <input
-                type="date"
-                className={`input-pill ${memberFieldsDisabled ? "bg-gray-100 cursor-not-allowed" : ""}`}
-                value={memberForm.dateOfBirth}
-                onChange={onPersonFieldChange(setMemberForm, "dateOfBirth")}
-                disabled={memberFieldsDisabled}
-              />
-            </div>
-            <div className="flex flex-col gap-1">
-              <label className="text-xs text-gray-blue-600">Dependent #</label>
-              <input
-                type="text"
-                className={`input-pill ${memberFieldsDisabled ? "bg-gray-100 cursor-not-allowed" : ""}`}
-                value={memberForm.dependentNumber}
-                onChange={onPersonFieldChange(setMemberForm, "dependentNumber")}
-                disabled={memberFieldsDisabled}
-              />
-            </div>
-          </div>
-        </section>
+            {viewMode === VIEW_MODES.ACCOUNT ? (
+              <div className="flex flex-col gap-4 w-full lg:basis-2/4">
+                <section className="container-col m-0">
+                  <div className="flex flex-col gap-6 lg:flex-row lg:items-stretch border-l-4 border-ebmaa-purple bg-gray-blue-100/40 px-6 py-5 rounded-r-lg min-w-[260px]">
+                    <div className="flex-1">
+                      <p className="text-xs uppercase tracking-wide text-gray-blue-600">Add Account / Invoice</p>
+                      <h1 className="text-2xl font-semibold text-gray-dark">Batch #{batch.batch_id}</h1>
+                      <p className="text-sm text-gray-blue-600">{clientDisplayName}</p>
 
-        <section className="container-col m-0">
-          <div className="flex items-center justify-between gap-3">
-            <p className="text-xs uppercase tracking-wide text-gray-blue-600">Patient</p>
-            <label className="flex items-center gap-2 text-xs text-gray-blue-600 select-none">
-              <input
-                type="checkbox"
-                className="h-4 w-4"
-                checked={isPatientSameAsMember}
-                onChange={(e) => handlePatientSameAsMemberChange(e.target.checked)}
-              />
-              Patient &amp; member same
-            </label>
-          </div>
-          <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
-            <div className="flex flex-col gap-1">
-              <label className="text-xs text-gray-blue-600">First Name</label>
-              <input
-                type="text"
-                className={`input-pill ${patientFieldsDisabled ? "bg-gray-100 cursor-not-allowed" : ""}`}
-                value={patientForm.first}
-                onChange={onPersonFieldChange(setPatientForm, "first")}
-                disabled={patientFieldsDisabled}
-              />
-            </div>
-            <div className="flex flex-col gap-1">
-              <label className="text-xs text-gray-blue-600">Last Name</label>
-              <input
-                type="text"
-                className={`input-pill ${patientFieldsDisabled ? "bg-gray-100 cursor-not-allowed" : ""}`}
-                value={patientForm.last}
-                onChange={onPersonFieldChange(setPatientForm, "last")}
-                disabled={patientFieldsDisabled}
-              />
-            </div>
-            <div className="flex flex-col gap-1">
-              <label className="text-xs text-gray-blue-600">ID Number</label>
-              <input
-                type="text"
-                className={`input-pill ${patientFieldsDisabled ? "bg-gray-100 cursor-not-allowed" : ""}`}
-                value={patientForm.idNumber}
-                onChange={onPersonFieldChange(setPatientForm, "idNumber")}
-                disabled={patientFieldsDisabled}
-              />
-            </div>
-            <div className="flex flex-col gap-1">
-              <label className="text-xs text-gray-blue-600">DOB</label>
-              <input
-                type="date"
-                className={`input-pill ${patientFieldsDisabled ? "bg-gray-100 cursor-not-allowed" : ""}`}
-                value={patientForm.dateOfBirth}
-                onChange={onPersonFieldChange(setPatientForm, "dateOfBirth")}
-                disabled={patientFieldsDisabled}
-              />
-            </div>
-            <div className="flex flex-col gap-1">
-              <label className="text-xs text-gray-blue-600">Dependent #</label>
-              <input
-                type="text"
-                className={`input-pill ${patientFieldsDisabled ? "bg-gray-100 cursor-not-allowed" : ""}`}
-                value={patientForm.dependentNumber}
-                onChange={onPersonFieldChange(setPatientForm, "dependentNumber")}
-                disabled={patientFieldsDisabled}
-              />
-            </div>
-          </div>
-        </section>
+                      <div className="flex flex-wrap gap-6 mt-4">
+                        {infoItems.map((item) => (
+                          <div key={item.label}>
+                            <p className="text-xs uppercase tracking-wide text-gray-blue-600">{item.label}</p>
+                            <p className="text-lg font-semibold text-gray-dark">{item.value}</p>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                    <div className="w-full lg:max-w-[340px] flex flex-col gap-2 justify-end">
+                      <div className="flex flex-wrap items-center gap-4 justify-start lg:justify-end">
+                        <p className="text-xs uppercase tracking-wide text-gray-blue-600 whitespace-nowrap">Invoice Type</p>
+                        <div className="flex flex-wrap gap-3">
+                          {invoiceTypeOptions.map((option) => (
+                            <label
+                              key={option}
+                              className={`flex items-center gap-2 text-sm cursor-pointer ${
+                                invoiceForm.type === option ? "text-ebmaa-purple font-semibold" : "text-gray-700"
+                              }`}
+                            >
+                              <input
+                                type="checkbox"
+                                className="h-4 w-4"
+                                checked={invoiceForm.type === option}
+                                onChange={() => handleInvoiceTypeSelect(option)}
+                              />
+                              <span>{INVOICE_TYPE_LABELS[option] || option}</span>
+                            </label>
+                          ))}
+                        </div>
+                      </div>
+                      {isForeignUrgentBatch && !invoiceForm.type && (
+                        <p className="text-xs text-gray-blue-600 text-right">
+                          Select a type to start editing account details.
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                </section>
+                <section className="container-col m-0">
+                  <p className="text-xs uppercase tracking-wide text-gray-blue-600">Medical Aid</p>
+                  <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
+                    <div className="flex flex-col gap-1">
+                      <label className="text-xs text-gray-blue-600">Medical Aid Number</label>
+                      <input
+                        type="text"
+                        className="input-pill"
+                        value={medicalAidForm.medicalAidNr}
+                        onChange={(e) => setMedicalAidForm((prev) => ({ ...prev, medicalAidNr: e.target.value }))}
+                        disabled={medicalAidFieldsDisabled}
+                      />
+                    </div>
+                    <div className="flex flex-col gap-1">
+                      <label className="text-xs text-gray-blue-600">Medical Aid</label>
+                      <select
+                        className="input-pill"
+                        value={medicalAidForm.medicalAidId}
+                        onChange={(e) => handleMedicalAidSelectChange(e.target.value)}
+                        disabled={medicalAidFieldsDisabled || medicalAidCatalog.length === 0}
+                      >
+                        <option value="">{medicalAidCatalog.length ? "Select medical aid" : "Loading..."}</option>
+                        {medicalAidCatalog.map((aid) => (
+                          <option key={aid.id} value={aid.id}>
+                            {aid.name}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                    <div className="flex flex-col gap-1">
+                      <label className="text-xs text-gray-blue-600">Plan</label>
+                      <select
+                        className="input-pill"
+                        value={medicalAidForm.planId}
+                        onChange={(e) => handleMedicalAidPlanSelectChange(e.target.value)}
+                        disabled={medicalAidFieldsDisabled || !selectedMedicalAid || availablePlans.length === 0}
+                      >
+                        <option value="">
+                          {selectedMedicalAid
+                            ? availablePlans.length
+                              ? "Select plan"
+                              : "No plans available"
+                            : "Select medical aid first"}
+                        </option>
+                        {availablePlans.map((plan) => (
+                          <option key={plan.id} value={plan.id}>
+                            {plan.name || plan.code || `Plan ${plan.id}`}
+                            {plan.name && plan.code ? ` (${plan.code})` : ""}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                  </div>
+                </section>
+                <section className="container-col m-0">
+                  <p className="text-xs uppercase tracking-wide text-gray-blue-600">Main Member</p>
+                  <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
+                    <div className="flex flex-col gap-1">
+                      <label className="text-xs text-gray-blue-600">First Name</label>
+                      <input
+                        type="text"
+                        className="input-pill"
+                        value={memberForm.first}
+                        onChange={onPersonFieldChange(setMemberForm, "first")}
+                        disabled={memberFieldsDisabled}
+                      />
+                    </div>
+                    <div className="flex flex-col gap-1">
+                      <label className="text-xs text-gray-blue-600">Last Name</label>
+                      <input
+                        type="text"
+                        className="input-pill"
+                        value={memberForm.last}
+                        onChange={onPersonFieldChange(setMemberForm, "last")}
+                        disabled={memberFieldsDisabled}
+                      />
+                    </div>
+                    <div className="flex flex-col gap-1">
+                      <label className="text-xs text-gray-blue-600">ID Number</label>
+                      <input
+                        type="text"
+                        className="input-pill"
+                        value={memberForm.idNumber}
+                        onChange={onPersonFieldChange(setMemberForm, "idNumber")}
+                        disabled={memberFieldsDisabled}
+                      />
+                    </div>
+                    <div className="flex flex-col gap-1">
+                      <label className="text-xs text-gray-blue-600">DOB</label>
+                      <input
+                        type="date"
+                        className="input-pill"
+                        value={memberForm.dateOfBirth}
+                        onChange={onPersonFieldChange(setMemberForm, "dateOfBirth")}
+                        disabled={memberFieldsDisabled}
+                      />
+                    </div>
+                    <div className="flex flex-col gap-1">
+                      <label className="text-xs text-gray-blue-600">Dependent #</label>
+                      <input
+                        type="text"
+                        className="input-pill"
+                        value={memberForm.dependentNumber}
+                        onChange={onPersonFieldChange(setMemberForm, "dependentNumber")}
+                        disabled={memberFieldsDisabled}
+                      />
+                    </div>
+                  </div>
+                </section>
 
-        <section className="container-col m-0 mb-4">
-          <p className="text-xs uppercase tracking-wide text-gray-blue-600">Invoice Details</p>
-          <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
-            <div className="flex flex-col gap-1">
-              <label className="text-xs text-gray-blue-600">Nr in Batch</label>
-              <input
-                type="number"
-                className="input-pill bg-gray-100 cursor-not-allowed"
-                value={invoiceForm.nrInBatch}
-                readOnly
-                disabled
-              />
-            </div>
-            <div className="flex flex-col gap-1">
-              <label className="text-xs text-gray-blue-600">Date of Service</label>
-              <input
-                type="date"
-                className="input-pill"
-                value={invoiceForm.dateOfService}
-                onChange={(e) => setInvoiceForm((prev) => ({ ...prev, dateOfService: e.target.value }))}
-              />
-            </div>
-            <div className="flex flex-col gap-1 relative" ref={statusDropdownRef}>
-              <label className="text-xs text-gray-blue-600">Status</label>
-              <button
-                type="button"
-                className="input-pill flex items-center justify-between gap-2"
-                onClick={() => setIsStatusDropdownOpen((prev) => !prev)}
-              >
-                <span>{invoiceForm.status}</span>
-                <svg
-                  className={`w-4 h-4 transform transition-transform ${isStatusDropdownOpen ? "rotate-180" : ""}`}
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
-                </svg>
-              </button>
-              {isStatusDropdownOpen && (
-                <div className="nav-dropdown-panel w-full absolute left-0 top-full">
-                  {STATUS_OPTIONS.map((option) => (
-                    <button
-                      key={option}
-                      type="button"
-                      className={`nav-dropdown-item ${invoiceForm.status === option ? "nav-dropdown-item-active" : ""}`}
-                      onClick={() => handleStatusSelect(option)}
-                    >
-                      {option}
+                <section className="container-col m-0">
+                  <div className="flex items-center justify-between gap-3">
+                    <p className="text-xs uppercase tracking-wide text-gray-blue-600">Patient</p>
+                    <label className="flex items-center gap-2 text-xs text-gray-blue-600 select-none">
+                      <input
+                        type="checkbox"
+                        className="h-4 w-4"
+                        checked={isPatientSameAsMember}
+                        onChange={(e) => handlePatientSameAsMemberChange(e.target.checked)}
+                      />
+                      Patient &amp; member same
+                    </label>
+                  </div>
+                  <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
+                    <div className="flex flex-col gap-1">
+                      <label className="text-xs text-gray-blue-600">First Name</label>
+                      <input
+                        type="text"
+                        className={`input-pill ${patientFieldsDisabled ? "bg-gray-100 cursor-not-allowed" : ""}`}
+                        value={patientForm.first}
+                        onChange={onPersonFieldChange(setPatientForm, "first")}
+                        disabled={patientFieldsDisabled}
+                      />
+                    </div>
+                    <div className="flex flex-col gap-1">
+                      <label className="text-xs text-gray-blue-600">Last Name</label>
+                      <input
+                        type="text"
+                        className={`input-pill ${patientFieldsDisabled ? "bg-gray-100 cursor-not-allowed" : ""}`}
+                        value={patientForm.last}
+                        onChange={onPersonFieldChange(setPatientForm, "last")}
+                        disabled={patientFieldsDisabled}
+                      />
+                    </div>
+                    <div className="flex flex-col gap-1">
+                      <label className="text-xs text-gray-blue-600">ID Number</label>
+                      <input
+                        type="text"
+                        className={`input-pill ${patientFieldsDisabled ? "bg-gray-100 cursor-not-allowed" : ""}`}
+                        value={patientForm.idNumber}
+                        onChange={onPersonFieldChange(setPatientForm, "idNumber")}
+                        disabled={patientFieldsDisabled}
+                      />
+                    </div>
+                    <div className="flex flex-col gap-1">
+                      <label className="text-xs text-gray-blue-600">DOB</label>
+                      <input
+                        type="date"
+                        className={`input-pill ${patientFieldsDisabled ? "bg-gray-100 cursor-not-allowed" : ""}`}
+                        value={patientForm.dateOfBirth}
+                        onChange={onPersonFieldChange(setPatientForm, "dateOfBirth")}
+                        disabled={patientFieldsDisabled}
+                      />
+                    </div>
+                    <div className="flex flex-col gap-1">
+                      <label className="text-xs text-gray-blue-600">Dependent #</label>
+                      <input
+                        type="text"
+                        className={`input-pill ${patientFieldsDisabled ? "bg-gray-100 cursor-not-allowed" : ""}`}
+                        value={patientForm.dependentNumber}
+                        onChange={onPersonFieldChange(setPatientForm, "dependentNumber")}
+                        disabled={patientFieldsDisabled}
+                      />
+                    </div>
+                  </div>
+                </section>
+
+                <section className="container-col m-0 mb-4">
+                  <p className="text-xs uppercase tracking-wide text-gray-blue-600">Invoice Details</p>
+                  <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
+                    <div className="flex flex-col gap-1">
+                      <label className="text-xs text-gray-blue-600">Nr in Batch</label>
+                      <input
+                        type="number"
+                        className="input-pill bg-gray-100 cursor-not-allowed"
+                        value={invoiceForm.nrInBatch}
+                        readOnly
+                        disabled
+                      />
+                    </div>
+                    <div className="flex flex-col gap-1">
+                      <label className="text-xs text-gray-blue-600">Date of Service</label>
+                      <input
+                        type="date"
+                        className="input-pill"
+                        value={invoiceForm.dateOfService}
+                        onChange={(e) => setInvoiceForm((prev) => ({ ...prev, dateOfService: e.target.value }))}
+                      />
+                    </div>
+                    <div className="flex flex-col gap-1 relative" ref={statusDropdownRef}>
+                      <label className="text-xs text-gray-blue-600">Status</label>
+                      <button
+                        type="button"
+                        className="input-pill flex items-center justify-between gap-2"
+                        onClick={() => setIsStatusDropdownOpen((prev) => !prev)}
+                      >
+                        <span>{invoiceForm.status}</span>
+                        <svg
+                          className={`w-4 h-4 transform transition-transform ${isStatusDropdownOpen ? "rotate-180" : ""}`}
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
+                        </svg>
+                      </button>
+                      {isStatusDropdownOpen && (
+                        <div className="nav-dropdown-panel w-full absolute left-0 top-full">
+                          {STATUS_OPTIONS.map((option) => (
+                            <button
+                              key={option}
+                              type="button"
+                              className={`nav-dropdown-item ${invoiceForm.status === option ? "nav-dropdown-item-active" : ""}`}
+                              onClick={() => handleStatusSelect(option)}
+                            >
+                              {option}
+                            </button>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                    <div className="flex flex-col gap-1">
+                      <label className="text-xs text-gray-blue-600">Balance</label>
+                      <input
+                        type="text"
+                        inputMode="decimal"
+                        className="input-pill"
+                        value={invoiceForm.balance}
+                        onChange={(e) => setInvoiceForm((prev) => ({ ...prev, balance: e.target.value }))}
+                      />
+                    </div>
+                    <div className="flex flex-col gap-1">
+                      <label className="text-xs text-gray-blue-600">File #</label>
+                      <input
+                        type="text"
+                        className="input-pill"
+                        value={invoiceForm.fileNr}
+                        onChange={(e) => setInvoiceForm((prev) => ({ ...prev, fileNr: e.target.value }))}
+                      />
+                    </div>
+                    <div className="flex flex-col gap-1">
+                      <label className="text-xs text-gray-blue-600">Auth #</label>
+                      <input
+                        type="text"
+                        className="input-pill"
+                        value={invoiceForm.authNr}
+                        onChange={(e) => setInvoiceForm((prev) => ({ ...prev, authNr: e.target.value }))}
+                      />
+                    </div>
+                  </div>
+                  {lastImported && (
+                    <p className="text-xs text-gray-blue-600 mt-3">
+                      Imported from profile #{lastImported.profileId}
+                      {lastImported.accountId ? ` / account #${lastImported.accountId}` : ""}
+                    </p>
+                  )}
+                  {saveError && <p className="text-sm text-red-600 mt-3">{saveError}</p>}
+                  <div className="flex flex-wrap items-center justify-between gap-3 mt-4">
+                    <div>
+                      {lockedProfileId && (
+                        <button
+                          type="button"
+                          className="button-pill border border-ebmaa-purple text-ebmaa-purple bg-white"
+                          onClick={handleClearImportedAccount}
+                          disabled={saving}
+                        >
+                          Clear Account
+                        </button>
+                      )}
+                    </div>
+                    <div className="flex gap-3">
+                      <button type="button" className="button-pill" onClick={() => navigate(-1)} disabled={saving}>
+                        Cancel
+                      </button>
+                      <button
+                        type="button"
+                        className={`tab-pill text-white px-4 ${canSave ? "bg-ebmaa-purple" : "bg-gray-400 cursor-not-allowed"}`}
+                        onClick={handleSave}
+                        disabled={!canSave || saving}
+                      >
+                        {saving ? "Saving..." : existingInvoice ? "Update Invoice" : "Save Invoice"}
+                      </button>
+                    </div>
+                  </div>
+                </section>
+              </div>
+            ) : (
+              <div className="flex flex-col gap-4 w-full lg:basis-2/4">
+                <section className="container-col m-0">
+                  <div className="flex items-center justify-between gap-3">
+                    <div>
+                      <p className="text-xs uppercase tracking-wide text-gray-blue-600">Person View</p>
+                      <p className="text-sm text-gray-blue-600">
+                        {personEditor.recordId
+                          ? `Editing person #${personEditor.recordId}`
+                          : "Select a person from Search results to edit, or add a new person."}
+                      </p>
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-1 gap-4 md:grid-cols-3 mt-3">
+                    <div className="flex flex-col gap-1">
+                      <label className="text-xs text-gray-blue-600">Profile ID</label>
+                      <input
+                        type="text"
+                        className="input-pill bg-gray-100"
+                        value={personEditor.profileId || ""}
+                        disabled
+                        readOnly
+                      />
+                    </div>
+                    <div className="flex flex-col gap-1">
+                      <label className="text-xs text-gray-blue-600">Dependent #</label>
+                      <input
+                        type="text"
+                        className="input-pill"
+                        value={personEditor.dependentNumber}
+                        onChange={(e) => handlePersonDependentChange(e.target.value)}
+                      />
+                    </div>
+                    <div className="flex flex-col gap-1">
+                      <label className="text-xs text-gray-blue-600">Role</label>
+                      <div className="flex items-center gap-2">
+                        <button
+                          type="button"
+                          className={`tab-pill ${personEditor.isMainMember ? "tab-pill-active" : ""}`}
+                          onClick={() => handlePersonRoleChange(true)}
+                        >
+                          Main Member
+                        </button>
+                        <button
+                          type="button"
+                          className={`tab-pill ${!personEditor.isMainMember ? "tab-pill-active" : ""}`}
+                          onClick={() => handlePersonRoleChange(false)}
+                        >
+                          Dependant
+                        </button>
+                      </div>
+                    </div>
+                    <div className="flex flex-col gap-1">
+                      <label className="text-xs text-gray-blue-600">First Name</label>
+                      <input
+                        type="text"
+                        className="input-pill"
+                        value={personEditor.data.first}
+                        onChange={handlePersonFieldChange("first")}
+                      />
+                    </div>
+                    <div className="flex flex-col gap-1">
+                      <label className="text-xs text-gray-blue-600">Last Name</label>
+                      <input
+                        type="text"
+                        className="input-pill"
+                        value={personEditor.data.last}
+                        onChange={handlePersonFieldChange("last")}
+                      />
+                    </div>
+                    <div className="flex flex-col gap-1">
+                      <label className="text-xs text-gray-blue-600">ID Number</label>
+                      <input
+                        type="text"
+                        className="input-pill"
+                        value={personEditor.data.idNumber}
+                        onChange={handlePersonFieldChange("idNumber")}
+                      />
+                    </div>
+                    <div className="flex flex-col gap-1">
+                      <label className="text-xs text-gray-blue-600">DOB</label>
+                      <input
+                        type="date"
+                        className="input-pill"
+                        value={personEditor.data.dateOfBirth}
+                        onChange={handlePersonFieldChange("dateOfBirth")}
+                      />
+                    </div>
+                    <div className="flex flex-col gap-1">
+                      <label className="text-xs text-gray-blue-600">Gender</label>
+                      <input
+                        type="text"
+                        className="input-pill"
+                        value={personEditor.data.gender}
+                        onChange={handlePersonFieldChange("gender")}
+                      />
+                    </div>
+                    <div className="flex flex-col gap-1">
+                      <label className="text-xs text-gray-blue-600">Title</label>
+                      <input
+                        type="text"
+                        className="input-pill"
+                        value={personEditor.data.title}
+                        onChange={handlePersonFieldChange("title")}
+                      />
+                    </div>
+                  </div>
+                  {personEditor.error && <p className="text-sm text-red-600 mt-3">{personEditor.error}</p>}
+                  <div className="flex gap-3 mt-4">
+                    <button type="button" className="button-pill" onClick={handlePersonCancel} disabled={personEditor.saving}>
+                      Cancel
                     </button>
-                  ))}
-                </div>
-              )}
-            </div>
-            <div className="flex flex-col gap-1">
-              <label className="text-xs text-gray-blue-600">Balance</label>
-              <input
-                type="number"
-                className="input-pill"
-                value={invoiceForm.balance}
-                onChange={(e) => setInvoiceForm((prev) => ({ ...prev, balance: e.target.value }))}
-              />
-            </div>
-            <div className="flex flex-col gap-1">
-              <label className="text-xs text-gray-blue-600">File #</label>
-              <input
-                type="text"
-                className="input-pill"
-                value={invoiceForm.fileNr}
-                onChange={(e) => setInvoiceForm((prev) => ({ ...prev, fileNr: e.target.value }))}
-              />
-            </div>
-            <div className="flex flex-col gap-1">
-              <label className="text-xs text-gray-blue-600">Auth #</label>
-              <input
-                type="text"
-                className="input-pill"
-                value={invoiceForm.authNr}
-                onChange={(e) => setInvoiceForm((prev) => ({ ...prev, authNr: e.target.value }))}
-              />
-            </div>
-          </div>
-          {lastImported && (
-            <p className="text-xs text-gray-blue-600 mt-3">
-              Imported from profile #{lastImported.profileId}
-              {lastImported.accountId ? ` / account #${lastImported.accountId}` : ""}
-            </p>
-          )}
-          {saveError && <p className="text-sm text-red-600 mt-3">{saveError}</p>}
-          <div className="flex justify-end gap-3 mt-4">
-            <button type="button" className="button-pill" onClick={() => navigate(-1)} disabled={saving}>
-              Cancel
-            </button>
-            <button
-              type="button"
-              className={`tab-pill text-white px-4 ${canSave ? "bg-ebmaa-purple" : "bg-gray-400 cursor-not-allowed"}`}
-              onClick={handleSave}
-              disabled={!canSave || saving}
-            >
-              {saving ? "Saving..." : existingInvoice ? "Update Invoice" : "Save Invoice"}
-            </button>
-          </div>
-        </section>
-            </div>
+                    <button
+                      type="button"
+                      className="tab-pill text-white px-4 bg-ebmaa-purple"
+                      onClick={handlePersonSave}
+                      disabled={personEditor.saving}
+                    >
+                      {personEditor.saving ? "Saving..." : personEditor.recordId ? "Update Person" : "Create Person"}
+                    </button>
+                  </div>
+                </section>
+              </div>
+            )}
           </div>
         </>
       ) : invoiceEntityId ? (

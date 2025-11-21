@@ -13,6 +13,18 @@ import SearchBar from "../ui/SearchBar";
 
 const LOGS_TAB = "logs";
 
+const normalizeIsPureFlag = (value) => {
+  if (typeof value === "boolean") return value;
+  if (value === null || value === undefined) return false;
+  if (typeof value === "number") return value === 1;
+  if (typeof value === "string") {
+    const normalized = value.trim().toLowerCase();
+    if (["1", "true", "yes", "y"].includes(normalized)) return true;
+    if (["0", "false", "no", "n", ""].includes(normalized)) return false;
+  }
+  return Boolean(value);
+};
+
 export default function WorkflowEngine({ department = "none" }) {
   const { user } = useContext(UserContext);
   const navigate = useNavigate();
@@ -117,35 +129,52 @@ export default function WorkflowEngine({ department = "none" }) {
     };
   }, [department, endpoint]);
 
-  const applyBatchUpdate = useCallback((updated) => {
-    if (!updated || !updated.batch_id) return;
-    const isFU = !!updated.parent_batch_id;
-    const appliesToDept = updated.current_department === department;
+  const applyBatchUpdate = useCallback(
+    (incoming) => {
+      if (!incoming || !incoming.batch_id) return;
 
-    if (isFU) {
-      setFuBatches((prev) => {
-        const exists = prev.some((b) => b.batch_id === updated.batch_id);
-        if (!appliesToDept) {
-          return prev.filter((b) => b.batch_id !== updated.batch_id);
-        }
-        if (exists) {
-          return prev.map((b) => (b.batch_id === updated.batch_id ? { ...b, ...updated } : b));
-        }
-        return [...prev, updated];
-      });
-    } else {
+      const normalized = {
+        ...incoming,
+        current_department: incoming.current_department || department,
+        status: incoming.status || "current",
+        is_pure_foreign_urgent: normalizeIsPureFlag(incoming.is_pure_foreign_urgent),
+      };
+
+      const isFU = !!normalized.parent_batch_id;
+      const appliesToDept = normalized.current_department === department;
+
+      if (isFU) {
+        setFuBatches((prev) => {
+          const exists = prev.some((b) => b.batch_id === normalized.batch_id);
+          if (!appliesToDept) {
+            return prev.filter((b) => b.batch_id !== normalized.batch_id);
+          }
+          if (exists) {
+            return prev.map((b) => (b.batch_id === normalized.batch_id ? { ...b, ...normalized } : b));
+          }
+          return [...prev, normalized];
+        });
+        return;
+      }
+
+      if (normalized.is_pure_foreign_urgent) {
+        setBatches((prev) => prev.filter((b) => b.batch_id !== normalized.batch_id));
+        return;
+      }
+
       setBatches((prev) => {
-        const exists = prev.some((b) => b.batch_id === updated.batch_id);
+        const exists = prev.some((b) => b.batch_id === normalized.batch_id);
         if (!appliesToDept) {
-          return prev.filter((b) => b.batch_id !== updated.batch_id);
+          return prev.filter((b) => b.batch_id !== normalized.batch_id);
         }
         if (exists) {
-          return prev.map((b) => (b.batch_id === updated.batch_id ? { ...b, ...updated } : b));
+          return prev.map((b) => (b.batch_id === normalized.batch_id ? { ...b, ...normalized } : b));
         }
-        return [...prev, updated];
+        return [...prev, normalized];
       });
-    }
-  }, [department]);
+    },
+    [department],
+  );
 
   const handleReceptionUpdate = useCallback(
     async (batchId, updates) => {

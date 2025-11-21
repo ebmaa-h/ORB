@@ -32,6 +32,9 @@ const ENDPOINTS = {
   batchAccountCreate: (batchId) => `${API_URL}/batches/${batchId}/accounts`,
   batchInvoiceUpdate: (batchId, invoiceId) => `${API_URL}/batches/${batchId}/invoices/${invoiceId}`,
   accountSearch: `${API_URL}/accounts/search`,
+  createProfile: `${API_URL}/accounts/profiles`,
+  createProfilePerson: (profileId) => `${API_URL}/accounts/profiles/${profileId}/persons`,
+  updateProfilePerson: (profileId, recordId) => `${API_URL}/accounts/profiles/${profileId}/persons/${recordId}`,
   medicalAidCatalog: `${API_URL}/accounts/catalog/medical-aids`,
 
   clientInvoices: (clientId) => `${API_URL}/clients/${clientId}/invoices`,
@@ -49,22 +52,6 @@ const ENDPOINTS = {
   workflowLogs: (department, batchType) => `${API_URL}/workflow/${department}/${batchType}/logs`,
   // clientInfo : `${API_URL}/client/info`,
 
-
-  // temp backup
-  // clientInvoices: (clientId) => `${API_URL}/invoices/clients/${clientId}`, // Client specific invoices
-  // invoiceDetails: (invoiceId) => `${API_URL}/invoices/${invoiceId}`, // Invoice Page
-  // newInvoice: (accountId) => `${API_URL}/invoices/new/${accountId}`,
-  // updateInvoice: `${API_URL}/invoices/update`,
-  // clientAccounts: (clientId) => `${API_URL}/accounts/clients/${clientId}`, // Client specific accounts
-  // partialAcc : (accountId) => `${API_URL}/accounts/partial/${accountId}`, // Account Page
-  // profileDetails : (profileId) => `${API_URL}/profiles/${profileId}`, // profile details
-  // profiles : `${API_URL}/profiles`, // All profiles
-  // records : `${API_URL}/records`, // All records
-  // fetchNotes: (tableName, id) => `${API_URL}/notes/${tableName}/${id}`,
-  // addNote: (tableName, id) => `${API_URL}/notes/${tableName}/${id}`,
-  // addLog: `${API_URL}/logs/add`,
-  // fetchLogs: (tableName, id) => `${API_URL}/logs/${tableName}/${id}`,
-  // recordDetails :  (recordId) => `${API_URL}/records/${recordId}`, // profile details
 };
 
 export default ENDPOINTS;

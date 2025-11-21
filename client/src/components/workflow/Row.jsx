@@ -88,6 +88,11 @@ const Row = ({
   onToggleExpand = () => {},
 }) => {
   const navigate = useNavigate();
+  const foreignUrgentCount = useMemo(() => {
+    const parsed = Number(batch?.total_urgent_foreign ?? 0);
+    return Number.isFinite(parsed) ? parsed : 0;
+  }, [batch?.total_urgent_foreign]);
+  const minBatchSize = Math.max(foreignUrgentCount, 1);
   const [editValues, setEditValues] = useState(buildInitialValues(batch));
   const [saving, setSaving] = useState(false);
   const [archiving, setArchiving] = useState(false);
@@ -188,13 +193,30 @@ const Row = ({
     switch (field) {
       case "batch_size":
         return (
-          <input
-            type="number"
-            min={1}
-            className={commonInputClasses}
-            value={editValues.batch_size}
-            onChange={(e) => updateField(field, e.target.value)}
-          />
+          <>
+            <input
+              type="number"
+              min={minBatchSize}
+              className={commonInputClasses}
+              value={editValues.batch_size}
+              onChange={(e) => {
+                const raw = e.target.value;
+                if (raw === "") {
+                  updateField(field, "");
+                  return;
+                }
+                const parsed = Number(raw);
+                if (Number.isNaN(parsed)) return;
+                const enforced = Math.max(minBatchSize, parsed);
+                updateField(field, String(enforced));
+              }}
+            />
+            {foreignUrgentCount > 0 && (
+              <p className="mt-1 text-xs text-gray-blue-500">
+                Minimum size {minBatchSize} to cover {foreignUrgentCount} foreign/urgent accounts.
+              </p>
+            )}
+          </>
         );
       case "client_id":
         return (

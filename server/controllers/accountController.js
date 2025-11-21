@@ -380,7 +380,7 @@ const accountController = {
       if (!medicalAid.medicalAidNr) {
         return res.status(400).json({ error: 'Medical aid number is required' });
       }
-      if (!member.recordId && !shouldCreatePerson(member)) {
+      if (!member.recordId && !existingInvoice.main_member_record_id) {
         return res.status(400).json({ error: 'Member details are required' });
       }
       if (!invoice.type || !ALLOWED_INVOICE_TYPES.has(invoice.type)) {
@@ -401,39 +401,48 @@ const accountController = {
           });
         }
 
-        let memberRecordId = member.recordId || existingInvoice.main_member_record_id || null;
+        const resolvePersonId = async (providedId, fallbackId, payload, allowCreate = false) => {
+          if (toPositiveInt(providedId)) return toPositiveInt(providedId);
+          if (toPositiveInt(fallbackId)) return toPositiveInt(fallbackId);
+          if (allowCreate && shouldCreatePerson(payload)) {
+            const newId = await AccountModel.insertPersonRecord(connection, payload);
+            return newId;
+          }
+          return null;
+        };
+
+        const memberRecordId = await resolvePersonId(member.recordId, existingInvoice.main_member_record_id, member, false);
         if (!memberRecordId) {
-          memberRecordId = await AccountModel.insertPersonRecord(connection, member);
-        } else {
-          await AccountModel.updatePersonRecord(connection, memberRecordId, member);
+          throw new Error('Missing member record for invoice update');
         }
 
-        let patientRecordId = patient.recordId || existingInvoice.patient_record_id || null;
-        if (isPatientSameAsMember) {
-          patientRecordId = memberRecordId;
-        } else if (patientRecordId) {
-          await AccountModel.updatePersonRecord(connection, patientRecordId, patient);
-        } else if (shouldCreatePerson(patient)) {
-          patientRecordId = await AccountModel.insertPersonRecord(connection, patient);
-        } else {
-          patientRecordId = null;
-        }
-
-        await AccountModel.upsertProfilePersonMap(connection, {
-          profileId,
-          recordId: memberRecordId,
-          isMainMember: true,
-          dependentNr: member.dependent_nr,
-        });
-
+        let patientRecordId = await resolvePersonId(
+          isPatientSameAsMember ? memberRecordId : patient.recordId,
+          existingInvoice.patient_record_id,
+          patient,
+          false,
+        );
         const targetPatientRecordId = isPatientSameAsMember ? memberRecordId : patientRecordId || null;
-        if (targetPatientRecordId && targetPatientRecordId !== memberRecordId) {
-          await AccountModel.upsertProfilePersonMap(connection, {
+
+        const ensureMap = async ({ recordId, isMainMember, dependentNr }) => {
+          if (!profileId || !recordId) return;
+          const existingMap = await AccountModel.hasProfilePersonMap(connection, {
             profileId,
-            recordId: targetPatientRecordId,
-            isMainMember: false,
-            dependentNr: patient.dependent_nr,
+            recordId,
           });
+          if (!existingMap) {
+            await AccountModel.insertProfilePersonMap(connection, {
+              profileId,
+              recordId,
+              isMainMember,
+              dependentNr,
+            });
+          }
+        };
+
+        await ensureMap({ recordId: memberRecordId, isMainMember: true, dependentNr: member.dependent_nr });
+        if (targetPatientRecordId && targetPatientRecordId !== memberRecordId) {
+          await ensureMap({ recordId: targetPatientRecordId, isMainMember: false, dependentNr: patient.dependent_nr });
         }
 
         let targetAccount = await AccountModel.findAccountByKeys(connection, {
@@ -449,18 +458,6 @@ const accountController = {
             clientId: batch.client_id,
             mainMemberId: memberRecordId,
             patientId: targetPatientRecordId,
-          });
-        }
-
-        const shouldDeletePreviousPatient =
-          previousPatientRecordId &&
-          previousPatientRecordId !== memberRecordId &&
-          previousPatientRecordId !== targetPatientRecordId;
-
-        if (shouldDeletePreviousPatient) {
-          await AccountModel.deleteProfilePersonMap(connection, {
-            profileId,
-            recordId: previousPatientRecordId,
           });
         }
 
@@ -536,6 +533,142 @@ const accountController = {
     } catch (err) {
       console.error('Error fetching medical aid catalog:', err);
       res.status(500).json({ error: 'Failed to load medical aid catalog' });
+    }
+  },
+
+  createProfile: async (req, res) => {
+    try {
+      const medicalAidId = toPositiveInt(req.body?.medicalAidId);
+      const planId = toPositiveInt(req.body?.planId);
+      const medicalAidNr = safeString(req.body?.medicalAidNr);
+
+      if (!medicalAidNr) {
+        return res.status(400).json({ error: 'medicalAidNr is required' });
+      }
+
+      const existingProfile = await AccountModel.findProfileByMedicalAidNr(null, medicalAidNr);
+      if (existingProfile) {
+        return res.status(409).json({ error: 'Profile already exists for this medical aid number', profile: existingProfile });
+      }
+
+      const connection = await db.getConnection();
+      try {
+        await connection.beginTransaction();
+        const profileId = await AccountModel.createProfile(connection, {
+          medicalAidId,
+          planId,
+          medicalAidNr,
+        });
+        await connection.commit();
+        res.status(201).json({
+          profile: {
+            profileId,
+            medicalAidId,
+            planId,
+            medicalAidNr,
+          },
+        });
+      } catch (err) {
+        await connection.rollback();
+        console.error('Error creating profile:', err);
+        res.status(500).json({ error: 'Failed to create profile' });
+      } finally {
+        connection.release();
+      }
+    } catch (err) {
+      console.error('Profile creation error:', err);
+      res.status(500).json({ error: 'Unexpected server error' });
+    }
+  },
+
+  createProfilePerson: async (req, res) => {
+    const profileId = toPositiveInt(req.params.profileId);
+    if (!profileId) {
+      return res.status(400).json({ error: 'Invalid profile ID' });
+    }
+
+    try {
+      const personPayload = normalizePersonPayload(req.body?.person || {});
+      const isMainMember = normalizeBooleanFlag(req.body?.isMainMember);
+      const dependentNumber = safeString(req.body?.dependentNumber || req.body?.person?.dependentNumber);
+
+      if (!shouldCreatePerson(personPayload)) {
+        return res.status(400).json({ error: 'Person details are required' });
+      }
+
+      const connection = await db.getConnection();
+      try {
+        await connection.beginTransaction();
+        const recordId = await AccountModel.insertPersonRecord(connection, personPayload);
+        await AccountModel.insertProfilePersonMap(connection, {
+          profileId,
+          recordId,
+          isMainMember,
+          dependentNr: dependentNumber,
+        });
+        await connection.commit();
+        res.status(201).json({
+          person: {
+            ...personPayload,
+            recordId,
+            dependentNumber,
+            isMainMember,
+          },
+        });
+      } catch (err) {
+        await connection.rollback();
+        console.error('Error creating profile person:', err);
+        res.status(500).json({ error: 'Failed to create person' });
+      } finally {
+        connection.release();
+      }
+    } catch (err) {
+      console.error('Profile person creation error:', err);
+      res.status(500).json({ error: 'Unexpected server error' });
+    }
+  },
+
+  updateProfilePerson: async (req, res) => {
+    const profileId = toPositiveInt(req.params.profileId);
+    const recordId = toPositiveInt(req.params.recordId);
+    if (!profileId || !recordId) {
+      return res.status(400).json({ error: 'Invalid profile or person ID' });
+    }
+
+    try {
+      const personPayload = normalizePersonPayload(req.body?.person || {});
+      const isMainMember = normalizeBooleanFlag(req.body?.isMainMember);
+      const dependentNumber = safeString(req.body?.dependentNumber || req.body?.person?.dependentNumber);
+
+      const connection = await db.getConnection();
+      try {
+        await connection.beginTransaction();
+        await AccountModel.updatePersonRecord(connection, recordId, personPayload);
+        await AccountModel.upsertProfilePersonMap(connection, {
+          profileId,
+          recordId,
+          isMainMember,
+          dependentNr: dependentNumber,
+        });
+        await connection.commit();
+        res.json({
+          person: {
+            ...personPayload,
+            recordId,
+            dependentNumber,
+            isMainMember,
+          },
+        });
+      } catch (err) {
+        await connection.rollback();
+        console.error('Error updating profile person:', err);
+        res.status(500).json({ error: 'Failed to update person' });
+      } finally {
+        connection.release();
+      }
+    } catch (err) {
+      console.error('Profile person update error:', err);
+      res.status(500).json({ error: 'Unexpected server error' });
     }
   },
 };

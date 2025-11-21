@@ -71,14 +71,17 @@ const getEntityType = (batch) => {
   return batch.parent_batch_id ? "fu" : "batch";
 };
 
+const getNormalBatchSizeCount = (batch) => {
+  if (!batch) return 0;
+  const total = toNumber(batch.batch_size);
+  const foreignUrgent = toNumber(batch.total_urgent_foreign);
+  return Math.max(total - foreignUrgent, 0);
+};
+
 const computeBatchSize = (batch) => {
   if (!batch) return "N/A";
   if (isForeignOrUrgentBatch(batch)) return "1";
-
-  const total = toNumber(batch.batch_size);
-  const foreignUrgent = toNumber(batch.total_urgent_foreign);
-  const realSize = Math.max(total - foreignUrgent, 0);
-  return realSize.toString();
+  return getNormalBatchSizeCount(batch).toString();
 };
 
 const formatCurrency = (value) => {
@@ -190,7 +193,7 @@ const BatchView = () => {
   const foreignUrgentSequence = useMemo(() => toForeignUrgentSequence(relevantInvoices), [relevantInvoices]);
   const displayInvoices = isForeignUrgentChild ? filteredInvoices.slice(0, 1) : filteredInvoices;
   const invoiceCount = displayInvoices.length;
-  const batchSize = isForeignUrgentChild ? 1 : Number(batch?.batch_size || 0);
+  const batchSize = isForeignUrgentChild ? 1 : getNormalBatchSizeCount(batch);
   const isBatchTab = activeTab === TAB_KEYS.BATCH;
 
   const handleViewInvoice = useCallback(
@@ -281,7 +284,7 @@ const BatchView = () => {
         <>
       <section className="tab-panel m-0">
         <div className="flex flex-row gap-4">
-          <div className="flex flex-wrap items-center justify-between gap-4">
+          <div className="flex flex-wrap items-center justify-between gap-4 bg-blac">
             <div>
               <p className="text-xs uppercase tracking-wide text-gray-blue-600">Batch</p>
               <h1 className="text-2xl font-semibold text-gray-dark">{batchType}</h1>
@@ -326,9 +329,12 @@ const BatchView = () => {
         ) : searchActive && filteredInvoices.length === 0 ? (
           <p className="text-sm text-gray-blue-700">No invoices match your search.</p>
         ) : (
-          <div className="flex flex-col gap-4">
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
             {displayInvoices.map((invoice) => (
-              <div key={invoice.invoice_id} className="border border-gray-blue-100 rounded p-4 bg-gray-blue-50/30">
+              <div
+                key={invoice.invoice_id}
+                className="border border-gray-blue-100 rounded p-4 bg-gray-blue-50/30 h-full flex flex-col"
+              >
                 <div className="flex flex-wrap items-center justify-between gap-4">
                   {isForeignUrgentChild ? (
                     <div>
@@ -338,7 +344,7 @@ const BatchView = () => {
                     </div>
                   ) : (
                     <div>
-                      <p className="text-xs uppercase text-gray-blue-600">Invoice</p>
+                      <p className="text-xs uppercase text-gray-blue-600">Account</p>
                       <p className="text-lg font-semibold text-gray-dark">#{invoice.invoice_id}</p>
                       <p className="text-xs text-gray-blue-600">
                         Nr in batch: {invoice.nr_in_batch || "N/A"}
@@ -346,7 +352,7 @@ const BatchView = () => {
                     </div>
                   )}
                   <button type="button" className="tab-pill min-w-[150px]" onClick={() => handleViewInvoice(invoice)}>
-                    View Invoice
+                    View Account
                   </button>
                 </div>
 
