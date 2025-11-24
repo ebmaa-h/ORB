@@ -25,6 +25,31 @@ const normalizeIsPureFlag = (value) => {
   return Boolean(value);
 };
 
+const getPrimaryId = (batch) => {
+  if (!batch) return null;
+  const raw =
+    batch.foreign_urgent_batch_id ??
+    batch.batch_id ??
+    batch.batchId ??
+    batch.id ??
+    null;
+  if (raw === null || raw === undefined) return null;
+  const normalized = String(raw).trim();
+  return normalized || null;
+};
+
+const isForeignUrgentEntity = (batch) => Boolean(batch?.foreign_urgent_batch_id || batch?.is_fu);
+
+const normalizeBatchIdentity = (batch = {}) => {
+  const id = getPrimaryId(batch);
+  const isFu = isForeignUrgentEntity(batch);
+  return {
+    ...batch,
+    primary_id: id,
+    is_fu: isFu,
+  };
+};
+
 export default function WorkflowEngine({ department = "none" }) {
   const { user } = useContext(UserContext);
   const navigate = useNavigate();
@@ -71,33 +96,25 @@ export default function WorkflowEngine({ department = "none" }) {
         target && typeof target === "object"
           ? target.meta || target.metadata || target
           : {};
-      const rawId =
-        (meta.foreign_urgent_batch_id ??
-          meta.fu_batch_id ??
-          meta.batch_id ??
-          meta.batchId ??
-          meta.id ??
-          target) ?? null;
+      const rawId = getPrimaryId(meta) ?? meta.fu_batch_id ?? meta.id ?? target ?? null;
       if (rawId === null || rawId === undefined) return false;
       const normalizedId = String(rawId).trim();
       if (!normalizedId) return false;
       const fromPath = `${location.pathname}${location.search}`;
       const fromState = { path: fromPath, activeStatus };
       const allBatches = [...batches, ...fuBatches];
-      const found = allBatches.find((entry) => String(entry.batch_id) === normalizedId);
+      const found = allBatches.find((entry) => getPrimaryId(entry) === normalizedId);
       const isFuContext = filterType === "fu";
       const isFu =
         isFuContext ||
         Boolean(
-          meta.is_pure_foreign_urgent ||
-            meta.foreign_urgent_batch_id ||
+          meta.foreign_urgent_batch_id ||
             (meta.batch_type || "").toLowerCase() === "foreign_urgent" ||
-            found?.is_pure_foreign_urgent ||
-            (found?.batch_type || "").toLowerCase() === "foreign_urgent",
+            isForeignUrgentEntity(found),
         );
       const basePath = isFu ? "/fu-batches" : "/batches";
       if (found) {
-        navigate(`${basePath}/${found.batch_id}`, { state: { batch: found, from: fromState } });
+        navigate(`${basePath}/${getPrimaryId(found)}`, { state: { batch: found, from: fromState } });
         return true;
       }
       navigate(`${basePath}/${normalizedId}`, { state: { from: fromState } });
@@ -144,8 +161,10 @@ export default function WorkflowEngine({ department = "none" }) {
         if (!mounted) return;
         console.log(`ðŸ“¥ Fetch response for ${department}:`, res.data);
         const { normal = [], foreignUrgent = [] } = res.data || {};
-        setBatches(normal.filter(b => !b.is_pure_foreign_urgent && b.current_department === department));
-        setFuBatches(foreignUrgent.filter(b => b.current_department === department));
+        const normalizedNormal = normal.map(normalizeBatchIdentity);
+        const normalizedFu = foreignUrgent.map(normalizeBatchIdentity);
+        setBatches(normalizedNormal.filter(b => !b.is_pure_foreign_urgent && b.current_department === department));
+        setFuBatches(normalizedFu.filter(b => b.current_department === department));
       } catch (err) {
         console.error(`âŒ WorkflowEngine fetch error for ${department}:`, err);
       } finally {
@@ -169,26 +188,29 @@ export default function WorkflowEngine({ department = "none" }) {
 
   const applyBatchUpdate = useCallback(
     (incoming) => {
-      if (!incoming || !incoming.batch_id) return;
+      if (!incoming) return;
 
-      const normalized = {
+      const normalized = normalizeBatchIdentity({
         ...incoming,
         current_department: incoming.current_department || department,
         status: incoming.status || "current",
         is_pure_foreign_urgent: normalizeIsPureFlag(incoming.is_pure_foreign_urgent),
-      };
+      });
 
-      const isFU = !!normalized.parent_batch_id;
+      const primaryId = normalized.primary_id;
+      if (!primaryId) return;
+
+      const isFU = isForeignUrgentEntity(normalized);
       const appliesToDept = normalized.current_department === department;
 
       if (isFU) {
         setFuBatches((prev) => {
-          const exists = prev.some((b) => b.batch_id === normalized.batch_id);
+          const exists = prev.some((b) => getPrimaryId(b) === primaryId);
           if (!appliesToDept) {
-            return prev.filter((b) => b.batch_id !== normalized.batch_id);
+            return prev.filter((b) => getPrimaryId(b) !== primaryId);
           }
           if (exists) {
-            return prev.map((b) => (b.batch_id === normalized.batch_id ? { ...b, ...normalized } : b));
+            return prev.map((b) => (getPrimaryId(b) === primaryId ? { ...b, ...normalized } : b));
           }
           return [...prev, normalized];
         });
@@ -196,17 +218,17 @@ export default function WorkflowEngine({ department = "none" }) {
       }
 
       if (normalized.is_pure_foreign_urgent) {
-        setBatches((prev) => prev.filter((b) => b.batch_id !== normalized.batch_id));
+        setBatches((prev) => prev.filter((b) => getPrimaryId(b) !== primaryId));
         return;
       }
 
       setBatches((prev) => {
-        const exists = prev.some((b) => b.batch_id === normalized.batch_id);
+        const exists = prev.some((b) => getPrimaryId(b) === primaryId);
         if (!appliesToDept) {
-          return prev.filter((b) => b.batch_id !== normalized.batch_id);
+          return prev.filter((b) => getPrimaryId(b) !== primaryId);
         }
         if (exists) {
-          return prev.map((b) => (b.batch_id === normalized.batch_id ? { ...b, ...normalized } : b));
+          return prev.map((b) => (getPrimaryId(b) === primaryId ? { ...b, ...normalized } : b));
         }
         return [...prev, normalized];
       });
@@ -240,8 +262,8 @@ export default function WorkflowEngine({ department = "none" }) {
     async (batch) => {
       try {
         const res = await axiosClient.post(ENDPOINTS.archiveBatch, {
-          batch_id: batch.batch_id,
-          is_fu: !!batch.parent_batch_id,
+          batch_id: getPrimaryId(batch),
+          is_fu: isForeignUrgentEntity(batch),
           user_id: user?.user_id || null,
         });
         if (res?.data) {
@@ -297,39 +319,39 @@ export default function WorkflowEngine({ department = "none" }) {
     };
 
     const handleCreated = (newBatch) => {
-      const normalized = normalizeIncomingBatch(newBatch);
+      const normalized = normalizeBatchIdentity(normalizeIncomingBatch(newBatch));
       logBatch('batchCreated', normalized);
       if (!normalized.current_department || normalized.current_department !== department) {
         console.log(`[socket] batchCreated ignored: wrong department ${normalized.current_department} for ${department}`);
         return;
       }
-      if (normalized.parent_batch_id) { // foreignUrgent batch
+      if (isForeignUrgentEntity(normalized)) { // foreignUrgent batch
         setFuBatches((prev) => {
-          if (prev.some((b) => b.batch_id === normalized.batch_id)) {
-            console.log(`[socket] foreign urgent batch ${normalized.batch_id} already exists`);
+          if (prev.some((b) => getPrimaryId(b) === getPrimaryId(normalized))) {
+            console.log(`[socket] foreign urgent batch ${getPrimaryId(normalized)} already exists`);
             return prev;
           }
-          console.log(`[socket] adding foreign urgent batch ${normalized.batch_id}`);
+          console.log(`[socket] adding foreign urgent batch ${getPrimaryId(normalized)}`);
           return [normalized, ...prev];
         });
       } else if (!normalized.is_pure_foreign_urgent) { // normal batch
         setBatches((prev) => {
-          if (prev.some((b) => b.batch_id === normalized.batch_id)) {
-            console.log(`[socket] normal batch ${normalized.batch_id} already exists`);
+          if (prev.some((b) => getPrimaryId(b) === getPrimaryId(normalized))) {
+            console.log(`[socket] normal batch ${getPrimaryId(normalized)} already exists`);
             return prev;
           }
-          console.log(`[socket] adding normal batch ${normalized.batch_id}`);
+          console.log(`[socket] adding normal batch ${getPrimaryId(normalized)}`);
           return [normalized, ...prev];
         });
       } else {
-        console.log(`[socket] skipping pure foreign urgent batch ${normalized.batch_id}`);
+        console.log(`[socket] skipping pure foreign urgent batch ${getPrimaryId(normalized)}`);
       }
     };
 
     socket.on("batchCreated", handleCreated);
 
     const handleUpdated = (updated) => {
-      applyBatchUpdate(updated);
+      applyBatchUpdate(normalizeBatchIdentity(updated));
     };
 
     socket.on("batchUpdated", handleUpdated);
@@ -365,7 +387,7 @@ export default function WorkflowEngine({ department = "none" }) {
     const searchedBatches = filtered.filter((batch) => {
       if (filterType === "normal") {
         return (
-          String(batch.batch_id || "").toLowerCase().includes(searchLower) ||
+          String(getPrimaryId(batch) || "").toLowerCase().includes(searchLower) ||
           String(batch.client_id || "").toLowerCase().includes(searchLower) ||
           String(batch.created_by || "").toLowerCase().includes(searchLower) ||
           String(batch.client_first || "").toLowerCase().includes(searchLower) ||
@@ -373,8 +395,7 @@ export default function WorkflowEngine({ department = "none" }) {
         );
       } else {
         return (
-          String(batch.batch_id || "").toLowerCase().includes(searchLower) ||
-          String(batch.parent_batch_id || "").toLowerCase().includes(searchLower) ||
+          String(batch.foreign_urgent_batch_id || getPrimaryId(batch) || "").toLowerCase().includes(searchLower) ||
           String(batch.patient_name || "").toLowerCase().includes(searchLower) ||
           String(batch.medical_aid_nr || "").toLowerCase().includes(searchLower)
         );
@@ -404,12 +425,12 @@ export default function WorkflowEngine({ department = "none" }) {
   const executeAction = async (action, batch) => {
     try {
       if (batch.is_pure_foreign_urgent && !batch.parent_batch_id) {
-        console.log(`Skipping action for pure foreign/urgent batch ${batch.batch_id}`);
+        console.log(`Skipping action for pure foreign/urgent batch ${getPrimaryId(batch)}`);
         return;
       }
       const url = ENDPOINTS[action.endpointKey];
       if (!url) return console.error("Missing endpoint for action", action);
-      const payload = { batch_id: batch.batch_id, is_fu: !!batch.parent_batch_id, user_id: user?.user_id };
+      const payload = { batch_id: getPrimaryId(batch), is_fu: isForeignUrgentEntity(batch), user_id: user?.user_id };
       if (action.target_status) payload.target_status = action.target_status;
       if (action.endpointKey === 'acceptBatch') {
         payload.to_department = department;
@@ -423,10 +444,10 @@ export default function WorkflowEngine({ department = "none" }) {
             payload.forEach(applyBatchUpdate);
             return;
           }
-          if (payload.batch_id) applyBatchUpdate(payload);
-          if (payload.inbox?.batch_id) applyBatchUpdate(payload.inbox);
-          if (payload.outbox?.batch_id) applyBatchUpdate(payload.outbox);
-          if (payload.filing?.batch_id) applyBatchUpdate(payload.filing);
+          applyBatchUpdate(payload);
+          if (payload.inbox) applyBatchUpdate(payload.inbox);
+          if (payload.outbox) applyBatchUpdate(payload.outbox);
+          if (payload.filing) applyBatchUpdate(payload.filing);
         };
         applyCandidates(res.data);
       }
@@ -438,7 +459,9 @@ export default function WorkflowEngine({ department = "none" }) {
   // sync selected batch
   useEffect(() => {
     if (!selectedBatch) return;
-    const updated = [...batches, ...fuBatches].find(b => b.batch_id === selectedBatch.batch_id);
+    const updated = [...batches, ...fuBatches].find(
+      (b) => getPrimaryId(b) === getPrimaryId(selectedBatch)
+    );
     if (!updated) setSelectedBatch(null);
     else if (updated !== selectedBatch) setSelectedBatch(updated);
   }, [batches, fuBatches, selectedBatch]);

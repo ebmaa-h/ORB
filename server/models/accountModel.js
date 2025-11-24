@@ -98,6 +98,7 @@ const AccountModel = {
     const {
       accountId,
       batchId,
+      foreignUrgentBatchId = null,
       nrInBatch = null,
       dateOfService = null,
       status = 'Open',
@@ -111,6 +112,7 @@ const AccountModel = {
     const [result] = await connection.query(queries.INSERT_INVOICE, [
       accountId,
       batchId,
+      foreignUrgentBatchId,
       nrInBatch || null,
       dateOfService || null,
       status || 'Open',

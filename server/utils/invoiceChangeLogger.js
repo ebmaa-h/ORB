@@ -101,7 +101,11 @@ const normalizeBatchFlag = (value) => {
   return ['1', 'true', 'yes'].includes(normalized);
 };
 
-const getBatchTypeKey = (batch) => (normalizeBatchFlag(batch?.is_pure_foreign_urgent) ? 'foreign_urgent' : 'normal');
+const getBatchTypeKey = (batch) => {
+  if (!batch) return 'normal';
+  if (batch.foreign_urgent_batch_id) return 'foreign_urgent';
+  return normalizeBatchFlag(batch?.is_pure_foreign_urgent) ? 'foreign_urgent' : 'normal';
+};
 
 const getDepartmentKey = (batch) => {
   const dept = (batch?.current_department || '').trim().toLowerCase();
@@ -132,7 +136,7 @@ const logInvoiceChange = async ({
       batchType: getBatchTypeKey(batch),
       entityType: 'invoice',
       entityId: nextInvoice.invoice_id,
-      batchId: batch.batch_id,
+      batchId: batch.foreign_urgent_batch_id || batch.batch_id,
       accountId,
       profileId,
       invoiceId: nextInvoice.invoice_id,

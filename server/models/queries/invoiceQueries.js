@@ -3,6 +3,7 @@ const BASE_INVOICE_SELECT = `
     i.invoice_id,
     i.account_id,
     i.batch_id,
+    i.foreign_urgent_batch_id,
     i.nr_in_batch,
     i.date_of_service,
     i.status,
@@ -62,6 +63,12 @@ const SELECT_INVOICES_BY_BATCH = `
   ORDER BY i.nr_in_batch ASC, i.invoice_id ASC
 `;
 
+const SELECT_INVOICES_BY_FU = `
+  ${BASE_INVOICE_SELECT}
+  WHERE i.foreign_urgent_batch_id = ?
+  ORDER BY i.nr_in_batch ASC, i.invoice_id ASC
+`;
+
 const SELECT_INVOICE_BY_ID = `
   ${BASE_INVOICE_SELECT}
   WHERE i.invoice_id = ?
@@ -70,5 +77,6 @@ const SELECT_INVOICE_BY_ID = `
 
 module.exports = {
   SELECT_INVOICES_BY_BATCH,
+  SELECT_INVOICES_BY_FU,
   SELECT_INVOICE_BY_ID,
 };

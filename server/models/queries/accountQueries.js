@@ -149,6 +149,7 @@ const INSERT_INVOICE = `
   INSERT INTO invoices (
     account_id,
     batch_id,
+    foreign_urgent_batch_id,
     nr_in_batch,
     date_of_service,
     status,
@@ -157,7 +158,7 @@ const INSERT_INVOICE = `
     balance,
     auth_nr,
     type
-  ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+  ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
 `;
 
 const UPDATE_PROFILE = `

@@ -21,7 +21,7 @@ const GET_BATCHES_BY_DEPARTMENT = `
 
 const GET_FU_BY_DEPARTMENT = `
   SELECT 
-    fua.foreign_urgent_batch_id AS batch_id,
+    fua.foreign_urgent_batch_id,
     fua.batch_id AS parent_batch_id,
     fua.patient_name,
     fua.medical_aid_nr,
@@ -37,7 +37,7 @@ const GET_FU_BY_DEPARTMENT = `
     b.client_id,
     b.method_received,
     b.date_received
-  FROM foreign_urgent_accounts fua
+  FROM foreign_urgent_batches fua
   LEFT JOIN batches b ON fua.batch_id = b.batch_id
   WHERE fua.current_department = ?
   ORDER BY b.date_received DESC
@@ -80,7 +80,7 @@ const GET_OUTGOING_TRANSFERS_BATCHES = `
 
 const GET_INCOMING_TRANSFERS_FU = `
   SELECT 
-    fua.foreign_urgent_batch_id AS batch_id,
+    fua.foreign_urgent_batch_id,
     fua.batch_id AS parent_batch_id,
     fua.patient_name,
     fua.medical_aid_nr,
@@ -97,14 +97,14 @@ const GET_INCOMING_TRANSFERS_FU = `
     b.method_received,
     b.date_received
   FROM batch_transfers t
-  JOIN foreign_urgent_accounts fua ON fua.foreign_urgent_batch_id = t.item_id
+  JOIN foreign_urgent_batches fua ON fua.foreign_urgent_batch_id = t.item_id
   LEFT JOIN batches b ON fua.batch_id = b.batch_id
   WHERE t.item_type = 'fu' AND t.to_department = ? AND t.status = 'pending'
 `;
 
 const GET_OUTGOING_TRANSFERS_FU = `
   SELECT 
-    fua.foreign_urgent_batch_id AS batch_id,
+    fua.foreign_urgent_batch_id,
     fua.batch_id AS parent_batch_id,
     fua.patient_name,
     fua.medical_aid_nr,
@@ -121,7 +121,7 @@ const GET_OUTGOING_TRANSFERS_FU = `
     b.method_received,
     b.date_received
   FROM batch_transfers t
-  JOIN foreign_urgent_accounts fua ON fua.foreign_urgent_batch_id = t.item_id
+  JOIN foreign_urgent_batches fua ON fua.foreign_urgent_batch_id = t.item_id
   LEFT JOIN batches b ON fua.batch_id = b.batch_id
   WHERE t.item_type = 'fu' AND t.from_department = ? AND t.status = 'pending'
 `;
@@ -145,7 +145,7 @@ const CREATE_BATCH = `
 `;
 
 const CREATE_FOREIGN_URGENT = `
-  INSERT INTO foreign_urgent_accounts (
+  INSERT INTO foreign_urgent_batches (
     batch_id,
     patient_name,
     medical_aid_nr,
@@ -182,13 +182,13 @@ const UPDATE_BATCH_RECEPTION_FIELDS = `
 `;
 
 const UPDATE_FU_ADMITTED_BY = `
-  UPDATE foreign_urgent_accounts
+  UPDATE foreign_urgent_batches
   SET admitted_by = ?
   WHERE foreign_urgent_batch_id = ?
 `;
 
 const UPDATE_FU_BILLED_BY = `
-  UPDATE foreign_urgent_accounts
+  UPDATE foreign_urgent_batches
   SET billed_by = ?
   WHERE foreign_urgent_batch_id = ?
 `;
@@ -200,7 +200,7 @@ const MOVE_BATCH = `
 `;
 
 const MOVE_FU = `
-  UPDATE foreign_urgent_accounts
+  UPDATE foreign_urgent_batches
   SET current_department = ?, status = 'inbox'
   WHERE foreign_urgent_batch_id = ?
 `;
@@ -212,7 +212,7 @@ const ACCEPT_BATCH = `
 `;
 
 const ACCEPT_FU = `
-  UPDATE foreign_urgent_accounts
+  UPDATE foreign_urgent_batches
   SET status = 'current'
   WHERE foreign_urgent_batch_id = ?
 `;
@@ -251,7 +251,7 @@ const GET_BATCH_BY_ID = `
 
 const GET_FU_BY_ID = `
   SELECT 
-    fua.foreign_urgent_batch_id AS batch_id,
+    fua.foreign_urgent_batch_id,
     fua.batch_id AS parent_batch_id,
     fua.patient_name,
     fua.medical_aid_nr,
@@ -275,7 +275,7 @@ const GET_FU_BY_ID = `
     SUBSTRING_INDEX(u_created.email, '@', 1) AS created_by_name,
     SUBSTRING_INDEX(u_fu_admitted.email, '@', 1) AS admitted_by_name,
     SUBSTRING_INDEX(u_fu_billed.email, '@', 1) AS billed_by_name
-  FROM foreign_urgent_accounts fua
+  FROM foreign_urgent_batches fua
   LEFT JOIN batches b ON fua.batch_id = b.batch_id
   LEFT JOIN clients c ON c.client_id = b.client_id
   LEFT JOIN users u_created ON u_created.user_id = b.created_by
@@ -312,7 +312,7 @@ const ARCHIVE_BATCH = `
 `;
 
 const ARCHIVE_FU = `
-  UPDATE foreign_urgent_accounts
+  UPDATE foreign_urgent_batches
   SET status = 'archived', filed_by = ?
   WHERE foreign_urgent_batch_id = ?
 `;
@@ -373,8 +373,8 @@ const WF_SELECT_BATCHES_OUTBOX_BY_DEPT = `
 
 const WF_SELECT_FU_MAIN_BY_DEPT = `
   SELECT 
-    fua.foreign_urgent_batch_id AS batch_id,
-    fua.batch_id AS parent_batch_id,
+    fua.foreign_urgent_batch_id,
+    fua.batch_id,
     fua.patient_name,
     fua.medical_aid_nr,
     w.department AS current_department,
@@ -396,7 +396,7 @@ const WF_SELECT_FU_MAIN_BY_DEPT = `
     SUBSTRING_INDEX(u_fu_admitted.email, '@', 1) AS admitted_by_name,
     SUBSTRING_INDEX(u_fu_billed.email, '@', 1) AS billed_by_name
   FROM workflows w
-  JOIN foreign_urgent_accounts fua ON fua.foreign_urgent_batch_id = w.entity_id
+  JOIN foreign_urgent_batches fua ON fua.foreign_urgent_batch_id = w.entity_id
   LEFT JOIN batches b ON fua.batch_id = b.batch_id
   LEFT JOIN clients c ON c.client_id = b.client_id
   LEFT JOIN users u_created ON u_created.user_id = b.created_by
@@ -407,8 +407,8 @@ const WF_SELECT_FU_MAIN_BY_DEPT = `
 
 const WF_SELECT_FU_OUTBOX_BY_DEPT = `
   SELECT 
-    fua.foreign_urgent_batch_id AS batch_id,
-    fua.batch_id AS parent_batch_id,
+    fua.foreign_urgent_batch_id,
+    fua.batch_id,
     fua.patient_name,
     fua.medical_aid_nr,
     w.department AS current_department,
@@ -430,7 +430,7 @@ const WF_SELECT_FU_OUTBOX_BY_DEPT = `
     SUBSTRING_INDEX(u_fu_admitted.email, '@', 1) AS admitted_by_name,
     SUBSTRING_INDEX(u_fu_billed.email, '@', 1) AS billed_by_name
   FROM workflows w
-  JOIN foreign_urgent_accounts fua ON fua.foreign_urgent_batch_id = w.entity_id
+  JOIN foreign_urgent_batches fua ON fua.foreign_urgent_batch_id = w.entity_id
   LEFT JOIN batches b ON fua.batch_id = b.batch_id
   LEFT JOIN clients c ON c.client_id = b.client_id
   LEFT JOIN users u_created ON u_created.user_id = b.created_by

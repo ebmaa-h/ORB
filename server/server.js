@@ -1,4 +1,6 @@
-require('dotenv').config();
+// Ensure we load environment variables from the server directory
+const path = require('path');
+require('dotenv').config({ path: path.join(__dirname, '.env') });
 require('./config/passport.js');
 
 const express = require('express');

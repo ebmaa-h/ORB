@@ -37,9 +37,16 @@ const normalizeBatchFlag = (value) => {
   return false;
 };
 
+const getMainBatchId = (batch) =>
+  batch?.foreign_urgent_batch_id ??
+  batch?.foreignUrgentBatchId ??
+  batch?.batch_id ??
+  batch?.batchId ??
+  null;
+
 const isForeignUrgentBatchType = (batch) => {
   if (!batch) return false;
-  if (batch.parent_batch_id) return true;
+  if (batch.is_fu || batch.foreign_urgent_batch_id || batch.foreignUrgentBatchId) return true;
   return normalizeBatchFlag(batch.is_pure_foreign_urgent);
 };
 
@@ -68,6 +75,7 @@ const parseBalanceInput = (value) => {
 
 const isForeignUrgentInvoice = (invoice) => {
   if (!invoice) return false;
+  if (invoice.foreign_urgent_batch_id) return true;
   const type = (invoice.invoice_type || invoice.type || "").toLowerCase();
   return FOREIGN_URGENT_INVOICE_TYPES.has(type);
 };
@@ -196,6 +204,7 @@ const AddAccount = () => {
   const location = useLocation();
   const isFuRoute = location.pathname.startsWith("/fu-batches");
   const batch = location.state?.batch || null;
+  const mainBatchId = getMainBatchId(batch);
   const existingInvoice = location.state?.invoice || null;
   const originFrom = location.state?.from || null;
   const backPath = typeof originFrom === "string" ? originFrom : originFrom?.path;
@@ -293,12 +302,12 @@ const AddAccount = () => {
   }, []);
 
   useEffect(() => {
-    if (!batch?.batch_id) return;
+    if (!mainBatchId) return;
     let cancelled = false;
 
     const fetchInvoices = async () => {
       try {
-        const res = await axiosClient.get(ENDPOINTS.batchInvoices(batch.batch_id));
+        const res = await axiosClient.get(ENDPOINTS.batchInvoices(mainBatchId));
         if (cancelled) return;
         const list = Array.isArray(res.data) ? res.data : res.data?.invoices;
         const scoped = Array.isArray(list)
@@ -320,7 +329,7 @@ const AddAccount = () => {
     return () => {
       cancelled = true;
     };
-  }, [batch, isForeignUrgentBatch]);
+  }, [mainBatchId, isForeignUrgentBatch]);
 
   useEffect(() => {
     if (existingInvoice) return;
@@ -432,7 +441,7 @@ const AddAccount = () => {
   const selectedTypeLabel = invoiceForm.type ? INVOICE_TYPE_LABELS[invoiceForm.type] || invoiceForm.type : "Select type";
   const infoItems = [
     { label: "Client", value: clientDisplayName },
-    { label: "Batch ID", value: `${isForeignUrgentBatch ? "FU-Batch" : "Batch"} #${batch.batch_id}` },
+    { label: "Batch ID", value: mainBatchId ? `${isForeignUrgentBatch ? "FU-Batch" : "Batch"} #${mainBatchId}` : "N/A" },
     { label: "Type", value: selectedTypeLabel },
   ];
   if (isForeignUrgentBatch) {
@@ -625,11 +634,17 @@ const hydratePersonForm = (data = {}) => ({
       };
 
       if (existingInvoice?.invoice_id) {
-        await axiosClient.put(ENDPOINTS.batchInvoiceUpdate(batch.batch_id, existingInvoice.invoice_id), payload);
+        await axiosClient.put(ENDPOINTS.batchInvoiceUpdate(mainBatchId, existingInvoice.invoice_id), {
+          ...payload,
+          is_fu: isForeignUrgentBatch,
+        });
       } else {
-        await axiosClient.post(ENDPOINTS.batchAccountCreate(batch.batch_id), payload);
+        await axiosClient.post(ENDPOINTS.batchAccountCreate(mainBatchId), {
+          ...payload,
+          is_fu: isForeignUrgentBatch,
+        });
       }
-      navigate(`${batchBasePath}/${batch.batch_id}`, {
+      navigate(`${batchBasePath}/${mainBatchId}`, {
         state: {
           batch,
           from: originFrom || { path: currentPath, activeStatus: location.state?.activeStatus },

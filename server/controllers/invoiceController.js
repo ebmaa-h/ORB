@@ -1,4 +1,5 @@
 const Invoice = require('../models/invoiceModel');
+const Batch = require('../models/batchModel');
 
 const toPositiveInt = (value) => {
   const parsed = Number(value);
@@ -14,9 +15,13 @@ const invoiceController = {
         return res.status(400).json({ error: 'Invalid batch id' });
       }
 
-      const invoices = await Invoice.getByBatchId(batchId);
+      const fu = await Batch.getForeignUrgentById(batchId);
+      const invoices = fu
+        ? await Invoice.getByForeignUrgentId(batchId)
+        : await Invoice.getByBatchId(batchId);
       res.json({
         batchId,
+        is_foreign_urgent: Boolean(fu),
         count: invoices.length,
         invoices,
       });

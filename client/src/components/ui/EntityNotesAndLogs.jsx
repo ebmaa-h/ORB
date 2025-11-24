@@ -53,10 +53,11 @@ const getFuBatchId = (meta = {}) =>
 const extractBatchId = (item) => {
   const metadata = item?.metadata || {};
   const fuId = getFuBatchId(metadata);
+  const fallback = metadata.batch_id ?? metadata.batchId ?? item.entity_id ?? null;
   if (isForeignUrgentMeta(metadata)) {
-    return fuId || null; // only FU id is valid for FU logs
+    return fuId || fallback || null; // allow batch_id fallback when FU id is missing in metadata
   }
-  return metadata.batch_id ?? metadata.batchId ?? item.entity_id ?? null;
+  return fallback;
 };
 
 const isForeignUrgentMeta = (meta = {}) => {

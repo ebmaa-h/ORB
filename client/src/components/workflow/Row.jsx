@@ -73,6 +73,7 @@ const flattenForCompare = (values) => ({
 
 const Row = ({
   batch,
+  primaryId,
   columns,
   onSelect,
   isSelected,
@@ -87,6 +88,7 @@ const Row = ({
   clients = [],
   onToggleExpand = () => {},
 }) => {
+  const entityId = primaryId ?? batch?.foreign_urgent_batch_id ?? batch?.batch_id;
   const navigate = useNavigate();
   const foreignUrgentCount = useMemo(() => {
     const parsed = Number(batch?.total_urgent_foreign ?? 0);
@@ -158,7 +160,7 @@ const Row = ({
       corrections: Boolean(editValues.corrections),
       cc_availability: editValues.cc_availability,
     };
-    const result = await onBatchUpdate(batch.batch_id, payload);
+    const result = await onBatchUpdate(entityId, payload);
     if (!result?.success) {
       setSaveError(result?.error || "Failed to save changes");
     } else {
@@ -297,15 +299,15 @@ const Row = ({
   const location = useLocation();
 
   const handleViewBatch = (selected) => {
-    if (!selected?.batch_id) return;
+    if (!entityId) return;
     const fromPath = `${location.pathname}${location.search}`;
     const isFu = Boolean(
-      selected.parent_batch_id ||
-        selected.is_pure_foreign_urgent ||
+      selected.is_fu ||
+        selected.foreign_urgent_batch_id ||
         (selected.batch_type || "").toLowerCase() === "foreign_urgent",
     );
     const basePath = isFu ? "/fu-batches" : "/batches";
-    navigate(`${basePath}/${selected.batch_id}`, { state: { batch: selected, from: fromPath } });
+    navigate(`${basePath}/${entityId}`, { state: { batch: selected, from: fromPath } });
   };
 
   return (
@@ -316,7 +318,7 @@ const Row = ({
         } ${isSelected ? "bg-gray-50" : ""}`}
         onClick={() => {
           onSelect(batch);
-          onToggleExpand(batch.batch_id);
+          onToggleExpand(entityId);
         }}
       >
         {columns.map((col) => {

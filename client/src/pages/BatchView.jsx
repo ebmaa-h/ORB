@@ -26,6 +26,7 @@ const toForeignUrgentSequence = (invoices = []) => {
 
 const isForeignUrgentInvoice = (invoice) => {
   if (!invoice) return false;
+  if (invoice.foreign_urgent_batch_id) return true;
   const type = (invoice.invoice_type || invoice.type || "").toLowerCase();
   return FU_INVOICE_TYPES.has(type);
 };
@@ -56,19 +57,36 @@ const formatClientName = (batch) => {
   return "N/A";
 };
 
-const isForeignOrUrgentBatch = (batch) => {
+const hasPureForeignUrgentFlag = (batch) => {
   if (!batch) return false;
-  if (batch.parent_batch_id) return true;
   if (typeof batch.is_pure_foreign_urgent === "boolean") return batch.is_pure_foreign_urgent;
   if (batch.is_pure_foreign_urgent == null) return false;
   return ["1", 1, "true", "yes"].includes(batch.is_pure_foreign_urgent);
+};
+
+const getMainBatchId = (batch) =>
+  batch?.foreign_urgent_batch_id ??
+  batch?.foreignUrgentBatchId ??
+  batch?.batch_id ??
+  batch?.batchId ??
+  null;
+
+const isForeignUrgentAccount = (batch) => {
+  if (!batch) return false;
+  return Boolean(batch.is_fu || batch.foreign_urgent_batch_id || batch.foreignUrgentBatchId);
+};
+
+const isForeignOrUrgentBatch = (batch) => {
+  if (!batch) return false;
+  if (isForeignUrgentAccount(batch)) return true;
+  return hasPureForeignUrgentFlag(batch);
 };
 
 const getBatchType = (batch) => (isForeignOrUrgentBatch(batch) ? "foreign_urgent" : "normal");
 
 const getEntityType = (batch) => {
   if (!batch) return "batch";
-  return batch.parent_batch_id ? "fu" : "batch";
+  return isForeignUrgentAccount(batch) ? "fu" : "batch";
 };
 
 const getNormalBatchSizeCount = (batch) => {
@@ -161,9 +179,9 @@ const BatchView = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const batch = location.state?.batch || null;
-  const parentBatchId = batch?.parent_batch_id || null;
+  const mainBatchId = getMainBatchId(batch);
   const isFuRoute = location.pathname.startsWith("/fu-batches");
-  const isForeignUrgentChild = Boolean(parentBatchId);
+  const isForeignUrgentChild = isForeignUrgentAccount(batch);
   const [invoices, setInvoices] = useState([]);
   const [invoicesLoading, setInvoicesLoading] = useState(false);
   const [invoicesError, setInvoicesError] = useState("");
@@ -173,8 +191,8 @@ const BatchView = () => {
   const infoItems = useMemo(() => {
     if (!batch) return [];
     const typeLabel = isForeignOrUrgentBatch(batch) ? "Foreign & Urgent" : "Normal";
-    const batchLabel = batch.batch_id
-      ? `${isForeignOrUrgentBatch(batch) ? "FU-Batch" : "Batch"} #${batch.batch_id}`
+    const batchLabel = mainBatchId
+      ? `${isForeignOrUrgentBatch(batch) ? "FU-Batch" : "Batch"} #${mainBatchId}`
       : "N/A";
     const items = [
       { label: "Client", value: formatClientName(batch) },
@@ -183,14 +201,11 @@ const BatchView = () => {
       { label: "Date Received", value: formatDate(batch.date_received) },
       { label: "Type", value: typeLabel },
     ];
-    if (isForeignUrgentChild && parentBatchId) {
-      items.splice(2, 0, { label: "Parent Batch", value: `#${parentBatchId}` });
-    }
     return items;
-  }, [batch, isForeignUrgentChild, parentBatchId]);
+  }, [batch, isForeignUrgentChild, mainBatchId]);
 
   useEffect(() => {
-    if (!batch?.batch_id) {
+    if (!mainBatchId) {
       setInvoices([]);
       setInvoicesError("Batch unavailable.");
       return;
@@ -201,7 +216,7 @@ const BatchView = () => {
       setInvoicesLoading(true);
       setInvoicesError("");
       try {
-        const res = await axiosClient.get(ENDPOINTS.batchInvoices(batch.batch_id));
+        const res = await axiosClient.get(ENDPOINTS.batchInvoices(mainBatchId));
         if (!cancelled) {
           const next = Array.isArray(res.data) ? res.data : res.data?.invoices;
           setInvoices(Array.isArray(next) ? next : []);
@@ -220,13 +235,14 @@ const BatchView = () => {
     return () => {
       cancelled = true;
     };
-  }, [batch]);
+  }, [mainBatchId]);
 
-  const normalizedBatchId = Number(batch?.batch_id || 0);
+  const normalizedBatchId = Number(mainBatchId || 0);
   const relevantInvoices = useMemo(() => {
     if (!normalizedBatchId) return [];
     return invoices.filter((invoice) => {
-      if (Number(invoice.batch_id) !== normalizedBatchId) return false;
+      const invoiceBatchId = Number(invoice.foreign_urgent_batch_id ?? invoice.batch_id);
+      if (invoiceBatchId !== normalizedBatchId) return false;
       const isFuInvoice = isForeignUrgentInvoice(invoice);
       return isForeignUrgentChild ? isFuInvoice : !isFuInvoice;
     });
@@ -245,11 +261,11 @@ const BatchView = () => {
 
   const handleViewInvoice = useCallback(
     (invoice) => {
-      if (!batch?.batch_id) return;
+      if (!mainBatchId) return;
       const fromState = location.state?.from || { path: `${location.pathname}${location.search}` };
       const currentPath = `${location.pathname}${location.search}`;
       const basePath = isFuRoute || isForeignUrgentChild ? "/fu-batches" : "/batches";
-      navigate(`${basePath}/${batch.batch_id}/accounts/new`, {
+      navigate(`${basePath}/${mainBatchId}/accounts/new`, {
         state: {
           batch,
           invoice,
@@ -257,7 +273,7 @@ const BatchView = () => {
         },
       });
     },
-    [batch, location.pathname, location.search, navigate, location.state?.from, isFuRoute, isForeignUrgentChild],
+    [batch, location.pathname, location.search, navigate, location.state?.from, isFuRoute, isForeignUrgentChild, mainBatchId],
   );
   const originFrom = location.state?.from || null;
   const backPath = typeof originFrom === "string" ? originFrom : originFrom?.path;
@@ -472,7 +488,7 @@ const BatchView = () => {
             type="button"
             className="button-pill min-w-[160px] disabled:opacity-60"
             onClick={() =>
-              navigate(`${isFuRoute || isForeignUrgentChild ? "/fu-batches" : "/batches"}/${batch.batch_id}/accounts/new`, {
+              navigate(`${isFuRoute || isForeignUrgentChild ? "/fu-batches" : "/batches"}/${mainBatchId}/accounts/new`, {
                 state: {
                   batch,
                   from: originFrom || { path: `${location.pathname}${location.search}`, activeStatus: location.state?.activeStatus },
@@ -490,7 +506,7 @@ const BatchView = () => {
         </>
       ) : (
         <EntityNotesAndLogs
-          entityId={batch.batch_id}
+          entityId={mainBatchId}
           entityType={entityType}
           department={departmentKey}
           batchType={batchTypeKey}

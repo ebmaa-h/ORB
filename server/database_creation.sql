@@ -2,7 +2,7 @@ SET FOREIGN_KEY_CHECKS = 0;
 
 DROP TABLE IF EXISTS invoices;
 DROP TABLE IF EXISTS workflows;
-DROP TABLE IF EXISTS foreign_urgent_accounts;
+DROP TABLE IF EXISTS foreign_urgent_batches;
 DROP TABLE IF EXISTS batches;
 DROP TABLE IF EXISTS accounts;
 DROP TABLE IF EXISTS profile_person_map;
@@ -320,8 +320,8 @@ CREATE TABLE batches (
     FOREIGN KEY (billing_email_sent_by) REFERENCES users(user_id)
 );
 
--- Create foreign/urgent table -> essentially batches
-CREATE TABLE foreign_urgent_accounts (
+-- Create foreign/urgent table
+CREATE TABLE foreign_urgent_batches (
     batch_id INT, 
     foreign_urgent_batch_id INT AUTO_INCREMENT PRIMARY KEY,
     -- client id get from batches
@@ -382,6 +382,7 @@ CREATE TABLE invoices (
     invoice_id INT AUTO_INCREMENT PRIMARY KEY,
     account_id INT,
     batch_id INT,
+    foreign_urgent_batch_id INT,
     nr_in_batch INT,
     date_of_service DATE,
     status ENUM('Open','Archived') DEFAULT 'Open',
@@ -393,6 +394,7 @@ CREATE TABLE invoices (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     FOREIGN KEY (batch_id) REFERENCES batches(batch_id),
+    FOREIGN KEY (foreign_urgent_batch_id) REFERENCES foreign_urgent_batches(foreign_urgent_batch_id),
     FOREIGN KEY (account_id) REFERENCES accounts(account_id),
     FOREIGN KEY (ref_client_id) REFERENCES ref_clients(ref_client_id)
 );

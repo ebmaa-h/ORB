@@ -245,17 +245,22 @@ const accountController = {
   },
 
   createBatchAccount: async (req, res) => {
-    const batchId = toPositiveInt(req.params.batchId);
-    if (!batchId) {
+    const rawId = toPositiveInt(req.params.batchId);
+    if (!rawId) {
       return res.status(400).json({ error: 'Invalid batch ID' });
     }
 
     try {
-      const batch = await Batch.getBatchById(batchId);
+      // Determine if this is a normal or FU batch
+      const requestIsFu = normalizeBooleanFlag(req.body?.is_fu);
+      const fu = requestIsFu ? await Batch.getForeignUrgentById(rawId) : await Batch.getForeignUrgentById(rawId);
+      const batch = fu || (await Batch.getBatchById(rawId));
       if (!batch) {
-        return res.status(404).json({ error: `Batch #${batchId} not found` });
+        return res.status(404).json({ error: `Batch #${rawId} not found` });
       }
 
+      const isForeignUrgent = Boolean(fu);
+      const batchId = rawId;
       const clientIdFromBatch = batch.client_id;
       const {
         invoice: invoiceInput = {},
@@ -356,7 +361,8 @@ const accountController = {
 
         const invoiceId = await AccountModel.createInvoice(connection, {
           accountId,
-          batchId,
+          batchId: isForeignUrgent ? null : batchId,
+          foreignUrgentBatchId: isForeignUrgent ? batchId : null,
           nrInBatch: invoice.nrInBatch,
           dateOfService: invoice.dateOfService,
           status: invoice.status,
@@ -407,23 +413,31 @@ const accountController = {
   },
 
   updateBatchInvoice: async (req, res) => {
-    const batchId = toPositiveInt(req.params.batchId);
+    const rawId = toPositiveInt(req.params.batchId);
     const invoiceId = toPositiveInt(req.params.invoiceId);
-    if (!batchId || !invoiceId) {
+    if (!rawId || !invoiceId) {
       return res.status(400).json({ error: 'Invalid batch or invoice ID' });
     }
 
     try {
-      const batch = await Batch.getBatchById(batchId);
+      const requestIsFu = normalizeBooleanFlag(req.body?.is_fu);
+      const fu = requestIsFu ? await Batch.getForeignUrgentById(rawId) : await Batch.getForeignUrgentById(rawId);
+      const batch = fu || (await Batch.getBatchById(rawId));
       if (!batch) {
-        return res.status(404).json({ error: `Batch #${batchId} not found` });
+        return res.status(404).json({ error: `Batch #${rawId} not found` });
       }
+      const isForeignUrgent = Boolean(fu);
+      const batchId = rawId;
 
       const existingInvoice = await Invoice.getById(invoiceId);
       if (!existingInvoice) {
         return res.status(404).json({ error: `Invoice #${invoiceId} not found` });
       }
-      if (existingInvoice.batch_id !== batchId) {
+      if (isForeignUrgent) {
+        if (existingInvoice.foreign_urgent_batch_id !== batchId) {
+          return res.status(400).json({ error: 'Invoice does not belong to this foreign/urgent batch' });
+        }
+      } else if (existingInvoice.batch_id !== batchId) {
         return res.status(400).json({ error: 'Invoice does not belong to this batch' });
       }
 

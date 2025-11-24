@@ -4,6 +4,8 @@ import React, { useCallback, useEffect, useState } from "react";
 import Row from "./Row";
 import WORKFLOW_CONFIG from "../../config/workflowConfig";
 
+const getPrimaryId = (batch) => batch?.foreign_urgent_batch_id ?? batch?.batch_id ?? batch?.id ?? null;
+
 const WorkflowTable = React.memo(function WorkflowTable({
   columns = [],
   batches = [],
@@ -61,13 +63,13 @@ const WorkflowTable = React.memo(function WorkflowTable({
           ) : (
             batches.map((batch) => (
               <Row
-                key={batch.batch_id}
+                key={getPrimaryId(batch) ?? `row-${Math.random()}`}
                 batch={batch}
                 columns={columns}
                 onSelect={onSelect}
                 onToggleExpand={handleToggleExpand}
-                isSelected={selectedBatch?.batch_id === batch.batch_id}
-                isExpanded={expandedBatchId === batch.batch_id}
+                isSelected={selectedBatch ? getPrimaryId(selectedBatch) === getPrimaryId(batch) : false}
+                isExpanded={expandedBatchId === getPrimaryId(batch)}
                 mainActions={mainActions}
                 actions={actions}
                 onExecute={onExecute}
@@ -77,6 +79,7 @@ const WorkflowTable = React.memo(function WorkflowTable({
                 onBatchUpdate={onBatchUpdate}
                 onArchiveDraft={onArchiveDraft}
                 clients={clients}
+                primaryId={getPrimaryId(batch)}
               />
             ))
           )}
