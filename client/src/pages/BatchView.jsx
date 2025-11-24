@@ -84,6 +84,47 @@ const computeBatchSize = (batch) => {
   return getNormalBatchSizeCount(batch).toString();
 };
 
+const firstNonEmpty = (values = []) => {
+  for (const value of values) {
+    if (value === null || value === undefined) continue;
+    const normalized = String(value).trim();
+    if (normalized) return normalized;
+  }
+  return "";
+};
+
+const resolveDependentNumber = (invoice, role = "member") => {
+  if (!invoice) return "";
+  const nestedSource = role === "member" ? invoice.member : invoice.patient;
+  const nested = firstNonEmpty([
+    nestedSource?.dependentNumber,
+    nestedSource?.dependent_nr,
+    nestedSource?.dependent_number,
+    nestedSource?.dependentNo,
+  ]);
+  if (nested) return nested;
+
+  const flatKeys =
+    role === "member"
+      ? [
+          "main_member_dependent_nr",
+          "main_member_dependent_number",
+          "main_member_dependent",
+          "member_dependent_nr",
+          "member_dependent_number",
+          "member_dependent",
+        ]
+      : [
+          "patient_dependent_nr",
+          "patient_dependent_number",
+          "patient_dependent",
+          "dependent_nr",
+          "dependent_number",
+        ];
+
+  return firstNonEmpty(flatKeys.map((key) => invoice[key]));
+};
+
 const formatCurrency = (value) => {
   if (value === null || value === undefined || value === "") return "R 0.00";
   const amount = Number(value);
@@ -121,6 +162,7 @@ const BatchView = () => {
   const location = useLocation();
   const batch = location.state?.batch || null;
   const parentBatchId = batch?.parent_batch_id || null;
+  const isFuRoute = location.pathname.startsWith("/fu-batches");
   const isForeignUrgentChild = Boolean(parentBatchId);
   const [invoices, setInvoices] = useState([]);
   const [invoicesLoading, setInvoicesLoading] = useState(false);
@@ -130,14 +172,19 @@ const BatchView = () => {
 
   const infoItems = useMemo(() => {
     if (!batch) return [];
+    const typeLabel = isForeignOrUrgentBatch(batch) ? "Foreign & Urgent" : "Normal";
+    const batchLabel = batch.batch_id
+      ? `${isForeignOrUrgentBatch(batch) ? "FU-Batch" : "Batch"} #${batch.batch_id}`
+      : "N/A";
     const items = [
-      { label: "Batch ID", value: batch.batch_id ? `#${batch.batch_id}` : "N/A" },
-      { label: "Batch Size", value: computeBatchSize(batch) },
       { label: "Client", value: formatClientName(batch) },
+      { label: "Batch ID", value: batchLabel },
+      { label: "Batch Size", value: computeBatchSize(batch) },
       { label: "Date Received", value: formatDate(batch.date_received) },
+      { label: "Type", value: typeLabel },
     ];
     if (isForeignUrgentChild && parentBatchId) {
-      items.splice(1, 0, { label: "Parent Batch", value: `#${parentBatchId}` });
+      items.splice(2, 0, { label: "Parent Batch", value: `#${parentBatchId}` });
     }
     return items;
   }, [batch, isForeignUrgentChild, parentBatchId]);
@@ -199,15 +246,25 @@ const BatchView = () => {
   const handleViewInvoice = useCallback(
     (invoice) => {
       if (!batch?.batch_id) return;
-      navigate(`/batches/${batch.batch_id}/accounts/new`, {
+      const fromState = location.state?.from || { path: `${location.pathname}${location.search}` };
+      const currentPath = `${location.pathname}${location.search}`;
+      const basePath = isFuRoute || isForeignUrgentChild ? "/fu-batches" : "/batches";
+      navigate(`${basePath}/${batch.batch_id}/accounts/new`, {
         state: {
           batch,
           invoice,
+          from: fromState || currentPath,
         },
       });
     },
-    [batch, navigate],
+    [batch, location.pathname, location.search, navigate, location.state?.from, isFuRoute, isForeignUrgentChild],
   );
+  const originFrom = location.state?.from || null;
+  const backPath = typeof originFrom === "string" ? originFrom : originFrom?.path;
+  const backActiveStatus = typeof originFrom === "object" ? originFrom.activeStatus : null;
+  const backTarget = backPath || "/workflow";
+  const backOptions = backActiveStatus ? { state: { activeStatus: backActiveStatus } } : undefined;
+  const handleBack = () => navigate(backTarget, backOptions);
 
   if (!batch) {
     return (
@@ -218,10 +275,20 @@ const BatchView = () => {
         <div className="mt-4">
           <button
             type="button"
-            className="button-pill min-w-[100px]"
-            onClick={() => navigate("/workflow")}
+            className="button-pill min-w-[100px] flex items-center justify-center"
+            onClick={handleBack}
           >
-            Back
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              viewBox="0 -960 960 960"
+              width="20"
+              height="20"
+              fill="currentColor"
+              aria-hidden="true"
+            >
+              <path d="M360-240 120-480l240-240 56 56-144 144h568v80H272l144 144-56 56Z" />
+            </svg>
+            <span className="sr-only">Back</span>
           </button>
         </div>
       </section>
@@ -269,13 +336,22 @@ const BatchView = () => {
         <span className="hidden h-6 w-px bg-gray-blue-100 md:block" aria-hidden="true" />
 
         <div className="flex gap-2 flex-wrap items-center ml-auto">
-          <SearchBar searchTerm={searchTerm} setSearchTerm={setSearchTerm} classes="min-w-[220px]" />
           <button
             type="button"
-            className="button-pill min-w-[100px]"
-            onClick={() => navigate("/workflow")}
+            className="button-pill min-w-[100px] flex items-center justify-center"
+            onClick={handleBack}
           >
-            Back
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              viewBox="0 -960 960 960"
+              width="20"
+              height="20"
+              fill="currentColor"
+              aria-hidden="true"
+            >
+              <path d="M360-240 120-480l240-240 56 56-144 144h568v80H272l144 144-56 56Z" />
+            </svg>
+            <span className="sr-only">Back</span>
           </button>
         </div>
       </div>
@@ -283,37 +359,33 @@ const BatchView = () => {
       {isBatchTab ? (
         <>
       <section className="tab-panel m-0">
-        <div className="flex flex-row gap-4">
-          <div className="flex flex-wrap items-center justify-between gap-4 bg-blac">
-            <div>
-              <p className="text-xs uppercase tracking-wide text-gray-blue-600">Batch</p>
-              <h1 className="text-2xl font-semibold text-gray-dark">{batchType}</h1>
-              <p className="text-sm text-gray-blue-700 mt-1">#{batch.batch_id}</p>
-            </div>
+        <div className="flex flex-wrap items-center gap-3 rounded-lg w-full">
+          {/* <p className="text-xs uppercase tracking-wide text-gray-blue-600">Batch</p> */}
+          {infoItems.map((item) => (
+            <span
+              key={item.label}
+              className="inline-flex items-center gap-2 rounded-full bg-gray-blue-100/60 px-3 py-2 text-sm text-gray-dark"
+            >
+              <span className="text-xs uppercase tracking-wide text-gray-blue-600 whitespace-nowrap">
+                {item.label}:
+              </span>
+              <span className="font-semibold text-gray-dark whitespace-nowrap">{item.value}</span>
+            </span>
+          ))}
+          <div className="ml-auto">
+            <SearchBar searchTerm={searchTerm} setSearchTerm={setSearchTerm} classes="min-w-[220px]" />
           </div>
-
-          <div className="flex">
-            <div className="flex flex-row gap-8 border-l-4 border-ebmaa-purple bg-gray-blue-100/40 px-6 py-5 rounded-r-lg min-w-[260px]">
-              {infoItems.map((item) => (
-                <div key={item.label}>
-                  <p className="text-xs uppercase tracking-wide text-gray-blue-600">{item.label}</p>
-                  <p className="text-lg font-semibold text-gray-dark">{item.value}</p>
-                </div>
-              ))}
-            </div>
-          </div>
-
         </div>
       </section>
 
       <section aria-label="Batch invoices workspace" className="tab-panel flex-col items-start w-full">
         <div className="flex flex-wrap items-center justify-between gap-4 border-b border-gray-blue-100 pb-4 mb-4">
           <div>
-            <p className="text-xs uppercase tracking-wide text-gray-blue-600">Invoices Linked to Batch</p>
+            <p className="text-xs uppercase tracking-wide text-gray-blue-600">Accounts Linked to Batch</p>
             <p className="text-2xl font-semibold text-gray-dark">
               {invoiceCount} / {batchSize}
             </p>
-            <p className="text-sm text-gray-blue-600">Current Invoices / Batch Size</p>
+            {/* <p className="text-sm text-gray-blue-600">Current Accounts / Batch Size</p> */}
           </div>
           <div className="text-right">
             {/* reserved for future summary */}
@@ -325,9 +397,9 @@ const BatchView = () => {
         ) : invoicesError ? (
           <p className="text-sm text-red-600">{invoicesError}</p>
         ) : invoiceCount === 0 ? (
-          <p className="text-sm text-gray-blue-700">No invoices linked to this batch yet.</p>
+          <p className="text-sm text-gray-blue-700">No accounts linked to this batch yet.</p>
         ) : searchActive && filteredInvoices.length === 0 ? (
-          <p className="text-sm text-gray-blue-700">No invoices match your search.</p>
+          <p className="text-sm text-gray-blue-700">No accounts match your search.</p>
         ) : (
           <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
             {displayInvoices.map((invoice) => (
@@ -379,7 +451,7 @@ const BatchView = () => {
                       {[invoice.main_member_first, invoice.main_member_last].filter(Boolean).join(" ") || "N/A"}
                     </p>
                     <p className="text-sm text-gray-700">ID: {invoice.main_member_id_nr || "N/A"}</p>
-                    <p className="text-sm text-gray-700">Dep #: {invoice.main_member_dependent_nr || "N/A"}</p>
+                    <p className="text-sm text-gray-700">Dep #: {resolveDependentNumber(invoice, "member") || "N/A"}</p>
                   </div>
                   <div className="space-y-1">
                     <p className="text-xs uppercase text-gray-blue-600">Patient</p>
@@ -387,7 +459,7 @@ const BatchView = () => {
                       {[invoice.patient_first, invoice.patient_last].filter(Boolean).join(" ") || "N/A"}
                     </p>
                     <p className="text-sm text-gray-700">ID: {invoice.patient_id_nr || "N/A"}</p>
-                    <p className="text-sm text-gray-700">Dep #: {invoice.patient_dependent_nr || "N/A"}</p>
+                    <p className="text-sm text-gray-700">Dep #: {resolveDependentNumber(invoice, "patient") || "N/A"}</p>
                   </div>
                 </div>
               </div>
@@ -399,11 +471,19 @@ const BatchView = () => {
           <button
             type="button"
             className="button-pill min-w-[160px] disabled:opacity-60"
-            onClick={() => navigate(`/batches/${batch.batch_id}/accounts/new`, { state: { batch } })}
+            onClick={() =>
+              navigate(`${isFuRoute || isForeignUrgentChild ? "/fu-batches" : "/batches"}/${batch.batch_id}/accounts/new`, {
+                state: {
+                  batch,
+                  from: originFrom || { path: `${location.pathname}${location.search}`, activeStatus: location.state?.activeStatus },
+                },
+              })
+            }
             disabled={isForeignUrgentChild && invoiceCount >= 1}
             title={isForeignUrgentChild && invoiceCount >= 1 ? "Foreign & urgent batches allow one account" : ""}
           >
-            {isForeignUrgentChild ? "Add Foreign/Urgent Account" : "Add Account"}
+            {/* {isForeignUrgentChild ? "Add Foreign & Urgent Account" : "Add Account"} */}
+            Add Account
           </button>
         </div>
       </section>
@@ -418,6 +498,7 @@ const BatchView = () => {
           searchTermOverride={searchTerm}
           onSearchTermChange={setSearchTerm}
           showSearchInput={false}
+          showBatchLink={false}
         />
       )}
     </div>

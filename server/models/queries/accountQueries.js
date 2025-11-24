@@ -189,6 +189,38 @@ const UPDATE_INVOICE = `
   WHERE invoice_id = ?
 `;
 
+const SELECT_CONTACTS_BY_RECORD_IDS = (count) => `
+  SELECT record_id, number_id, num_type, num
+  FROM person_contact_numbers
+  WHERE record_id IN (${new Array(count).fill("?").join(", ")})
+`;
+
+const SELECT_ADDRESSES_BY_RECORD_IDS = (count) => `
+  SELECT record_id, address_id, address_type, is_domicilium, address
+  FROM person_addresses
+  WHERE record_id IN (${new Array(count).fill("?").join(", ")})
+`;
+
+const DELETE_CONTACTS_FOR_RECORD = `
+  DELETE FROM person_contact_numbers
+  WHERE record_id = ?
+`;
+
+const INSERT_CONTACT = `
+  INSERT INTO person_contact_numbers (record_id, num_type, num)
+  VALUES (?, ?, ?)
+`;
+
+const DELETE_ADDRESSES_FOR_RECORD = `
+  DELETE FROM person_addresses
+  WHERE record_id = ?
+`;
+
+const INSERT_ADDRESS = `
+  INSERT INTO person_addresses (record_id, address_type, is_domicilium, address)
+  VALUES (?, ?, ?, ?)
+`;
+
 module.exports = {
   SEARCH_PROFILES_WITH_ACCOUNTS,
   SELECT_PROFILE_BY_MEDICAL_AID_NR,
@@ -207,4 +239,10 @@ module.exports = {
   UPDATE_PROFILE_PERSON_MAP,
   DELETE_PROFILE_PERSON_MAP,
   UPDATE_INVOICE,
+  SELECT_CONTACTS_BY_RECORD_IDS,
+  SELECT_ADDRESSES_BY_RECORD_IDS,
+  DELETE_CONTACTS_FOR_RECORD,
+  INSERT_CONTACT,
+  DELETE_ADDRESSES_FOR_RECORD,
+  INSERT_ADDRESS,
 };

@@ -1,6 +1,6 @@
 ﻿// src/components/Workflow/WorkflowEngine.jsx
-import React, { useEffect, useState, useMemo, useContext, useCallback } from "react";
-import { useNavigate } from "react-router-dom";
+import React, { useEffect, useState, useMemo, useContext, useCallback, useRef } from "react";
+import { useLocation, useNavigate } from "react-router-dom";
 import WORKFLOW_CONFIG from "../../config/workflowConfig";
 import ENDPOINTS from "../../utils/apiEndpoints";
 import axiosClient from "../../utils/axiosClient";
@@ -28,6 +28,7 @@ const normalizeIsPureFlag = (value) => {
 export default function WorkflowEngine({ department = "none" }) {
   const { user } = useContext(UserContext);
   const navigate = useNavigate();
+  const location = useLocation();
   const config = WORKFLOW_CONFIG[department];
   const [batches, setBatches] = useState([]);
   const [fuBatches, setFuBatches] = useState([]);
@@ -51,21 +52,58 @@ export default function WorkflowEngine({ department = "none" }) {
     return (config?.tables || []).find((tab) => tab.name === "filing") || null;
   }, [config]);
   const showLogsTab = activeStatus === LOGS_TAB;
+
+  const hasAppliedActiveStatusRef = useRef(false);
+
+  useEffect(() => {
+    const desiredStatus = location.state?.activeStatus;
+    if (hasAppliedActiveStatusRef.current) return;
+    if (desiredStatus) {
+      hasAppliedActiveStatusRef.current = true;
+      if (desiredStatus !== activeStatus) {
+        setActiveStatus(desiredStatus);
+      }
+    }
+  }, [location.state?.activeStatus, activeStatus]);
   const handleNavigateToBatch = useCallback(
-    (batchId) => {
-      if (batchId === null || batchId === undefined) return false;
-      const normalizedId = String(batchId).trim();
+    (target) => {
+      const meta =
+        target && typeof target === "object"
+          ? target.meta || target.metadata || target
+          : {};
+      const rawId =
+        (meta.foreign_urgent_batch_id ??
+          meta.fu_batch_id ??
+          meta.batch_id ??
+          meta.batchId ??
+          meta.id ??
+          target) ?? null;
+      if (rawId === null || rawId === undefined) return false;
+      const normalizedId = String(rawId).trim();
       if (!normalizedId) return false;
+      const fromPath = `${location.pathname}${location.search}`;
+      const fromState = { path: fromPath, activeStatus };
       const allBatches = [...batches, ...fuBatches];
       const found = allBatches.find((entry) => String(entry.batch_id) === normalizedId);
+      const isFuContext = filterType === "fu";
+      const isFu =
+        isFuContext ||
+        Boolean(
+          meta.is_pure_foreign_urgent ||
+            meta.foreign_urgent_batch_id ||
+            (meta.batch_type || "").toLowerCase() === "foreign_urgent" ||
+            found?.is_pure_foreign_urgent ||
+            (found?.batch_type || "").toLowerCase() === "foreign_urgent",
+        );
+      const basePath = isFu ? "/fu-batches" : "/batches";
       if (found) {
-        navigate(`/batches/${found.batch_id}`, { state: { batch: found } });
+        navigate(`${basePath}/${found.batch_id}`, { state: { batch: found, from: fromState } });
         return true;
       }
-      navigate(`/batches/${normalizedId}`);
+      navigate(`${basePath}/${normalizedId}`, { state: { from: fromState } });
       return true;
     },
-    [batches, fuBatches, navigate],
+    [batches, fuBatches, navigate, location.pathname, location.search, activeStatus, filterType],
   );
 
   useEffect(() => {

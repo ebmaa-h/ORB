@@ -385,7 +385,7 @@ CREATE TABLE invoices (
     nr_in_batch INT,
     date_of_service DATE,
     status ENUM('Open','Archived') DEFAULT 'Open',
-    type ENUM('foreign','urgent_normal','urgent_other', 'other', 'normal'),
+    type ENUM('WCA','RAF','Normal') DEFAULT 'Normal',
     ref_client_id INT NULL,
     file_nr VARCHAR(255) NULL,
     balance DECIMAL(10,2) DEFAULT 0.00,

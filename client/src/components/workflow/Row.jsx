@@ -1,6 +1,6 @@
 // src/components/Workflow/Row.jsx
 import React, { useEffect, useMemo, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import ExpandedRowActions from "./ExpandedRowActions";
 
 const METHOD_OPTIONS = [
@@ -294,9 +294,18 @@ const Row = ({
     }
   };
 
+  const location = useLocation();
+
   const handleViewBatch = (selected) => {
     if (!selected?.batch_id) return;
-    navigate(`/batches/${selected.batch_id}`, { state: { batch: selected } });
+    const fromPath = `${location.pathname}${location.search}`;
+    const isFu = Boolean(
+      selected.parent_batch_id ||
+        selected.is_pure_foreign_urgent ||
+        (selected.batch_type || "").toLowerCase() === "foreign_urgent",
+    );
+    const basePath = isFu ? "/fu-batches" : "/batches";
+    navigate(`${basePath}/${selected.batch_id}`, { state: { batch: selected, from: fromPath } });
   };
 
   return (

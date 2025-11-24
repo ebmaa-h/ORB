@@ -2,6 +2,7 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { useLocation, useNavigate, useParams } from "react-router-dom";
 import EntityNotesAndLogs from "../components/ui/EntityNotesAndLogs";
 import SearchBar from "../components/ui/SearchBar";
+import ConfirmDialog from "../components/ui/ConfirmDialog";
 import axiosClient from "../utils/axiosClient";
 import ENDPOINTS from "../utils/apiEndpoints";
 
@@ -20,11 +21,9 @@ const defaultPerson = () => ({
 const STATUS_OPTIONS = ["Open", "Archived"];
 
 const INVOICE_TYPE_LABELS = {
-  normal: "Normal",
-  other: "Other",
-  foreign: "Foreign",
-  urgent_normal: "Urgent (Normal)",
-  urgent_other: "Urgent (Other)",
+  NORMAL: "Normal",
+  WCA: "WCA",
+  RAF: "RAF",
 };
 
 const normalizeBatchFlag = (value) => {
@@ -82,6 +81,9 @@ const VIEW_MODES = {
   ACCOUNT: "account",
   PERSON: "person",
 };
+
+const CONTACT_TYPES = ["Cell", "Tell", "Work", "Other"];
+const ADDRESS_TYPES = ["Street", "Postal", "Other"];
 
 const formatPersonName = (person) => {
   if (!person) return "N/A";
@@ -192,9 +194,17 @@ const AddAccount = () => {
   const { batchId } = useParams();
   const navigate = useNavigate();
   const location = useLocation();
+  const isFuRoute = location.pathname.startsWith("/fu-batches");
   const batch = location.state?.batch || null;
   const existingInvoice = location.state?.invoice || null;
-  const existingInvoiceType = existingInvoice?.invoice_type || existingInvoice?.type || "";
+  const originFrom = location.state?.from || null;
+  const backPath = typeof originFrom === "string" ? originFrom : originFrom?.path;
+  const backActiveStatus = typeof originFrom === "object" ? originFrom.activeStatus : null;
+  const backTarget = backPath || "/workflow";
+  const backOptions = backActiveStatus ? { state: { activeStatus: backActiveStatus } } : undefined;
+  const handleBack = () => navigate(backTarget, backOptions);
+  const currentPath = `${location.pathname}${location.search}`;
+  const existingInvoiceType = (existingInvoice?.invoice_type || existingInvoice?.type || "").toString().toUpperCase();
   const isViewingInvoice = Boolean(existingInvoice?.invoice_id);
 
   const [activeTab, setActiveTab] = useState(TAB_KEYS.ACCOUNT);
@@ -214,12 +224,15 @@ const AddAccount = () => {
     isMainMember: false,
     dependentNumber: "",
     data: defaultPerson(),
+    contactNumbers: [],
+    addresses: [],
     saving: false,
     error: "",
   });
   const [newProfileDraft, setNewProfileDraft] = useState(null);
   const [newProfileSaving, setNewProfileSaving] = useState(false);
   const [newProfileError, setNewProfileError] = useState("");
+  const [confirmState, setConfirmState] = useState({ open: false, message: "", onConfirm: null });
 
   const [memberForm, setMemberForm] = useState(defaultPerson);
   const [patientForm, setPatientForm] = useState(defaultPerson);
@@ -238,22 +251,22 @@ const AddAccount = () => {
     fileNr: "",
     balance: DEFAULT_BALANCE_VALUE,
     authNr: "",
-    type: "",
+    type: "NORMAL",
   });
   const [saving, setSaving] = useState(false);
   const [saveError, setSaveError] = useState("");
-  const [invoiceCount, setInvoiceCount] = useState(0);
   const [lastImported, setLastImported] = useState(null);
   const [isStatusDropdownOpen, setIsStatusDropdownOpen] = useState(false);
   const statusDropdownRef = useRef(null);
   const isForeignUrgentBatch = useMemo(() => isForeignUrgentBatchType(batch), [batch]);
+  const batchBasePath = isFuRoute || isForeignUrgentBatch ? "/fu-batches" : "/batches";
   const invoiceTypeOptions = useMemo(() => {
-    const base = isForeignUrgentBatch ? ["foreign", "urgent_normal", "urgent_other"] : ["normal", "other"];
+    const base = ["NORMAL", "WCA", "RAF"];
     if (existingInvoiceType && !base.includes(existingInvoiceType)) {
       return [...base, existingInvoiceType];
     }
     return base;
-  }, [isForeignUrgentBatch, existingInvoiceType]);
+  }, [existingInvoiceType]);
   const selectedInvoiceType = invoiceForm.type;
   const memberFieldsDisabled = false;
   const medicalAidFieldsDisabled = false;
@@ -294,7 +307,6 @@ const AddAccount = () => {
             )
           : [];
         const count = scoped.length;
-        setInvoiceCount(count);
         setInvoiceForm((prev) => ({
           ...prev,
           nrInBatch: isForeignUrgentBatch ? 1 : prev.nrInBatch || count + 1,
@@ -312,11 +324,10 @@ const AddAccount = () => {
 
   useEffect(() => {
     if (existingInvoice) return;
-    if (isForeignUrgentBatch) return;
     if (!invoiceForm.type) {
-      setInvoiceForm((prev) => ({ ...prev, type: "normal" }));
+      setInvoiceForm((prev) => ({ ...prev, type: "NORMAL" }));
     }
-  }, [existingInvoice, isForeignUrgentBatch, invoiceForm.type]);
+  }, [existingInvoice, invoiceForm.type]);
 
   const clientDisplayName = useMemo(() => formatClientDisplayName(batch), [batch]);
 
@@ -378,7 +389,7 @@ const AddAccount = () => {
           ? String(existingInvoice.balance)
           : "",
       authNr: existingInvoice.auth_nr || "",
-      type: existingInvoiceType || "",
+      type: existingInvoiceType ? existingInvoiceType.toString() : "",
     });
     setIsMemberEditable(false);
     if (existingInvoice.profile_id) {
@@ -399,21 +410,34 @@ const AddAccount = () => {
         </p>
         <button
           type="button"
-          className="tab-pill-dark bg-ebmaa-purple text-white px-6 hover:bg-ebmaa-purple-light mt-4"
-          onClick={() => navigate("/workflow")}
+          className="tab-pill-dark bg-ebmaa-purple text-white px-6 hover:bg-ebmaa-purple-light mt-4 flex items-center justify-center"
+          onClick={handleBack}
         >
-          Back to Workflow
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            viewBox="0 -960 960 960"
+            width="20"
+            height="20"
+            fill="currentColor"
+            aria-hidden="true"
+          >
+            <path d="M360-240 120-480l240-240 56 56-144 144h568v80H272l144 144-56 56Z" />
+          </svg>
+          <span className="sr-only">Back</span>
         </button>
       </section>
     );
   }
 
+  const selectedTypeLabel = invoiceForm.type ? INVOICE_TYPE_LABELS[invoiceForm.type] || invoiceForm.type : "Select type";
   const infoItems = [
-    { label: "Batch", value: `#${batch.batch_id}` },
     { label: "Client", value: clientDisplayName },
-    { label: "Client ID", value: batch.client_id || "N/A" },
-    { label: "Invoice Count", value: invoiceCount },
+    { label: "Batch ID", value: `${isForeignUrgentBatch ? "FU-Batch" : "Batch"} #${batch.batch_id}` },
+    { label: "Type", value: selectedTypeLabel },
   ];
+  if (isForeignUrgentBatch) {
+    infoItems.push({ label: "FU", value: "Foreign & Urgent" });
+  }
   const departmentKey = (batch.current_department || "").toLowerCase();
   const batchTypeKey = isForeignUrgentBatch ? "foreign_urgent" : "normal";
   const invoiceEntityId = existingInvoice?.invoice_id ? String(existingInvoice.invoice_id) : null;
@@ -605,7 +629,12 @@ const hydratePersonForm = (data = {}) => ({
       } else {
         await axiosClient.post(ENDPOINTS.batchAccountCreate(batch.batch_id), payload);
       }
-      navigate(`/batches/${batch.batch_id}`, { state: { batch } });
+      navigate(`${batchBasePath}/${batch.batch_id}`, {
+        state: {
+          batch,
+          from: originFrom || { path: currentPath, activeStatus: location.state?.activeStatus },
+        },
+      });
     } catch (err) {
       setSaveError(err?.response?.data?.error || "Failed to create invoice");
     } finally {
@@ -695,10 +724,29 @@ const hydratePersonForm = (data = {}) => ({
       isMainMember: false,
       dependentNumber: "",
       data: defaultPerson(),
+      contactNumbers: [],
+      addresses: [],
       saving: false,
       error: "",
     });
   }, []);
+
+  const normalizeAddressList = (list = []) => {
+    if (!Array.isArray(list)) return [];
+    let domiciliumSet = false;
+    return list.map((addr, idx) => {
+      const isDomicilium = Boolean(addr.isDomicilium || addr.is_domicilium || (addr.domicilium && !domiciliumSet));
+      if (isDomicilium && !domiciliumSet) domiciliumSet = true;
+      return {
+        addressType: addr.addressType || addr.address_type || addr.type || "Street",
+        address: addr.address || addr.line || "",
+        isDomicilium: isDomicilium && domiciliumSet,
+      };
+    }).map((addr, idx, arr) => {
+      if (arr.some((a) => a.isDomicilium)) return addr;
+      return idx === 0 ? { ...addr, isDomicilium: true } : addr;
+    });
+  };
 
   const openPersonEditor = (person = defaultPerson(), options = {}) => {
     const profileId = options.profileId || person.profileId || lastImported?.profileId || null;
@@ -712,6 +760,8 @@ const hydratePersonForm = (data = {}) => ({
       isMainMember: Boolean(options.isMainMember ?? person.isMainMember),
       dependentNumber: dependentNumber === null || dependentNumber === undefined ? "" : String(dependentNumber),
       data: hydratePersonForm({ ...person, dependentNumber }),
+      contactNumbers: Array.isArray(person.contactNumbers) ? person.contactNumbers : [],
+      addresses: normalizeAddressList(person.addresses),
       saving: false,
       error: "",
     });
@@ -737,6 +787,77 @@ const hydratePersonForm = (data = {}) => ({
     setPersonEditor((prev) => ({ ...prev, isMainMember }));
   };
 
+  const handleAddContactNumber = () => {
+    setPersonEditor((prev) => ({
+      ...prev,
+      contactNumbers: [...prev.contactNumbers, { numType: "Cell", num: "" }],
+    }));
+  };
+
+  const handleUpdateContactNumber = (index, field, value) => {
+    setPersonEditor((prev) => {
+      const next = prev.contactNumbers.map((item, idx) =>
+        idx === index ? { ...item, [field]: value } : item,
+      );
+      return { ...prev, contactNumbers: next };
+    });
+  };
+
+  const requestConfirm = (message, onConfirm) => {
+    setConfirmState({ open: true, message, onConfirm });
+  };
+
+  const handleRemoveContactNumber = (index) => {
+    requestConfirm("remove this contact number?", () => {
+      setPersonEditor((prev) => ({
+        ...prev,
+        contactNumbers: prev.contactNumbers.filter((_, idx) => idx !== index),
+      }));
+    });
+  };
+
+  const handleAddAddress = () => {
+    setPersonEditor((prev) => {
+      const hasDomicilium = prev.addresses.some((addr) => addr.isDomicilium);
+      return {
+        ...prev,
+        addresses: [
+          ...prev.addresses,
+          { addressType: "Street", address: "", isDomicilium: !hasDomicilium },
+        ],
+      };
+    });
+  };
+
+  const handleUpdateAddress = (index, field, value) => {
+    setPersonEditor((prev) => {
+      const next = prev.addresses.map((addr, idx) =>
+        idx === index ? { ...addr, [field]: value } : addr,
+      );
+      return { ...prev, addresses: next };
+    });
+  };
+
+  const handleRemoveAddress = (index) => {
+    requestConfirm("remove this address?", () => {
+      setPersonEditor((prev) => {
+        const next = prev.addresses.filter((_, idx) => idx !== index);
+        const hasDomicilium = next.some((addr) => addr.isDomicilium);
+        if (!hasDomicilium && next[0]) {
+          next[0] = { ...next[0], isDomicilium: true };
+        }
+        return { ...prev, addresses: next };
+      });
+    });
+  };
+
+  const handleSelectDomicilium = (index) => {
+    setPersonEditor((prev) => ({
+      ...prev,
+      addresses: prev.addresses.map((addr, idx) => ({ ...addr, isDomicilium: idx === index })),
+    }));
+  };
+
   const handlePersonSave = async () => {
     if (!personEditor.profileId) {
       setPersonEditor((prev) => ({ ...prev, error: "Select a profile before saving a person." }));
@@ -749,6 +870,8 @@ const hydratePersonForm = (data = {}) => ({
       },
       isMainMember: personEditor.isMainMember,
       dependentNumber: personEditor.dependentNumber,
+      contactNumbers: personEditor.contactNumbers,
+      addresses: personEditor.addresses,
     };
     setPersonEditor((prev) => ({ ...prev, saving: true, error: "" }));
     try {
@@ -764,7 +887,12 @@ const hydratePersonForm = (data = {}) => ({
         const res = await axiosClient.post(ENDPOINTS.createProfilePerson(normalizedProfileId), payload);
         recordId = res.data?.person?.recordId;
       }
-      setPersonEditor((prev) => ({ ...prev, recordId }));
+      setPersonEditor((prev) => ({
+        ...prev,
+        recordId,
+        contactNumbers: payload.contactNumbers,
+        addresses: normalizeAddressList(payload.addresses),
+      }));
       await handleSearchProfiles();
     } catch (err) {
       setPersonEditor((prev) => ({
@@ -914,8 +1042,18 @@ const hydratePersonForm = (data = {}) => ({
         <span className="hidden h-6 w-px bg-gray-blue-100 md:block" aria-hidden="true" />
 
         <div className="flex gap-2 flex-wrap items-center ml-auto">
-          <button type="button" className="button-pill min-w-[100px]" onClick={() => navigate(-1)}>
-            Back
+          <button type="button" className="button-pill min-w-[100px] flex items-center justify-center" onClick={handleBack}>
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              viewBox="0 -960 960 960"
+              width="20"
+              height="20"
+              fill="currentColor"
+              aria-hidden="true"
+            >
+              <path d="M360-240 120-480l240-240 56 56-144 144h568v80H272l144 144-56 56Z" />
+            </svg>
+            <span className="sr-only">Back</span>
           </button>
         </div>
       </div>
@@ -939,6 +1077,9 @@ const hydratePersonForm = (data = {}) => ({
                 <button type="button" className="button-pill opacity-60 cursor-not-allowed" disabled>
                   Import from Medical Aid
                 </button>
+                <button type="button" className="button-pill " onClick={startNewProfileDraft}>
+                  New Profile
+                </button>
               </div>
               {searchError && <p className="text-sm text-red-600">{searchError}</p>}
               {!batch.client_id && (
@@ -947,7 +1088,7 @@ const hydratePersonForm = (data = {}) => ({
               <div className="flex flex-col gap-4 mt-4">
                 {newProfileDraft && (
                   <div className="border border-gray-blue-100 rounded-lg p-4 bg-white">
-                    <p className="text-xs uppercase text-gray-blue-600">New Profile (Private/Other)</p>
+                    <p className="text-xs uppercase text-gray-blue-600">New Profile</p>
                     <div className="grid grid-cols-1 gap-3 md:grid-cols-3 mt-3">
                       <div className="flex flex-col gap-1">
                         <label className="text-xs text-gray-blue-600">Medical Aid Number</label>
@@ -1023,11 +1164,6 @@ const hydratePersonForm = (data = {}) => ({
                     <p className="text-sm text-gray-blue-600">
                       Search for existing profiles or accounts by medical aid number, ID, or surname.
                     </p>
-                    {invoiceForm.type === "other" && (
-                      <button type="button" className="tab-pill w-fit" onClick={startNewProfileDraft}>
-                        New Profile
-                      </button>
-                    )}
                   </div>
                 ) : (
                   profiles.map((profile) => {
@@ -1063,8 +1199,8 @@ const hydratePersonForm = (data = {}) => ({
                               {viewMode === VIEW_MODES.ACCOUNT && (
                                 <button
                                   type="button"
-                                  className={`tab-pill ${
-                                    (!canImportData || isProfileLockedOut) ? "opacity-50 cursor-not-allowed" : ""
+                                  className={`button-pill ${
+                                    !canImportData || isProfileLockedOut ? "opacity-50 cursor-not-allowed" : ""
                                   }`}
                                   onClick={() => {
                                     if (!canImportData || isProfileLockedOut) return;
@@ -1111,7 +1247,7 @@ const hydratePersonForm = (data = {}) => ({
                                       {viewMode === VIEW_MODES.ACCOUNT ? (
                                         <button
                                           type="button"
-                                          className={`tab-pill ${
+                                          className={`button-pill ${
                                             !canImportData || isProfileLockedOut ? "opacity-50 cursor-not-allowed" : ""
                                           }`}
                                           onClick={() =>
@@ -1125,15 +1261,15 @@ const hydratePersonForm = (data = {}) => ({
                                         >
                                           Import Patient
                                         </button>
-                                      ) : (
-                                        <button
-                                          type="button"
-                                          className="tab-pill"
-                                          onClick={() =>
-                                            importPersonToCurrentProfile(profilePersons.mainMember.person, {
-                                              isMainMember: true,
-                                              dependentNumber: profilePersons.mainMember.dependentNumber,
-                                            })
+                                        ) : (
+                                          <button
+                                            type="button"
+                                            className="button-pill"
+                                            onClick={() =>
+                                              importPersonToCurrentProfile(profilePersons.mainMember.person, {
+                                                isMainMember: true,
+                                                dependentNumber: profilePersons.mainMember.dependentNumber,
+                                              })
                                           }
                                         >
                                           Import Person
@@ -1176,7 +1312,7 @@ const hydratePersonForm = (data = {}) => ({
                                           {viewMode === VIEW_MODES.ACCOUNT ? (
                                             <button
                                               type="button"
-                                              className={`tab-pill ${
+                                              className={`button-pill ${
                                                 !canImportData || isProfileLockedOut ? "opacity-50 cursor-not-allowed" : ""
                                               }`}
                                               onClick={() =>
@@ -1186,15 +1322,15 @@ const hydratePersonForm = (data = {}) => ({
                                             >
                                               Import Patient
                                             </button>
-                                          ) : (
-                                            <button
-                                              type="button"
-                                              className="tab-pill"
-                                              onClick={() =>
-                                                importPersonToCurrentProfile(person, {
-                                                  isMainMember: false,
-                                                  dependentNumber: person.dependentNumber,
-                                                })
+                                        ) : (
+                                          <button
+                                            type="button"
+                                            className="button-pill"
+                                            onClick={() =>
+                                              importPersonToCurrentProfile(person, {
+                                                isMainMember: false,
+                                                dependentNumber: person.dependentNumber,
+                                              })
                                               }
                                             >
                                               Import Person
@@ -1315,49 +1451,43 @@ const hydratePersonForm = (data = {}) => ({
             {viewMode === VIEW_MODES.ACCOUNT ? (
               <div className="flex flex-col gap-4 w-full lg:basis-2/4">
                 <section className="container-col m-0">
-                  <div className="flex flex-col gap-6 lg:flex-row lg:items-stretch border-l-4 border-ebmaa-purple bg-gray-blue-100/40 px-6 py-5 rounded-r-lg min-w-[260px]">
-                    <div className="flex-1">
-                      <p className="text-xs uppercase tracking-wide text-gray-blue-600">Add Account / Invoice</p>
-                      <h1 className="text-2xl font-semibold text-gray-dark">Batch #{batch.batch_id}</h1>
-                      <p className="text-sm text-gray-blue-600">{clientDisplayName}</p>
-
-                      <div className="flex flex-wrap gap-6 mt-4">
-                        {infoItems.map((item) => (
-                          <div key={item.label}>
-                            <p className="text-xs uppercase tracking-wide text-gray-blue-600">{item.label}</p>
-                            <p className="text-lg font-semibold text-gray-dark">{item.value}</p>
-                          </div>
-                        ))}
-                      </div>
+                  <div className="flex flex-wrap items-center gap-3 bg-white rounded-lg">
+                    {/* <p className="text-xs uppercase tracking-wide text-gray-blue-600">Add Account / Invoice</p> */}
+                    <div className="flex flex-wrap items-center gap-2 text-sm text-gray-dark">
+                      {infoItems.map((item) => (
+                        <span
+                          key={item.label}
+                          className="inline-flex items-center gap-2 rounded-full bg-gray-blue-100/60 px-3 py-2"
+                        >
+                          <span className="font-semibold text-gray-dark whitespace-nowrap">{item.value}</span>
+                        </span>
+                      ))}
                     </div>
-                    <div className="w-full lg:max-w-[340px] flex flex-col gap-2 justify-end">
-                      <div className="flex flex-wrap items-center gap-4 justify-start lg:justify-end">
-                        <p className="text-xs uppercase tracking-wide text-gray-blue-600 whitespace-nowrap">Invoice Type</p>
-                        <div className="flex flex-wrap gap-3">
-                          {invoiceTypeOptions.map((option) => (
-                            <label
-                              key={option}
-                              className={`flex items-center gap-2 text-sm cursor-pointer ${
-                                invoiceForm.type === option ? "text-ebmaa-purple font-semibold" : "text-gray-700"
-                              }`}
-                            >
-                              <input
-                                type="checkbox"
-                                className="h-4 w-4"
-                                checked={invoiceForm.type === option}
-                                onChange={() => handleInvoiceTypeSelect(option)}
-                              />
-                              <span>{INVOICE_TYPE_LABELS[option] || option}</span>
-                            </label>
-                          ))}
-                        </div>
-                      </div>
-                      {isForeignUrgentBatch && !invoiceForm.type && (
-                        <p className="text-xs text-gray-blue-600 text-right">
-                          Select a type to start editing account details.
-                        </p>
-                      )}
+                    <div className="flex flex-wrap items-center gap-3 ml-auto">
+                      <div className="flex flex-wrap gap-3">
+                        {invoiceTypeOptions.map((option) => (
+                          <label
+                            key={option}
+                            className={`flex items-center gap-2 text-sm cursor-pointer ${
+                              invoiceForm.type === option ? "text-ebmaa-purple font-semibold" : "text-gray-700"
+                            }`}
+                          >
+                            <input
+                              type="checkbox"
+                              className="h-4 w-4"
+                              checked={invoiceForm.type === option}
+                            onChange={() => handleInvoiceTypeSelect(option)}
+                          />
+                          <span>{INVOICE_TYPE_LABELS[option] || option}</span>
+                        </label>
+                      ))}
                     </div>
+                  </div>
+                    {/* {isForeignUrgentBatch && !invoiceForm.type && (
+                      <p className="text-xs text-gray-blue-600 w-full text-right">
+                        Select a type to start editing account details.
+                      </p>
+                    )} */}
                   </div>
                 </section>
                 <section className="container-col m-0">
@@ -1620,19 +1750,19 @@ const hydratePersonForm = (data = {}) => ({
                       />
                     </div>
                   </div>
-                  {lastImported && (
+                  {/* {lastImported && (
                     <p className="text-xs text-gray-blue-600 mt-3">
                       Imported from profile #{lastImported.profileId}
                       {lastImported.accountId ? ` / account #${lastImported.accountId}` : ""}
                     </p>
-                  )}
+                  )} */}
                   {saveError && <p className="text-sm text-red-600 mt-3">{saveError}</p>}
                   <div className="flex flex-wrap items-center justify-between gap-3 mt-4">
                     <div>
                       {lockedProfileId && (
                         <button
                           type="button"
-                          className="button-pill border border-ebmaa-purple text-ebmaa-purple bg-white"
+                          className="button-pill"
                           onClick={handleClearImportedAccount}
                           disabled={saving}
                         >
@@ -1763,6 +1893,151 @@ const hydratePersonForm = (data = {}) => ({
                       />
                     </div>
                   </div>
+
+                  <div className="mt-4 grid grid-cols-1 gap-4 md:grid-cols-3 md:auto-cols-fr md:[grid-template-columns:2fr_1fr]">
+ 
+                    <div className="flex flex-col gap-2">
+                      <div className="flex items-center justify-between">
+                        <p className="text-xs uppercase tracking-wide text-gray-blue-600">Addresses</p>
+                      </div>
+                      <div className="flex flex-col gap-2">
+                        {personEditor.addresses.length === 0 && (
+                          <p className="text-xs text-gray-blue-600">No addresses added.</p>
+                        )}
+                        {personEditor.addresses.map((addr, idx) => (
+                          <div key={`addr-${idx}`} className="flex flex-col gap-2 border border-gray-blue-100 rounded-lg p-2">
+                            <div className="flex items-center gap-2">
+                              <input
+                                type="radio"
+                                name="domicilium"
+                                checked={Boolean(addr.isDomicilium)}
+                                onChange={() => handleSelectDomicilium(idx)}
+                              />
+                              <span className="text-xs text-gray-blue-700">Domicilium</span>
+                              <select
+                                className="input-pill w-[140px]"
+                                value={addr.addressType || addr.address_type || ""}
+                                onChange={(e) => handleUpdateAddress(idx, "addressType", e.target.value)}
+                              >
+                                {ADDRESS_TYPES.map((type) => (
+                                  <option key={type} value={type}>
+                                    {type}
+                                  </option>
+                                ))}
+                              </select>
+                              <button
+                                type="button"
+                                className="p-1 text-red-600 hover:text-red-700 ml-auto"
+                                onClick={() => handleRemoveAddress(idx)}
+                                aria-label="Remove address"
+                              >
+                                <svg
+                                  xmlns="http://www.w3.org/2000/svg"
+                                  height="20px"
+                                  viewBox="0 -960 960 960"
+                                  width="20px"
+                                  fill="currentColor"
+                                >
+                                  <path d="m336-280-56-56 144-144-144-143 56-56 144 144 143-144 56 56-144 143 144 144-56 56-143-144-144 144Z" />
+                                </svg>
+                              </button>
+                            </div>
+                            <input
+                              className="input-pill"
+                              placeholder="Address"
+                              value={addr.address || ""}
+                              onChange={(e) => handleUpdateAddress(idx, "address", e.target.value)}
+                            />
+                          </div>
+                        ))}
+                      </div>
+                      <div className="mt-1">
+                        <button
+                          type="button"
+                          className="p-1 text-ebmaa-purple hover:text-ebmaa-purple-light"
+                          onClick={handleAddAddress}
+                          aria-label="Add address"
+                        >
+                          <svg
+                            xmlns="http://www.w3.org/2000/svg"
+                            height="20px"
+                            viewBox="0 -960 960 960"
+                            width="20px"
+                            fill="currentColor"
+                          >
+                            <path d="M440-440H200v-80h240v-240h80v240h240v80H520v240h-80v-240Z" />
+                          </svg>
+                        </button>
+                      </div>
+                    </div>
+                    <div className="flex flex-col gap-2">
+                      <div className="flex items-center justify-between">
+                        <p className="text-xs uppercase tracking-wide text-gray-blue-600">Contact Numbers</p>
+                      </div>
+                      <div className="flex flex-col gap-2">
+                        {personEditor.contactNumbers.length === 0 && (
+                          <p className="text-xs text-gray-blue-600">No contacts added.</p>
+                        )}
+                        {personEditor.contactNumbers.map((contact, idx) => (
+                          <div key={`contact-${idx}`} className="flex items-center gap-2">
+                            <select
+                              className="input-pill w-[80px] text-sm"
+                              value={contact.numType || contact.num_type || ""}
+                              onChange={(e) => handleUpdateContactNumber(idx, "numType", e.target.value)}
+                            >
+                              {CONTACT_TYPES.map((type) => (
+                                <option key={type} value={type}>
+                                  {type}
+                                </option>
+                              ))}
+                            </select>
+                            <input
+                              type="text"
+                              className="input-pill flex-1 w-[120px]"
+                              placeholder="Contact number"
+                              value={contact.num || contact.number || ""}
+                              onChange={(e) => handleUpdateContactNumber(idx, "num", e.target.value)}
+                            />
+                            <button
+                              type="button"
+                              className="p-1 text-red-600 hover:text-red-700"
+                              onClick={() => handleRemoveContactNumber(idx)}
+                              aria-label="Remove contact"
+                            >
+                              <svg
+                                xmlns="http://www.w3.org/2000/svg"
+                                height="20px"
+                                viewBox="0 -960 960 960"
+                                width="20px"
+                                fill="currentColor"
+                              >
+                                <path d="m336-280-56-56 144-144-144-143 56-56 144 144 143-144 56 56-144 143 144 144-56 56-143-144-144 144Z" />
+                              </svg>
+                            </button>
+                          </div>
+                        ))}
+                      </div>
+                      <div className="mt-1">
+                        <button
+                          type="button"
+                          className="p-1 text-ebmaa-purple hover:text-ebmaa-purple-light"
+                          onClick={handleAddContactNumber}
+                          aria-label="Add contact"
+                        >
+                          <svg
+                            xmlns="http://www.w3.org/2000/svg"
+                            height="20px"
+                            viewBox="0 -960 960 960"
+                            width="20px"
+                            fill="currentColor"
+                          >
+                            <path d="M440-440H200v-80h240v-240h80v240h240v80H520v240h-80v-240Z" />
+                          </svg>
+                        </button>
+                      </div>
+                    </div>
+
+                  </div>
                   {personEditor.error && <p className="text-sm text-red-600 mt-3">{personEditor.error}</p>}
                   <div className="flex gap-3 mt-4">
                     <button type="button" className="button-pill" onClick={handlePersonCancel} disabled={personEditor.saving}>
@@ -1792,12 +2067,23 @@ const hydratePersonForm = (data = {}) => ({
           headerDescription={`Tracking updates for invoice #${invoiceEntityId}`}
           showSearchInput={false}
           className="mt-4"
+          showBatchLink={false}
         />
       ) : (
         <section className="container-col">
           <p className="text-sm text-gray-blue-700">Save this account to start capturing notes and logs.</p>
-        </section>
+    </section>
       )}
+      <ConfirmDialog
+        open={confirmState.open}
+        message={confirmState.message || "Are you sure you want to proceed?"}
+        onCancel={() => setConfirmState({ open: false, message: "", onConfirm: null })}
+        onConfirm={() => {
+          const cb = confirmState.onConfirm;
+          setConfirmState({ open: false, message: "", onConfirm: null });
+          if (typeof cb === "function") cb();
+        }}
+      />
     </div>
   );
 };

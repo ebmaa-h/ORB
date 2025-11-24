@@ -1,5 +1,5 @@
 import { useCallback, useContext, useEffect, useMemo, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import axiosClient from "../../utils/axiosClient";
 import ENDPOINTS from "../../utils/apiEndpoints";
 import { UserContext } from "../../context/UserContext";
@@ -47,15 +47,25 @@ const toLogItem = (log) => ({
   entity_type: log.entity_type,
 });
 
+const getFuBatchId = (meta = {}) =>
+  meta.foreign_urgent_batch_id ?? meta.fu_batch_id ?? meta.foreignUrgentBatchId ?? null;
+
 const extractBatchId = (item) => {
   const metadata = item?.metadata || {};
+  const fuId = getFuBatchId(metadata);
+  if (isForeignUrgentMeta(metadata)) {
+    return fuId || null; // only FU id is valid for FU logs
+  }
+  return metadata.batch_id ?? metadata.batchId ?? item.entity_id ?? null;
+};
+
+const isForeignUrgentMeta = (meta = {}) => {
+  const batchType = (meta.batch_type || "").toLowerCase();
   return (
-    metadata.batch_id ??
-    metadata.batchId ??
-    metadata.parent_batch_id ??
-    metadata.foreign_urgent_batch_id ??
-    item.entity_id ??
-    null
+    Boolean(meta.foreign_urgent_batch_id) ||
+    Boolean(meta.is_pure_foreign_urgent) ||
+    Boolean(meta.is_foreign_urgent) ||
+    batchType === "foreign_urgent"
   );
 };
 
@@ -67,16 +77,84 @@ const getChangeEntries = (metadata) => {
 const formatChangeValue = (value) => {
   if (value === null || value === undefined || value === "") return "N/A";
   if (typeof value === "boolean") return value ? "Yes" : "No";
+  if (typeof value === "string") {
+    // Normalize ISO-like date strings to date-only.
+    if (/^\d{4}-\d{2}-\d{2}T/.test(value)) {
+      return value.split("T")[0];
+    }
+    return value;
+  }
   return String(value);
 };
 
-const useLogDetailToggles = () => {
-  const [collapsed, setCollapsed] = useState({});
-  const toggle = useCallback((logId) => {
-    if (!logId) return;
-    setCollapsed((prev) => ({ ...prev, [logId]: !prev?.[logId] }));
-  }, []);
-  return { collapsed, toggle };
+const FIELD_LABELS = {
+  "invoice.type": "Invoice Type",
+  "invoice.date_of_service": "Date of Service",
+  "invoice.nr_in_batch": "Nr in Batch",
+  "invoice.balance": "Balance",
+  "invoice.status": "Status",
+  "invoice.file_nr": "File #",
+  "invoice.auth_nr": "Auth #",
+  "invoice.plan_name": "Plan",
+  "invoice.plan_code": "Plan Code",
+  "invoice.medical_aid_name": "Medical Aid",
+  "invoice.medical_aid_nr": "Medical Aid #",
+  "invoice.main_member_dependent_nr": "Main Member Dep #",
+  "invoice.patient_dependent_nr": "Patient Dep #",
+  "invoice.main_member_id_nr": "Main Member ID",
+  "invoice.patient_id_nr": "Patient ID",
+  "invoice.main_member_first": "Main Member First",
+  "invoice.main_member_last": "Main Member Last",
+  "invoice.patient_first": "Patient First",
+  "invoice.patient_last": "Patient Last",
+  "member.first": "Member First",
+  "member.last": "Member Last",
+  "member.title": "Member Title",
+  "member.date_of_birth": "Member DOB",
+  "member.dob": "Member DOB",
+  "member.gender": "Member Gender",
+  "member.id": "Member ID",
+  "member.id_nr": "Member ID Nr",
+  "member.dependent_nr": "Member Dep #",
+  "member.dependent_number": "Member Dep #",
+  "patient.first": "Patient First",
+  "patient.last": "Patient Last",
+  "patient.title": "Patient Title",
+  "patient.date_of_birth": "Patient DOB",
+  "patient.dob": "Patient DOB",
+  "patient.gender": "Patient Gender",
+  "patient.id": "Patient ID",
+  "patient.id_nr": "Patient ID Nr",
+  "patient.dependent_nr": "Patient Dep #",
+  "patient.dependent_number": "Patient Dep #",
+};
+
+const formatChangeFieldLabel = (field) => {
+  if (!field) return "Field";
+  const raw = String(field).trim();
+  const lowered = raw.toLowerCase();
+  if (FIELD_LABELS[lowered]) return FIELD_LABELS[lowered];
+
+  const cleaned = lowered
+    .replace(/^(data\.|invoice\.|member\.|patient\.|account\.)+/, "")
+    .replace(/[._]+/g, " ")
+    .trim();
+  if (!cleaned) return "Field";
+
+  const special = {
+    id: "ID",
+    dob: "DOB",
+    nr: "Nr",
+    dep: "Dep",
+  };
+
+  return cleaned
+    .split(" ")
+    .map((part) => {
+      if (special[part]) return special[part];
+      return part ? part[0].toUpperCase() + part.slice(1) : "";
+    })
+    .join(" ");
 };
 
 const CONTEXT_BUILDERS = {
@@ -116,8 +194,10 @@ export default function EntityNotesAndLogs({
   searchTermOverride = null,
   onSearchTermChange = null,
   showSearchInput = true,
+  showBatchLink = true,
 }) {
   const { user } = useContext(UserContext);
+  const location = useLocation();
   const [items, setItems] = useState([]);
   const [newNote, setNewNote] = useState("");
   const [internalSearchTerm, setInternalSearchTerm] = useState("");
@@ -125,7 +205,8 @@ export default function EntityNotesAndLogs({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showLogs, setShowLogs] = useState(initialShowLogs);
   const navigate = useNavigate();
-  const { collapsed: collapsedChanges, toggle: toggleChanges } = useLogDetailToggles();
+  const [openChangesId, setOpenChangesId] = useState(null);
+  const [openChangesPayload, setOpenChangesPayload] = useState(null);
   const showLogsEffective = enableLogToggle ? showLogs : true;
   const effectiveSearchTerm =
     typeof searchTermOverride === "string" ? searchTermOverride : internalSearchTerm;
@@ -265,15 +346,22 @@ export default function EntityNotesAndLogs({
   };
 
   const handleBatchLink = useCallback(
-    (batchId) => {
+    (itemOrId, explicitId = null) => {
+      const meta = typeof itemOrId === "object" && itemOrId !== null ? itemOrId.metadata || {} : {};
+      const batchId =
+        explicitId ??
+        (typeof itemOrId === "object" && itemOrId !== null ? extractBatchId(itemOrId) : String(itemOrId || ""));
       if (!batchId) return;
+
       if (typeof onBatchNavigate === "function") {
-        const handled = onBatchNavigate(batchId);
+        const handled = onBatchNavigate({ batchId, meta });
         if (handled) return;
       }
-      navigate(`/batches/${batchId}`);
+      const fromPath = `${location.pathname}${location.search}`;
+      const basePath = isForeignUrgentMeta(meta) ? "/fu-batches" : "/batches";
+      navigate(`${basePath}/${batchId}`, { state: { from: fromPath, meta } });
     },
-    [navigate, onBatchNavigate],
+    [navigate, onBatchNavigate, location.pathname, location.search],
   );
 
   const searchLower = effectiveSearchTerm.toLowerCase();
@@ -289,78 +377,7 @@ export default function EntityNotesAndLogs({
     return parts.join(" ").toLowerCase().includes(searchLower);
   });
 
-  const renderLogDetails = (item) => {
-    if (item.type !== "log") return null;
-    const metadata = item.metadata || {};
-    const batchId = extractBatchId(item);
-    const changes = getChangeEntries(metadata);
-    const fromDept = metadata.from ?? metadata.fromDepartment;
-    const toDept = metadata.to ?? metadata.toDepartment;
-    const acceptedBy = metadata.accepted_by ?? metadata.acceptedBy;
-    if (!batchId && !fromDept && !toDept && !acceptedBy && changes.length === 0) {
-      return null;
-    }
-
-    return (
-      <div className="mt-2 text-xs text-gray-600 space-y-1">
-        {(batchId || fromDept || toDept || acceptedBy) && (
-          <div className="flex flex-wrap items-center gap-3">
-            {batchId && (
-              <button
-                type="button"
-                className="text-ebmaa-purple font-medium hover:underline"
-                onClick={() => handleBatchLink(batchId)}
-              >
-                Batch #{batchId}
-              </button>
-            )}
-            {fromDept && (
-              <span>
-                From: <strong>{fromDept}</strong>
-              </span>
-            )}
-            {toDept && (
-              <span>
-                To: <strong>{toDept}</strong>
-              </span>
-            )}
-            {acceptedBy && (
-              <span>
-                Accepted by: <strong>{acceptedBy}</strong>
-              </span>
-            )}
-          </div>
-        )}
-
-        {changes.length > 0 && (() => {
-          const isCollapsed = collapsedChanges[item.id] ?? true;
-          return (
-            <div className="rounded border border-gray-blue-100 bg-white/70 p-2">
-              <button
-                type="button"
-                className="text-xs font-semibold uppercase tracking-wide text-gray-700 hover:text-gray-900"
-                onClick={() => toggleChanges(item.id)}
-              >
-                {isCollapsed ? "Show Changes" : "Hide Changes"}
-              </button>
-              {!isCollapsed && (
-                <ul className="mt-2 space-y-1">
-                  {changes.map(([field, diff]) => (
-                    <li key={field} className="flex flex-wrap gap-1">
-                      <span className="font-semibold text-gray-800">{field}:</span>
-                      <span className="text-gray-700">
-                        {formatChangeValue(diff?.before)} → {formatChangeValue(diff?.after)}
-                      </span>
-                    </li>
-                  ))}
-                </ul>
-              )}
-            </div>
-          );
-        })()}
-      </div>
-    );
-  };
+const renderLogDetails = () => null;
 
   const containerClasses = `container-col ${className} mt-0`.trim();
 
@@ -423,24 +440,86 @@ export default function EntityNotesAndLogs({
         </div>
       </div>
 
-      <div className="flex flex-col gap-2 min-h-[80px]" style={listStyle}>
+      <div className="flex flex-col gap-3" style={listStyle}>
         {isLoading ? (
           <p>Loading notes and logs...</p>
         ) : filteredItems.length ? (
           filteredItems.map((item) => (
-            <div key={item.id} className="flex gap-4 items-start text-sm">
-              <p className="text-gray-700 w-[170px] shrink-0">
-                {new Date(item.created_at).toLocaleString()}
-              </p>
-              <div className="flex-1">
-                <p className={item.type === "log" ? "text-gray-700 italic" : ""}>
-                  {item.email ? `${item.email} - ` : ""}
-                  {item.type === "log" && item.action ? `[${item.action}] ` : ""}
-                  {item.content || "(no details)"}
-                </p>
-                {renderLogDetails(item)}
-              </div>
-            </div>
+            (() => {
+              const isLog = item.type === "log";
+              const changes = isLog ? getChangeEntries(item.metadata || {}) : [];
+              const metadata = item.metadata || {};
+              const fromDept = metadata.from ?? metadata.fromDepartment ?? metadata.from_department;
+              const toDept = metadata.to ?? metadata.toDepartment ?? metadata.to_department;
+              const acceptedBy = metadata.accepted_by ?? metadata.acceptedBy;
+              const hasMetaDetails = Boolean(fromDept || toDept || acceptedBy);
+              const hasChanges = changes.length > 0;
+              const isOpen = openChangesId === item.id;
+              const displayName = (item.email || "Unknown user").replace(/@ebmaa\.co\.za$/i, "");
+              const transferInfo =
+                fromDept || toDept
+                  ? {
+                      from: fromDept || "Unknown",
+                      to: toDept || "Unknown",
+                    }
+                  : null;
+              const changeRows = changes.map(([field, diff]) => [
+                formatChangeFieldLabel(field),
+                { before: formatChangeValue(diff?.before), after: formatChangeValue(diff?.after) },
+              ]);
+              const canOpenDetails = Boolean(transferInfo || changeRows.length);
+
+              return (
+                <div
+                  key={item.id}
+                  className="relative flex flex-col gap-2 text-sm"
+                >
+                  <div className="flex flex-wrap items-center gap-3">
+                    <span className="text-[11px] uppercase tracking-wide text-gray-blue-600 min-w-[150px]">
+                      {new Date(item.created_at).toLocaleString()}
+                    </span>
+                    <span className="min-w-[60px]">{displayName}</span>
+                    {showBatchLink && isLog && extractBatchId(item) && (
+                      <button
+                        type="button"
+                        className="button-pill cursor-pointer"
+                        onClick={() => handleBatchLink(item)}
+                      >
+                        {isForeignUrgentMeta(item.metadata || {})
+                          ? `FU-Batch #${extractBatchId(item)}`
+                          : `Batch #${extractBatchId(item)}`}
+                      </button>
+                    )}
+                    {isLog && item.action && (
+                      <span className="text-[11px] uppercase tracking-wide text-gray-blue-700 rounded-full bg-gray-blue-100/80 px-2 py-1">
+                        {item.action}
+                      </span>
+                    )}
+                    <span className={isLog ? "text-gray-700" : "text-gray-700 italic"}>
+                      {item.content || "(no details)"}
+                    </span>
+                    {canOpenDetails && (
+                      <button
+                        type="button"
+                        className="tab-pill text-xs h-[28px]"
+                        onClick={() => {
+                          if (isOpen) {
+                            setOpenChangesId(null);
+                            setOpenChangesPayload(null);
+                          } else {
+                            setOpenChangesId(item.id);
+                            setOpenChangesPayload({ item, transfer: transferInfo, changeRows });
+                          }
+                        }}
+                      >
+                        {isOpen ? "Hide Details" : "Show Details"}
+                      </button>
+                    )}
+                  </div>
+                  {renderLogDetails(item, { changes })}
+                </div>
+              );
+            })()
           ))
         ) : (
           <p>No logs.</p>
@@ -452,7 +531,7 @@ export default function EntityNotesAndLogs({
           <input
             type="text"
             placeholder="New note"
-            className="flex-1 tab-pill"
+            className="flex-1 input-pill"
             value={newNote}
             onChange={(e) => setNewNote(e.target.value)}
             onKeyDown={(e) => e.key === "Enter" && handleAddNote()}
@@ -461,13 +540,91 @@ export default function EntityNotesAndLogs({
           <button
             type="button"
             onClick={handleAddNote}
-            className="tab-pill-dark w-[120px] cursor-pointer bg-ebmaa-purple text-white disabled:opacity-60 hover:bg-ebmaa-purple/70"
+            className="button-pill min-w-[160px] disabled:opacity-60"
             disabled={isSubmitting || !newNote.trim() || !user?.user_id}
           >
             {isSubmitting ? "Adding..." : "Add Note"}
           </button>
         </div>
       )}
+      {openChangesId && (openChangesPayload?.transfer || openChangesPayload?.changeRows?.length) ? (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 p-4"
+          onClick={() => {
+            setOpenChangesId(null);
+            setOpenChangesPayload(null);
+          }}
+        >
+          <div
+            className="w-auto max-w-[90vw] p-2 overflow-hidden rounded-lg border border-gray-blue-100 bg-white shadow-lg"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center justify-between border-b border-gray-blue-50 px-4 py-3">
+              <p className="text-sm font-semibold text-gray-800">Changes</p>
+              <button
+                type="button"
+                className="text-xs uppercase tracking-wide text-gray-blue-600 hover:text-gray-800"
+                onClick={() => {
+                  setOpenChangesId(null);
+                  setOpenChangesPayload(null);
+                }}
+              >
+                Close
+              </button>
+            </div>
+            {openChangesPayload.transfer ? (
+              <div className="px-5 py-6">
+                <div className="flex items-center gap-3 text-sm text-gray-900">
+                  <span className="px-3 py-1 rounded-full bg-gray-blue-100/70 font-semibold">
+                    {openChangesPayload.transfer.from}
+                  </span>
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    viewBox="0 -960 960 960"
+                    width="28"
+                    height="28"
+                    fill="currentColor"
+                    aria-hidden="true"
+                  >
+                    <path d="m560-240-56-58 142-142H160v-80h486L504-662l56-58 240 240-240 240Z" />
+                  </svg>
+                  <span className="px-3 py-1 rounded-full bg-gray-blue-100/70 font-semibold">
+                    {openChangesPayload.transfer.to}
+                  </span>
+                </div>
+              </div>
+            ) : null}
+            {!openChangesPayload.transfer && openChangesPayload.changeRows?.length ? (
+              <div className="overflow-y-auto overflow-x-hidden max-h-[420px]">
+                <table className="table-auto text-sm w-full">
+                  <thead className="bg-gray-blue-50/60 text-[11px] font-semibold uppercase tracking-wide text-gray-blue-600">
+                    <tr>
+                      <th className="px-3 py-2 text-left whitespace-nowrap">Field</th>
+                      <th className="px-3 py-2 text-left whitespace-nowrap">Previous</th>
+                      <th className="px-3 py-2 text-left whitespace-nowrap">New</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-gray-blue-50">
+                    {openChangesPayload.changeRows.map(([field, diff]) => (
+                      <tr key={field}>
+                        <td className="px-3 py-2 font-semibold text-gray-800 whitespace-nowrap">
+                          {formatChangeFieldLabel(field)}
+                        </td>
+                        <td className="px-3 py-2 text-gray-700">
+                          {formatChangeValue(diff?.before)}
+                        </td>
+                        <td className="px-3 py-2 text-gray-800 font-semibold">
+                          {formatChangeValue(diff?.after)}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            ) : null}
+          </div>
+        </div>
+      ) : null}
     </div>
   );
 }

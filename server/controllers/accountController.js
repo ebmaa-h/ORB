@@ -38,6 +38,44 @@ const normalizePersonPayload = (input = {}) => ({
   dependent_nr: safeString(input.dependentNumber || input.dependent_nr),
 });
 
+const normalizeContactNumbers = (input = []) => {
+  if (!Array.isArray(input)) return [];
+  return input
+    .map((item) => ({
+      num_type: safeString(item.num_type || item.numType || item.type) || 'Other',
+      num: safeString(item.num || item.number),
+    }))
+    .filter((item) => Boolean(item.num));
+};
+
+const normalizeAddresses = (input = []) => {
+  if (!Array.isArray(input)) return [];
+  let foundDomicilium = false;
+  const normalized = input
+    .map((item) => {
+      const address = safeString(item.address || item.line);
+      if (!address) return null;
+      const isDomicilium = normalizeBooleanFlag(item.is_domicilium || item.isDomicilium || item.domicilium);
+      if (isDomicilium && !foundDomicilium) {
+        foundDomicilium = true;
+      }
+      return {
+        address_type: safeString(item.address_type || item.addressType || item.type) || 'Other',
+        address,
+        is_domicilium: isDomicilium,
+      };
+    })
+    .filter(Boolean);
+
+  if (!foundDomicilium && normalized.length) {
+    normalized[0].is_domicilium = true;
+  }
+  return normalized.map((addr, index) => ({
+    ...addr,
+    is_domicilium: addr.is_domicilium && index === normalized.findIndex((a) => a.is_domicilium),
+  }));
+};
+
 const normalizeMedicalAid = (input = {}) => ({
   medicalAidId: toPositiveInt(input.medicalAidId) || null,
   planId: toPositiveInt(input.planId) || null,
@@ -52,7 +90,7 @@ const normalizeInvoicePayload = (input = {}) => ({
   fileNr: safeString(input.fileNr),
   balance: input.balance !== undefined && input.balance !== null ? Number(input.balance) : 0,
   authNr: safeString(input.authNr),
-  type: safeString(input.type),
+  type: safeString(input.type)?.toUpperCase() || 'NORMAL',
 });
 
 const shouldCreatePerson = (person) => {
@@ -61,7 +99,7 @@ const shouldCreatePerson = (person) => {
   return fields.some((key) => safeString(person[key]));
 };
 
-const ALLOWED_INVOICE_TYPES = new Set(['normal', 'other', 'foreign', 'urgent_normal', 'urgent_other']);
+const ALLOWED_INVOICE_TYPES = new Set(['NORMAL', 'WCA', 'RAF']);
 
 const accountController = {
   searchProfiles: async (req, res) => {
@@ -156,7 +194,7 @@ const accountController = {
         personRows.forEach((person) => {
           const profile = map.get(person.profile_id);
           if (!profile) return;
-          profile.profilePersons.push({
+          const personPayload = {
             recordId: person.record_id,
             first: person.first,
             last: person.last,
@@ -167,7 +205,33 @@ const accountController = {
             idNumber: person.id_nr,
             dependentNumber: person.dependent_nr,
             isMainMember: person.is_main_member === 1,
-          });
+            contactNumbers: person.contactNumbers || [],
+            addresses: person.addresses || [],
+          };
+          profile.profilePersons.push(personPayload);
+        });
+
+        // Enrich main members / patients in accounts with contact + address details
+        const attachContactInfo = (personObj) => {
+          if (!personObj || !personObj.recordId) return personObj;
+          const details = personRows.find((p) => p.record_id === personObj.recordId);
+          if (!details) return personObj;
+          return {
+            ...personObj,
+            contactNumbers: details.contactNumbers || [],
+            addresses: details.addresses || [],
+          };
+        };
+
+        map.forEach((profile) => {
+          if (profile.mainMember) {
+            profile.mainMember = attachContactInfo(profile.mainMember);
+          }
+          profile.accounts = (profile.accounts || []).map((account) => ({
+            ...account,
+            member: attachContactInfo(account.member),
+            patient: attachContactInfo(account.patient),
+          }));
         });
       }
 
@@ -589,6 +653,8 @@ const accountController = {
 
     try {
       const personPayload = normalizePersonPayload(req.body?.person || {});
+      const contactNumbers = normalizeContactNumbers(req.body?.contactNumbers || req.body?.person?.contactNumbers || []);
+      const addresses = normalizeAddresses(req.body?.addresses || req.body?.person?.addresses || []);
       const isMainMember = normalizeBooleanFlag(req.body?.isMainMember);
       const dependentNumber = safeString(req.body?.dependentNumber || req.body?.person?.dependentNumber);
 
@@ -606,6 +672,8 @@ const accountController = {
           isMainMember,
           dependentNr: dependentNumber,
         });
+        await AccountModel.replaceContactNumbers(connection, recordId, contactNumbers);
+        await AccountModel.replaceAddresses(connection, recordId, addresses);
         await connection.commit();
         res.status(201).json({
           person: {
@@ -613,6 +681,8 @@ const accountController = {
             recordId,
             dependentNumber,
             isMainMember,
+            contactNumbers,
+            addresses,
           },
         });
       } catch (err) {
@@ -637,6 +707,8 @@ const accountController = {
 
     try {
       const personPayload = normalizePersonPayload(req.body?.person || {});
+      const contactNumbers = normalizeContactNumbers(req.body?.contactNumbers || req.body?.person?.contactNumbers || []);
+      const addresses = normalizeAddresses(req.body?.addresses || req.body?.person?.addresses || []);
       const isMainMember = normalizeBooleanFlag(req.body?.isMainMember);
       const dependentNumber = safeString(req.body?.dependentNumber || req.body?.person?.dependentNumber);
 
@@ -650,6 +722,8 @@ const accountController = {
           isMainMember,
           dependentNr: dependentNumber,
         });
+        await AccountModel.replaceContactNumbers(connection, recordId, contactNumbers);
+        await AccountModel.replaceAddresses(connection, recordId, addresses);
         await connection.commit();
         res.json({
           person: {
@@ -657,6 +731,8 @@ const accountController = {
             recordId,
             dependentNumber,
             isMainMember,
+            contactNumbers,
+            addresses,
           },
         });
       } catch (err) {

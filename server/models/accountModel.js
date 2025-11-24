@@ -127,7 +127,41 @@ const AccountModel = {
     if (!profileIds.length) return [];
     const placeholdersQuery = queries.buildProfilePersonsQuery(profileIds.length);
     const [rows] = await db.query(placeholdersQuery, profileIds);
-    return rows;
+    const recordIds = rows.map((row) => row.record_id).filter(Boolean);
+    let contacts = [];
+    let addresses = [];
+    if (recordIds.length) {
+      contacts = await AccountModel.getContactsByRecordIds(recordIds);
+      addresses = await AccountModel.getAddressesByRecordIds(recordIds);
+    }
+    const contactMap = contacts.reduce((map, row) => {
+      const key = row.record_id;
+      if (!map.has(key)) map.set(key, []);
+      map.get(key).push({
+        id: row.number_id,
+        numType: row.num_type,
+        num: row.num,
+      });
+      return map;
+    }, new Map());
+
+    const addressMap = addresses.reduce((map, row) => {
+      const key = row.record_id;
+      if (!map.has(key)) map.set(key, []);
+      map.get(key).push({
+        id: row.address_id,
+        addressType: row.address_type,
+        isDomicilium: !!row.is_domicilium,
+        address: row.address,
+      });
+      return map;
+    }, new Map());
+
+    return rows.map((row) => ({
+      ...row,
+      contactNumbers: contactMap.get(row.record_id) || [],
+      addresses: addressMap.get(row.record_id) || [],
+    }));
   },
 
   getAllMedicalAids: async () => {
@@ -222,6 +256,65 @@ const AccountModel = {
       type || null,
       invoiceId,
     ]);
+  },
+
+  getContactsByRecordIds: async (recordIds = []) => {
+    if (!recordIds.length) return [];
+    const [rows] = await db.query(queries.SELECT_CONTACTS_BY_RECORD_IDS(recordIds.length), recordIds);
+    return rows;
+  },
+
+  getAddressesByRecordIds: async (recordIds = []) => {
+    if (!recordIds.length) return [];
+    const [rows] = await db.query(queries.SELECT_ADDRESSES_BY_RECORD_IDS(recordIds.length), recordIds);
+    return rows;
+  },
+
+  replaceContactNumbers: async (connection, recordId, contacts = []) => {
+    if (!recordId) return;
+    const executor = connection || db;
+    await executor.query(queries.DELETE_CONTACTS_FOR_RECORD, [recordId]);
+    if (!Array.isArray(contacts) || !contacts.length) return;
+    const clean = contacts
+      .map((c) => ({
+        num_type: c.num_type || c.numType || c.type || "Other",
+        num: c.num || c.number || "",
+      }))
+      .filter((c) => c.num && String(c.num).trim());
+    for (const contact of clean) {
+      await executor.query(queries.INSERT_CONTACT, [recordId, contact.num_type, contact.num]);
+    }
+  },
+
+  replaceAddresses: async (connection, recordId, addresses = []) => {
+    if (!recordId) return;
+    const executor = connection || db;
+    await executor.query(queries.DELETE_ADDRESSES_FOR_RECORD, [recordId]);
+    if (!Array.isArray(addresses) || !addresses.length) return;
+
+    let domiciliumSet = false;
+    const normalized = addresses.map((addr) => {
+      const type = addr.address_type || addr.addressType || addr.type || "Other";
+      const address = addr.address || addr.line || "";
+      const isDomicilium = Boolean(addr.is_domicilium || addr.isDomicilium || addr.domicilium);
+      return { type, address, isDomicilium };
+    });
+
+    for (const addr of normalized) {
+      if (addr.isDomicilium && !domiciliumSet) {
+        domiciliumSet = true;
+      } else {
+        addr.isDomicilium = false;
+      }
+    }
+    if (!domiciliumSet && normalized.length) {
+      normalized[0].isDomicilium = true;
+    }
+
+    for (const addr of normalized) {
+      if (!addr.address || !String(addr.address).trim()) continue;
+      await executor.query(queries.INSERT_ADDRESS, [recordId, addr.type, addr.isDomicilium ? 1 : 0, addr.address]);
+    }
   },
 };
 

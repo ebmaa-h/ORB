@@ -21,6 +21,8 @@ function App() {
           <Route path="/workflow" element={<Workflow />} />
           <Route path="/batches/:batchId" element={<BatchView />} />
           <Route path="/batches/:batchId/accounts/new" element={<AddAccount />} />
+          <Route path="/fu-batches/:batchId" element={<BatchView />} />
+          <Route path="/fu-batches/:batchId/accounts/new" element={<AddAccount />} />
         </Route>
 
         {/* catch all // Not found*/}
