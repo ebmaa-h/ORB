@@ -4,6 +4,7 @@ import EntityNotesAndLogs from "../components/ui/EntityNotesAndLogs";
 import SearchBar from "../components/ui/SearchBar";
 import axiosClient from "../utils/axiosClient";
 import ENDPOINTS from "../utils/apiEndpoints";
+import { normalizeIsFuFlag, normalizeIsPureFlag } from "../domain/batch";
 
 const TAB_KEYS = {
   BATCH: "batch",
@@ -57,12 +58,7 @@ const formatClientName = (batch) => {
   return "N/A";
 };
 
-const hasPureForeignUrgentFlag = (batch) => {
-  if (!batch) return false;
-  if (typeof batch.is_pure_foreign_urgent === "boolean") return batch.is_pure_foreign_urgent;
-  if (batch.is_pure_foreign_urgent == null) return false;
-  return ["1", 1, "true", "yes"].includes(batch.is_pure_foreign_urgent);
-};
+const hasPureForeignUrgentFlag = (batch) => normalizeIsPureFlag(batch?.is_pure_foreign_urgent);
 
 const getMainBatchId = (batch) =>
   batch?.foreign_urgent_batch_id ??
@@ -73,7 +69,10 @@ const getMainBatchId = (batch) =>
 
 const isForeignUrgentAccount = (batch) => {
   if (!batch) return false;
-  return Boolean(batch.is_fu || batch.foreign_urgent_batch_id || batch.foreignUrgentBatchId);
+  return (
+    normalizeIsFuFlag(batch.is_fu) ||
+    Boolean(batch.foreign_urgent_batch_id || batch.foreignUrgentBatchId)
+  );
 };
 
 const isForeignOrUrgentBatch = (batch) => {
@@ -179,7 +178,12 @@ const BatchView = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const batch = location.state?.batch || null;
-  const mainBatchId = getMainBatchId(batch);
+  const routeBatchId = useMemo(() => {
+    if (!batchId) return null;
+    const trimmed = String(batchId).trim();
+    return trimmed || null;
+  }, [batchId]);
+  const mainBatchId = getMainBatchId(batch) || routeBatchId;
   const isFuRoute = location.pathname.startsWith("/fu-batches");
   const isForeignUrgentChild = isForeignUrgentAccount(batch);
   const [invoices, setInvoices] = useState([]);
@@ -216,7 +220,9 @@ const BatchView = () => {
       setInvoicesLoading(true);
       setInvoicesError("");
       try {
-        const res = await axiosClient.get(ENDPOINTS.batchInvoices(mainBatchId));
+        const res = await axiosClient.get(ENDPOINTS.batchInvoices(mainBatchId), {
+          params: { is_fu: isForeignUrgentChild ? 1 : 0 },
+        });
         if (!cancelled) {
           const next = Array.isArray(res.data) ? res.data : res.data?.invoices;
           setInvoices(Array.isArray(next) ? next : []);
@@ -235,7 +241,7 @@ const BatchView = () => {
     return () => {
       cancelled = true;
     };
-  }, [mainBatchId]);
+  }, [mainBatchId, isForeignUrgentChild]);
 
   const normalizedBatchId = Number(mainBatchId || 0);
   const relevantInvoices = useMemo(() => {
@@ -278,8 +284,12 @@ const BatchView = () => {
   const originFrom = location.state?.from || null;
   const backPath = typeof originFrom === "string" ? originFrom : originFrom?.path;
   const backActiveStatus = typeof originFrom === "object" ? originFrom.activeStatus : null;
+  const backFilterType = typeof originFrom === "object" ? originFrom.filterType : null;
   const backTarget = backPath || "/workflow";
-  const backOptions = backActiveStatus ? { state: { activeStatus: backActiveStatus } } : undefined;
+  const backOptions =
+    backActiveStatus || backFilterType
+      ? { state: { activeStatus: backActiveStatus, filterType: backFilterType } }
+      : undefined;
   const handleBack = () => navigate(backTarget, backOptions);
 
   if (!batch) {

@@ -5,6 +5,7 @@ import SearchBar from "../components/ui/SearchBar";
 import ConfirmDialog from "../components/ui/ConfirmDialog";
 import axiosClient from "../utils/axiosClient";
 import ENDPOINTS from "../utils/apiEndpoints";
+import { normalizeIsFuFlag, normalizeIsPureFlag } from "../domain/batch";
 
 const defaultPerson = () => ({
   recordId: "",
@@ -26,17 +27,6 @@ const INVOICE_TYPE_LABELS = {
   RAF: "RAF",
 };
 
-const normalizeBatchFlag = (value) => {
-  if (typeof value === "boolean") return value;
-  if (value === null || value === undefined) return false;
-  if (typeof value === "number") return value === 1;
-  if (typeof value === "string") {
-    const normalized = value.trim().toLowerCase();
-    return ["1", "true", "yes"].includes(normalized);
-  }
-  return false;
-};
-
 const getMainBatchId = (batch) =>
   batch?.foreign_urgent_batch_id ??
   batch?.foreignUrgentBatchId ??
@@ -46,8 +36,14 @@ const getMainBatchId = (batch) =>
 
 const isForeignUrgentBatchType = (batch) => {
   if (!batch) return false;
-  if (batch.is_fu || batch.foreign_urgent_batch_id || batch.foreignUrgentBatchId) return true;
-  return normalizeBatchFlag(batch.is_pure_foreign_urgent);
+  if (
+    normalizeIsFuFlag(batch.is_fu) ||
+    batch.foreign_urgent_batch_id ||
+    batch.foreignUrgentBatchId
+  ) {
+    return true;
+  }
+  return normalizeIsPureFlag(batch.is_pure_foreign_urgent);
 };
 
 const FOREIGN_URGENT_INVOICE_TYPES = new Set(["foreign", "urgent_normal", "urgent_other"]);
@@ -209,8 +205,12 @@ const AddAccount = () => {
   const originFrom = location.state?.from || null;
   const backPath = typeof originFrom === "string" ? originFrom : originFrom?.path;
   const backActiveStatus = typeof originFrom === "object" ? originFrom.activeStatus : null;
+  const backFilterType = typeof originFrom === "object" ? originFrom.filterType : null;
   const backTarget = backPath || "/workflow";
-  const backOptions = backActiveStatus ? { state: { activeStatus: backActiveStatus } } : undefined;
+  const backOptions =
+    backActiveStatus || backFilterType
+      ? { state: { activeStatus: backActiveStatus, filterType: backFilterType } }
+      : undefined;
   const handleBack = () => navigate(backTarget, backOptions);
   const currentPath = `${location.pathname}${location.search}`;
   const existingInvoiceType = (existingInvoice?.invoice_type || existingInvoice?.type || "").toString().toUpperCase();
@@ -307,7 +307,9 @@ const AddAccount = () => {
 
     const fetchInvoices = async () => {
       try {
-        const res = await axiosClient.get(ENDPOINTS.batchInvoices(mainBatchId));
+        const res = await axiosClient.get(ENDPOINTS.batchInvoices(mainBatchId), {
+          params: { is_fu: isForeignUrgentBatch ? 1 : 0 },
+        });
         if (cancelled) return;
         const list = Array.isArray(res.data) ? res.data : res.data?.invoices;
         const scoped = Array.isArray(list)

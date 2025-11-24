@@ -251,15 +251,16 @@ const accountController = {
     }
 
     try {
-      // Determine if this is a normal or FU batch
+      // Determine if this is a normal or FU batch.
+      // IMPORTANT: only look up FU when the request declares it, to avoid collisions on overlapping IDs.
       const requestIsFu = normalizeBooleanFlag(req.body?.is_fu);
-      const fu = requestIsFu ? await Batch.getForeignUrgentById(rawId) : await Batch.getForeignUrgentById(rawId);
+      const fu = requestIsFu ? await Batch.getForeignUrgentById(rawId) : null;
       const batch = fu || (await Batch.getBatchById(rawId));
       if (!batch) {
         return res.status(404).json({ error: `Batch #${rawId} not found` });
       }
 
-      const isForeignUrgent = Boolean(fu);
+      const isForeignUrgent = requestIsFu && Boolean(fu);
       const batchId = rawId;
       const clientIdFromBatch = batch.client_id;
       const {
