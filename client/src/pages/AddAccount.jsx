@@ -27,12 +27,12 @@ const INVOICE_TYPE_LABELS = {
   RAF: "RAF",
 };
 
-const getMainBatchId = (batch) =>
-  batch?.foreign_urgent_batch_id ??
-  batch?.foreignUrgentBatchId ??
-  batch?.batch_id ??
-  batch?.batchId ??
-  null;
+const getBatchIdForMode = (batch, { preferForeignUrgent = false } = {}) => {
+  if (!batch) return null;
+  const foreignId = batch.foreign_urgent_batch_id ?? batch.foreignUrgentBatchId ?? null;
+  const normalId = batch.batch_id ?? batch.batchId ?? null;
+  return preferForeignUrgent ? foreignId || normalId || null : normalId || foreignId || null;
+};
 
 const isForeignUrgentBatchType = (batch) => {
   if (!batch) return false;
@@ -200,7 +200,6 @@ const AddAccount = () => {
   const location = useLocation();
   const isFuRoute = location.pathname.startsWith("/fu-batches");
   const batch = location.state?.batch || null;
-  const mainBatchId = getMainBatchId(batch);
   const existingInvoice = location.state?.invoice || null;
   const originFrom = location.state?.from || null;
   const backPath = typeof originFrom === "string" ? originFrom : originFrom?.path;
@@ -235,6 +234,7 @@ const AddAccount = () => {
     data: defaultPerson(),
     contactNumbers: [],
     addresses: [],
+    emails: [],
     saving: false,
     error: "",
   });
@@ -267,7 +267,11 @@ const AddAccount = () => {
   const [lastImported, setLastImported] = useState(null);
   const [isStatusDropdownOpen, setIsStatusDropdownOpen] = useState(false);
   const statusDropdownRef = useRef(null);
-  const isForeignUrgentBatch = useMemo(() => isForeignUrgentBatchType(batch), [batch]);
+  const isForeignUrgentBatch = useMemo(() => isForeignUrgentBatchType(batch) || isFuRoute, [batch, isFuRoute]);
+  const mainBatchId = useMemo(
+    () => getBatchIdForMode(batch, { preferForeignUrgent: isForeignUrgentBatch }),
+    [batch, isForeignUrgentBatch],
+  );
   const batchBasePath = isFuRoute || isForeignUrgentBatch ? "/fu-batches" : "/batches";
   const invoiceTypeOptions = useMemo(() => {
     const base = ["NORMAL", "WCA", "RAF"];
@@ -743,6 +747,7 @@ const hydratePersonForm = (data = {}) => ({
       data: defaultPerson(),
       contactNumbers: [],
       addresses: [],
+      emails: [],
       saving: false,
       error: "",
     });
@@ -779,6 +784,7 @@ const hydratePersonForm = (data = {}) => ({
       data: hydratePersonForm({ ...person, dependentNumber }),
       contactNumbers: Array.isArray(person.contactNumbers) ? person.contactNumbers : [],
       addresses: normalizeAddressList(person.addresses),
+      emails: Array.isArray(person.emails) ? person.emails : [],
       saving: false,
       error: "",
     });
@@ -820,6 +826,22 @@ const hydratePersonForm = (data = {}) => ({
     });
   };
 
+  const handleAddEmail = () => {
+    setPersonEditor((prev) => ({
+      ...prev,
+      emails: [...prev.emails, { email: "" }],
+    }));
+  };
+
+  const handleUpdateEmail = (index, value) => {
+    setPersonEditor((prev) => {
+      const next = prev.emails.map((item, idx) =>
+        idx === index ? { ...item, email: value } : item,
+      );
+      return { ...prev, emails: next };
+    });
+  };
+
   const requestConfirm = (message, onConfirm) => {
     setConfirmState({ open: true, message, onConfirm });
   };
@@ -829,6 +851,15 @@ const hydratePersonForm = (data = {}) => ({
       setPersonEditor((prev) => ({
         ...prev,
         contactNumbers: prev.contactNumbers.filter((_, idx) => idx !== index),
+      }));
+    });
+  };
+
+  const handleRemoveEmail = (index) => {
+    requestConfirm("remove this email?", () => {
+      setPersonEditor((prev) => ({
+        ...prev,
+        emails: prev.emails.filter((_, idx) => idx !== index),
       }));
     });
   };
@@ -889,6 +920,7 @@ const hydratePersonForm = (data = {}) => ({
       dependentNumber: personEditor.dependentNumber,
       contactNumbers: personEditor.contactNumbers,
       addresses: personEditor.addresses,
+      emails: personEditor.emails,
     };
     setPersonEditor((prev) => ({ ...prev, saving: true, error: "" }));
     try {
@@ -909,6 +941,7 @@ const hydratePersonForm = (data = {}) => ({
         recordId,
         contactNumbers: payload.contactNumbers,
         addresses: normalizeAddressList(payload.addresses),
+        emails: payload.emails,
       }));
       await handleSearchProfiles();
     } catch (err) {
@@ -943,6 +976,9 @@ const hydratePersonForm = (data = {}) => ({
       recordId: person.recordId || null,
       dependentNumber: dependentNumber === null || dependentNumber === undefined ? "" : String(dependentNumber),
       isMainMember: Boolean(options.isMainMember ?? person.isMainMember),
+      contactNumbers: Array.isArray(person.contactNumbers) ? person.contactNumbers : [],
+      addresses: normalizeAddressList(person.addresses),
+      emails: Array.isArray(person.emails) ? person.emails : [],
       error: "",
     }));
     setViewMode(VIEW_MODES.PERSON);
@@ -1077,8 +1113,8 @@ const hydratePersonForm = (data = {}) => ({
       {activeTab === TAB_KEYS.ACCOUNT ? (
         <>
           {/* SECTION 1 // SEARCH SECTION */}
-          <div className="flex flex-row-reverse gap-4 lg:basis-2/4 mb-4">
-            <section className="container-col m-0 flex w-full lg:basis-2/4 lg:flex-none">
+          <div className="flex flex-col-reverse lg:flex-row-reverse gap-4 lg:basis-2/4 mb-4 w-full">
+            <section className="container-col m-0 flex w-full lg:basis-2/4 lg:flex-none min-w-0">
               <div className="flex flex-wrap items-center gap-4">
                 <div className="flex-1 min-w-[220px]">
                   <SearchBar searchTerm={searchTerm} setSearchTerm={handleSearchTermChange} classes="w-full" />
@@ -1466,7 +1502,7 @@ const hydratePersonForm = (data = {}) => ({
 
             {/* SECTION 2 // INFO SECTION */}
             {viewMode === VIEW_MODES.ACCOUNT ? (
-              <div className="flex flex-col gap-4 w-full lg:basis-2/4">
+              <div className="flex flex-col gap-4 w-full lg:basis-2/4 min-w-0">
                 <section className="container-col m-0">
                   <div className="flex flex-wrap items-center gap-3 bg-white rounded-lg">
                     {/* <p className="text-xs uppercase tracking-wide text-gray-blue-600">Add Account / Invoice</p> */}
@@ -1811,8 +1847,8 @@ const hydratePersonForm = (data = {}) => ({
                       <p className="text-xs uppercase tracking-wide text-gray-blue-600">Person View</p>
                       <p className="text-sm text-gray-blue-600">
                         {personEditor.recordId
-                          ? `Editing person #${personEditor.recordId}`
-                          : "Select a person from Search results to edit, or add a new person."}
+                          ? `#${personEditor.recordId}`
+                          : "Select a person from search results to edit, or add a new person."}
                       </p>
                     </div>
                   </div>
@@ -1911,9 +1947,8 @@ const hydratePersonForm = (data = {}) => ({
                     </div>
                   </div>
 
-                  <div className="mt-4 grid grid-cols-1 gap-4 md:grid-cols-3 md:auto-cols-fr md:[grid-template-columns:2fr_1fr]">
- 
-                    <div className="flex flex-col gap-2">
+                  <div className="mt-4 grid grid-cols-1 gap-4 md:grid-cols-3 md:auto-cols-fr">
+                    <div className="flex flex-col gap-2 min-w-0">
                       <div className="flex items-center justify-between">
                         <p className="text-xs uppercase tracking-wide text-gray-blue-600">Addresses</p>
                       </div>
@@ -1959,8 +1994,9 @@ const hydratePersonForm = (data = {}) => ({
                                 </svg>
                               </button>
                             </div>
-                            <input
-                              className="input-pill"
+                            <textarea
+                              rows={2}
+                              className="w-full rounded-none border-0 border-b border-gray-blue-200 bg-transparent px-0 py-2 text-sm text-gray-700 focus:border-ebmaa-purple focus:ring-0 resize-y min-h-[48px]"
                               placeholder="Address"
                               value={addr.address || ""}
                               onChange={(e) => handleUpdateAddress(idx, "address", e.target.value)}
@@ -1987,7 +2023,7 @@ const hydratePersonForm = (data = {}) => ({
                         </button>
                       </div>
                     </div>
-                    <div className="flex flex-col gap-2">
+                    <div className="flex flex-col gap-2 min-w-0">
                       <div className="flex items-center justify-between">
                         <p className="text-xs uppercase tracking-wide text-gray-blue-600">Contact Numbers</p>
                       </div>
@@ -1996,7 +2032,7 @@ const hydratePersonForm = (data = {}) => ({
                           <p className="text-xs text-gray-blue-600">No contacts added.</p>
                         )}
                         {personEditor.contactNumbers.map((contact, idx) => (
-                          <div key={`contact-${idx}`} className="flex items-center gap-2">
+                          <div key={`contact-${idx}`} className="flex items-center gap-2 w-full flex-wrap md:flex-nowrap">
                             <select
                               className="input-pill w-[80px] text-sm"
                               value={contact.numType || contact.num_type || ""}
@@ -2010,14 +2046,14 @@ const hydratePersonForm = (data = {}) => ({
                             </select>
                             <input
                               type="text"
-                              className="input-pill flex-1 w-[120px]"
+                              className="input-pill flex-1 min-w-0 w-[120px]"
                               placeholder="Contact number"
                               value={contact.num || contact.number || ""}
                               onChange={(e) => handleUpdateContactNumber(idx, "num", e.target.value)}
                             />
                             <button
                               type="button"
-                              className="p-1 text-red-600 hover:text-red-700"
+                              className="p-1 text-red-600 hover:text-red-700 flex-none"
                               onClick={() => handleRemoveContactNumber(idx)}
                               aria-label="Remove contact"
                             >
@@ -2053,7 +2089,61 @@ const hydratePersonForm = (data = {}) => ({
                         </button>
                       </div>
                     </div>
-
+                    <div className="flex flex-col gap-2 min-w-0">
+                      <div className="flex items-center justify-between">
+                        <p className="text-xs uppercase tracking-wide text-gray-blue-600">Emails</p>
+                      </div>
+                      <div className="flex flex-col gap-2">
+                        {personEditor.emails.length === 0 && (
+                          <p className="text-xs text-gray-blue-600">No emails added.</p>
+                        )}
+                        {personEditor.emails.map((item, idx) => (
+                          <div key={`email-${idx}`} className="flex items-center gap-2 w-full">
+                            <input
+                              type="email"
+                              className="input-pill flex-1 min-w-0"
+                              placeholder="Email address"
+                              value={item.email || ""}
+                              onChange={(e) => handleUpdateEmail(idx, e.target.value)}
+                            />
+                            <button
+                              type="button"
+                              className="p-1 text-red-600 hover:text-red-700 flex-none"
+                              onClick={() => handleRemoveEmail(idx)}
+                              aria-label="Remove email"
+                            >
+                              <svg
+                                xmlns="http://www.w3.org/2000/svg"
+                                height="20px"
+                                viewBox="0 -960 960 960"
+                                width="20px"
+                                fill="currentColor"
+                              >
+                                <path d="m336-280-56-56 144-144-144-143 56-56 144 144 143-144 56 56-144 143 144 144-56 56-143-144-144 144Z" />
+                              </svg>
+                            </button>
+                          </div>
+                        ))}
+                      </div>
+                      <div className="mt-1">
+                        <button
+                          type="button"
+                          className="p-1 text-ebmaa-purple hover:text-ebmaa-purple-light"
+                          onClick={handleAddEmail}
+                          aria-label="Add email"
+                        >
+                          <svg
+                            xmlns="http://www.w3.org/2000/svg"
+                            height="20px"
+                            viewBox="0 -960 960 960"
+                            width="20px"
+                            fill="currentColor"
+                          >
+                            <path d="M440-440H200v-80h240v-240h80v240h240v80H520v240h-80v-240Z" />
+                          </svg>
+                        </button>
+                      </div>
+                    </div>
                   </div>
                   {personEditor.error && <p className="text-sm text-red-600 mt-3">{personEditor.error}</p>}
                   <div className="flex gap-3 mt-4">

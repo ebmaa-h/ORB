@@ -63,6 +63,11 @@ const ACCEPT_TRANSFER = `
   WHERE transfer_id = ?
 `;
 
+const DELETE_PENDING_TRANSFERS = `
+  DELETE FROM batch_transfers
+  WHERE item_type = ? AND item_id = ? AND status = 'pending'
+`;
+
 // Incoming to a department (derived inbox)
 const GET_INCOMING_TRANSFERS_BATCHES = `
   SELECT b.*, ? AS current_department, 'inbox' AS status
@@ -336,6 +341,8 @@ const WF_SELECT_BATCHES_MAIN_BY_DEPT = `
     b.*,
     w.department AS current_department,
     w.status,
+    t.from_department AS transfer_from_department,
+    t.to_department AS transfer_to_department,
     c.first AS client_first,
     c.last AS client_last,
     c.client_type,
@@ -348,6 +355,7 @@ const WF_SELECT_BATCHES_MAIN_BY_DEPT = `
   LEFT JOIN users u_created ON u_created.user_id = b.created_by
   LEFT JOIN users u_admitted ON u_admitted.user_id = b.admitted_by
   LEFT JOIN users u_billed ON u_billed.user_id = b.billed_by
+  LEFT JOIN batch_transfers t ON t.item_type = 'batch' AND t.item_id = b.batch_id AND t.status = 'pending'
   WHERE w.entity_type = 'batch' AND w.outbox_temp = 0 AND w.department = ?
 `;
 
@@ -356,6 +364,8 @@ const WF_SELECT_BATCHES_OUTBOX_BY_DEPT = `
     b.*,
     w.department AS current_department,
     w.status,
+    t.from_department AS transfer_from_department,
+    t.to_department AS transfer_to_department,
     c.first AS client_first,
     c.last AS client_last,
     c.client_type,
@@ -368,6 +378,7 @@ const WF_SELECT_BATCHES_OUTBOX_BY_DEPT = `
   LEFT JOIN users u_created ON u_created.user_id = b.created_by
   LEFT JOIN users u_admitted ON u_admitted.user_id = b.admitted_by
   LEFT JOIN users u_billed ON u_billed.user_id = b.billed_by
+  LEFT JOIN batch_transfers t ON t.item_type = 'batch' AND t.item_id = b.batch_id AND t.status = 'pending'
   WHERE w.entity_type = 'batch' AND w.outbox_temp = 1 AND w.department = ? AND w.status = 'outbox'
 `;
 
@@ -379,6 +390,8 @@ const WF_SELECT_FU_MAIN_BY_DEPT = `
     fua.medical_aid_nr,
     w.department AS current_department,
     w.status,
+    t.from_department AS transfer_from_department,
+    t.to_department AS transfer_to_department,
     fua.created_at,
     fua.updated_at,
     fua.bank_statements,
@@ -402,6 +415,7 @@ const WF_SELECT_FU_MAIN_BY_DEPT = `
   LEFT JOIN users u_created ON u_created.user_id = b.created_by
   LEFT JOIN users u_fu_admitted ON u_fu_admitted.user_id = fua.admitted_by
   LEFT JOIN users u_fu_billed ON u_fu_billed.user_id = fua.billed_by
+  LEFT JOIN batch_transfers t ON t.item_type = 'fu' AND t.item_id = fua.foreign_urgent_batch_id AND t.status = 'pending'
   WHERE w.entity_type = 'fu' AND w.outbox_temp = 0 AND w.department = ?
 `;
 
@@ -413,6 +427,8 @@ const WF_SELECT_FU_OUTBOX_BY_DEPT = `
     fua.medical_aid_nr,
     w.department AS current_department,
     w.status,
+    t.from_department AS transfer_from_department,
+    t.to_department AS transfer_to_department,
     fua.created_at,
     fua.updated_at,
     fua.bank_statements,
@@ -436,6 +452,7 @@ const WF_SELECT_FU_OUTBOX_BY_DEPT = `
   LEFT JOIN users u_created ON u_created.user_id = b.created_by
   LEFT JOIN users u_fu_admitted ON u_fu_admitted.user_id = fua.admitted_by
   LEFT JOIN users u_fu_billed ON u_fu_billed.user_id = fua.billed_by
+  LEFT JOIN batch_transfers t ON t.item_type = 'fu' AND t.item_id = fua.foreign_urgent_batch_id AND t.status = 'pending'
   WHERE w.entity_type = 'fu' AND w.outbox_temp = 1 AND w.department = ? AND w.status = 'outbox'
 `;
 
@@ -448,6 +465,8 @@ module.exports = {
   MOVE_FU,
   ACCEPT_BATCH,
   ACCEPT_FU,
+  INSERT_TRANSFER,
+  GET_LATEST_PENDING_TRANSFER,
   UPDATE_BATCH_RECEPTION_FIELDS,
   GET_BATCH_BY_ID,
   GET_FU_BY_ID,
@@ -455,6 +474,8 @@ module.exports = {
   UPDATE_BATCH_BILLED_BY,
   UPDATE_FU_ADMITTED_BY,
   UPDATE_FU_BILLED_BY,
+  ACCEPT_TRANSFER,
+  DELETE_PENDING_TRANSFERS,
   // workflows
   WF_UPSERT_MAIN,
   WF_UPSERT_OUTBOX,

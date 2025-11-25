@@ -123,7 +123,7 @@ const workflowController = {
 
       res.status(201).json({
         message: "Batch created successfully",
-        batch: newBatch,
+        batch: baseBatch,
         foreign_urgents: createdForeignUrgents,
       });
     } catch (err) {
@@ -303,10 +303,33 @@ const workflowController = {
       // 2) create/update temp outbox on sender dept
       await Batch.upsertWorkflowOutbox({ entity_type, entity_id: batch_id, department: fromDepartment, created_by: user_id || null });
 
+      // maintain transfer trail (one pending record per entity)
+      await Batch.deletePendingTransfers({ entity_type, entity_id: batch_id });
+      await Batch.insertTransfer({
+        entity_type,
+        entity_id: batch_id,
+        from_department: fromDepartment,
+        to_department: finalToDepartment,
+        target_status: targetStatus,
+        created_by: user_id || null,
+      });
+
       // emit payloads
       const base = (is_fu ? await Batch.getForeignUrgentById(batch_id) : await Batch.getBatchById(batch_id)) || {};
-      const inboxPayload = { ...base, current_department: finalToDepartment, status: targetStatus };
-      const outboxPayload = { ...base, current_department: fromDepartment, status: 'outbox' };
+      const inboxPayload = {
+        ...base,
+        current_department: finalToDepartment,
+        status: targetStatus,
+        transfer_from_department: fromDepartment,
+        transfer_to_department: finalToDepartment,
+      };
+      const outboxPayload = {
+        ...base,
+        current_department: fromDepartment,
+        status: 'outbox',
+        transfer_from_department: fromDepartment,
+        transfer_to_department: finalToDepartment,
+      };
       if (fromDepartment) io.to(fromDepartment).emit('batchUpdated', outboxPayload);
       io.to(finalToDepartment).emit('batchUpdated', inboxPayload);
 
@@ -361,6 +384,14 @@ const workflowController = {
 
       // update main status to current/filing
       await Batch.upsertWorkflowMain({ entity_type, entity_id: batch_id, department: toDept, status: finalStatus, created_by: user_id || null });
+      const pendingTransfer = await Batch.getLatestPendingTransfer({
+        entity_type,
+        entity_id: batch_id,
+        to_department: toDept,
+      });
+      if (pendingTransfer?.transfer_id) {
+        await Batch.acceptTransfer({ transfer_id: pendingTransfer.transfer_id, accepted_by: user_id || null });
+      }
 
       // find and remove temp outbox (if exists)
       const outbox = await Batch.getWorkflowOutboxByEntity({ entity_type, entity_id: batch_id });

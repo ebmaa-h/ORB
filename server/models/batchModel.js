@@ -180,6 +180,35 @@ const Batch = {
       await db.query(queries.UPDATE_BATCH_BILLED_BY, [user_id, entity_id]);
     }
   },
+
+  deletePendingTransfers: async ({ entity_type, entity_id }) => {
+    await db.query(queries.DELETE_PENDING_TRANSFERS, [entity_type, entity_id]);
+  },
+
+  insertTransfer: async ({ entity_type, entity_id, from_department, to_department, target_status, created_by = null }) => {
+    await db.query(queries.INSERT_TRANSFER, [
+      entity_type,
+      entity_id,
+      from_department,
+      to_department,
+      target_status,
+      created_by,
+    ]);
+  },
+
+  getLatestPendingTransfer: async ({ entity_type, entity_id, to_department }) => {
+    const [rows] = await db.query(queries.GET_LATEST_PENDING_TRANSFER, [
+      entity_type,
+      entity_id,
+      to_department,
+    ]);
+    return rows[0] || null;
+  },
+
+  acceptTransfer: async ({ transfer_id, accepted_by = null }) => {
+    if (!transfer_id) return;
+    await db.query(queries.ACCEPT_TRANSFER, [accepted_by, transfer_id]);
+  },
 };
 
 module.exports = Batch;

@@ -377,6 +377,25 @@ CREATE TABLE workflows (
   FOREIGN KEY (created_by) REFERENCES users(user_id)
 );
 
+-- Tracks in-flight transfers between departments
+CREATE TABLE batch_transfers (
+  transfer_id INT AUTO_INCREMENT PRIMARY KEY,
+  item_type ENUM('batch','fu') NOT NULL,
+  item_id INT NOT NULL,
+  from_department ENUM('reception','admittance','billing') NOT NULL,
+  to_department ENUM('reception','admittance','billing') NOT NULL,
+  target_status ENUM('inbox','filing') NOT NULL DEFAULT 'inbox',
+  status ENUM('pending','accepted') NOT NULL DEFAULT 'pending',
+  created_by INT NULL,
+  accepted_by INT NULL,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  accepted_at TIMESTAMP NULL DEFAULT NULL,
+  INDEX idx_item_status (item_type, item_id, status),
+  INDEX idx_to_dept (to_department, status),
+  FOREIGN KEY (created_by) REFERENCES users(user_id),
+  FOREIGN KEY (accepted_by) REFERENCES users(user_id)
+);
+
 -- Create invoices table
 CREATE TABLE invoices (
     invoice_id INT AUTO_INCREMENT PRIMARY KEY,

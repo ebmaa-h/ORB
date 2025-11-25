@@ -87,6 +87,8 @@ const Row = ({
   onArchiveDraft,
   clients = [],
   onToggleExpand = () => {},
+  activeStatus = "current",
+  filterType = "normal",
 }) => {
   const entityId = primaryId ?? batch?.foreign_urgent_batch_id ?? batch?.batch_id;
   const navigate = useNavigate();
@@ -301,13 +303,14 @@ const Row = ({
   const handleViewBatch = (selected) => {
     if (!entityId) return;
     const fromPath = `${location.pathname}${location.search}`;
+    const fromState = { path: fromPath, activeStatus, filterType };
     const isFu = Boolean(
       selected.is_fu ||
         selected.foreign_urgent_batch_id ||
         (selected.batch_type || "").toLowerCase() === "foreign_urgent",
     );
     const basePath = isFu ? "/fu-batches" : "/batches";
-    navigate(`${basePath}/${entityId}`, { state: { batch: selected, from: fromPath } });
+    navigate(`${basePath}/${entityId}`, { state: { batch: selected, from: fromState } });
   };
 
   return (

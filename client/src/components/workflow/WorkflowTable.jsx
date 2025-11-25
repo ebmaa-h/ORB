@@ -74,6 +74,7 @@ const WorkflowTable = React.memo(function WorkflowTable({
                 actions={actions}
                 onExecute={onExecute}
                 filterType={filterType}
+                activeStatus={activeStatus}
                 expandedColumns={expandedColumns}
                 canEdit={canEdit}
                 onBatchUpdate={onBatchUpdate}

@@ -131,7 +131,7 @@ export default function NewBatch({ onBatchCreated }) {
           corrections: false,
         });
         if (typeof onBatchCreated === "function") {
-          onBatchCreated();
+          onBatchCreated(response.data);
         }
       }
     } catch (error) {

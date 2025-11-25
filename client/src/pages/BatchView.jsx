@@ -285,10 +285,11 @@ const BatchView = () => {
   const backPath = typeof originFrom === "string" ? originFrom : originFrom?.path;
   const backActiveStatus = typeof originFrom === "object" ? originFrom.activeStatus : null;
   const backFilterType = typeof originFrom === "object" ? originFrom.filterType : null;
+  const fallbackFilterType = backFilterType || (isForeignUrgentChild || isFuRoute ? "fu" : "normal");
   const backTarget = backPath || "/workflow";
   const backOptions =
-    backActiveStatus || backFilterType
-      ? { state: { activeStatus: backActiveStatus, filterType: backFilterType } }
+    backActiveStatus || backFilterType || fallbackFilterType
+      ? { state: { activeStatus: backActiveStatus, filterType: fallbackFilterType } }
       : undefined;
   const handleBack = () => navigate(backTarget, backOptions);
 

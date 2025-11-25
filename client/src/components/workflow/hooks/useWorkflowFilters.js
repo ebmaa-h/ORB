@@ -31,10 +31,24 @@ export const useWorkflowFilters = ({
   const showLogsTab = activeStatus === LOGS_TAB;
 
   const { visibleBatches, tableColumns } = useMemo(() => {
-    const columns =
+    const baseColumns =
       filterType === "fu" && config?.foreignUrgentColumns
         ? config.foreignUrgentColumns
         : config?.columns || [];
+    const columns = [...baseColumns];
+    if (activeStatus === "inbox") {
+      columns.push({
+        name: "transfer_from_department",
+        label: "Dept Received From",
+        formatter: (val) => (val ? String(val).charAt(0).toUpperCase() + String(val).slice(1) : "N/A"),
+      });
+    } else if (activeStatus === "outbox") {
+      columns.push({
+        name: "transfer_to_department",
+        label: "Dept Sent To",
+        formatter: (val) => (val ? String(val).charAt(0).toUpperCase() + String(val).slice(1) : "N/A"),
+      });
+    }
     const filtered =
       filterType === "normal"
         ? batches.filter((b) => b.current_department === department)
@@ -61,7 +75,7 @@ export const useWorkflowFilters = ({
     });
 
     return { visibleBatches: searchedBatches, tableColumns: columns };
-  }, [batches, fuBatches, filterType, config, department, searchTerm]);
+  }, [batches, fuBatches, filterType, config, department, searchTerm, activeStatus]);
 
   return {
     filterType,

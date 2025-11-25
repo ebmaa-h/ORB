@@ -132,9 +132,11 @@ const AccountModel = {
     const recordIds = rows.map((row) => row.record_id).filter(Boolean);
     let contacts = [];
     let addresses = [];
+    let emails = [];
     if (recordIds.length) {
       contacts = await AccountModel.getContactsByRecordIds(recordIds);
       addresses = await AccountModel.getAddressesByRecordIds(recordIds);
+      emails = await AccountModel.getEmailsByRecordIds(recordIds);
     }
     const contactMap = contacts.reduce((map, row) => {
       const key = row.record_id;
@@ -159,10 +161,21 @@ const AccountModel = {
       return map;
     }, new Map());
 
+    const emailMap = emails.reduce((map, row) => {
+      const key = row.record_id;
+      if (!map.has(key)) map.set(key, []);
+      map.get(key).push({
+        id: row.email_id,
+        email: row.email,
+      });
+      return map;
+    }, new Map());
+
     return rows.map((row) => ({
       ...row,
       contactNumbers: contactMap.get(row.record_id) || [],
       addresses: addressMap.get(row.record_id) || [],
+      emails: emailMap.get(row.record_id) || [],
     }));
   },
 
@@ -272,6 +285,12 @@ const AccountModel = {
     return rows;
   },
 
+  getEmailsByRecordIds: async (recordIds = []) => {
+    if (!recordIds.length) return [];
+    const [rows] = await db.query(queries.SELECT_EMAILS_BY_RECORD_IDS(recordIds.length), recordIds);
+    return rows;
+  },
+
   replaceContactNumbers: async (connection, recordId, contacts = []) => {
     if (!recordId) return;
     const executor = connection || db;
@@ -316,6 +335,24 @@ const AccountModel = {
     for (const addr of normalized) {
       if (!addr.address || !String(addr.address).trim()) continue;
       await executor.query(queries.INSERT_ADDRESS, [recordId, addr.type, addr.isDomicilium ? 1 : 0, addr.address]);
+    }
+  },
+
+  replaceEmails: async (connection, recordId, emails = []) => {
+    if (!recordId) return;
+    const executor = connection || db;
+    await executor.query(queries.DELETE_EMAILS_FOR_RECORD, [recordId]);
+    if (!Array.isArray(emails) || !emails.length) return;
+    const normalized = emails
+      .map((item) => {
+        const raw = typeof item === 'string' ? item : item?.email;
+        const email = raw ? String(raw).trim() : '';
+        return email ? { email } : null;
+      })
+      .filter(Boolean);
+
+    for (const entry of normalized) {
+      await executor.query(queries.INSERT_EMAIL, [recordId, entry.email]);
     }
   },
 };

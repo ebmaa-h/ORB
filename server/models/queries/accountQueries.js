@@ -202,6 +202,12 @@ const SELECT_ADDRESSES_BY_RECORD_IDS = (count) => `
   WHERE record_id IN (${new Array(count).fill("?").join(", ")})
 `;
 
+const SELECT_EMAILS_BY_RECORD_IDS = (count) => `
+  SELECT record_id, email_id, email
+  FROM person_emails
+  WHERE record_id IN (${new Array(count).fill("?").join(", ")})
+`;
+
 const DELETE_CONTACTS_FOR_RECORD = `
   DELETE FROM person_contact_numbers
   WHERE record_id = ?
@@ -220,6 +226,16 @@ const DELETE_ADDRESSES_FOR_RECORD = `
 const INSERT_ADDRESS = `
   INSERT INTO person_addresses (record_id, address_type, is_domicilium, address)
   VALUES (?, ?, ?, ?)
+`;
+
+const DELETE_EMAILS_FOR_RECORD = `
+  DELETE FROM person_emails
+  WHERE record_id = ?
+`;
+
+const INSERT_EMAIL = `
+  INSERT INTO person_emails (record_id, email)
+  VALUES (?, ?)
 `;
 
 module.exports = {
@@ -242,8 +258,11 @@ module.exports = {
   UPDATE_INVOICE,
   SELECT_CONTACTS_BY_RECORD_IDS,
   SELECT_ADDRESSES_BY_RECORD_IDS,
+  SELECT_EMAILS_BY_RECORD_IDS,
   DELETE_CONTACTS_FOR_RECORD,
   INSERT_CONTACT,
   DELETE_ADDRESSES_FOR_RECORD,
   INSERT_ADDRESS,
+  DELETE_EMAILS_FOR_RECORD,
+  INSERT_EMAIL,
 };

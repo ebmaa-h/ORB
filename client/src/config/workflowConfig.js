@@ -54,7 +54,11 @@ const WORKFLOW_CONFIG = {
       { name: "updated_at", label: "Updated At", formatter: (val) => (val ? new Date(val).toLocaleString() : "") },
     ],
     foreignUrgentColumns: [
-      { name: "batch_id", label: "Batch ID" },
+      {
+        name: "foreign_urgent_batch_id",
+        label: "FU Batch ID",
+        formatter: (val, row) => val ?? row.foreignUrgentBatchId ?? row.batch_id,
+      },
       { name: "client_id", label: "Client", formatter: (val, row) => (row.client_first || row.client_last) ? (`Dr ${row.client_first || ''} ${row.client_last || ''}`).trim() : val },
       { name: "date_received", label: "Date Received", formatter: (val) => (val ? new Date(val).toLocaleDateString() : "") },
       { name: "method_received", label: "Method Received" },
@@ -199,7 +203,11 @@ const WORKFLOW_CONFIG = {
       { name: "updated_at", label: "Updated At", formatter: (val) => (val ? new Date(val).toLocaleString() : "") },
     ],
     foreignUrgentColumns: [
-      { name: "batch_id", label: "Batch ID" },
+      {
+        name: "foreign_urgent_batch_id",
+        label: "FU Batch ID",
+        formatter: (val, row) => val ?? row.foreignUrgentBatchId ?? row.batch_id,
+      },
       { name: "client_id", label: "Client", formatter: (val, row) => (row.client_first || row.client_last) ? (`Dr ${row.client_first || ''} ${row.client_last || ''}`).trim() : val },
       { name: "date_received", label: "Date Received", formatter: (val) => (val ? new Date(val).toLocaleDateString() : "") },
       { name: "method_received", label: "Method Received" },
@@ -327,7 +335,11 @@ const WORKFLOW_CONFIG = {
       { name: "updated_at", label: "Updated At", formatter: (val) => (val ? new Date(val).toLocaleString() : "") },
     ],
     foreignUrgentColumns: [
-      { name: "batch_id", label: "Batch ID" },
+      {
+        name: "foreign_urgent_batch_id",
+        label: "FU Batch ID",
+        formatter: (val, row) => val ?? row.foreignUrgentBatchId ?? row.batch_id,
+      },
       { name: "client_id", label: "Client", formatter: (val, row) => (row.client_first || row.client_last) ? (`Dr ${row.client_first || ''} ${row.client_last || ''}`).trim() : val },
       { name: "date_received", label: "Date Received", formatter: (val) => (val ? new Date(val).toLocaleDateString() : "") },
       { name: "method_received", label: "Method Received" },

@@ -48,6 +48,16 @@ const normalizeContactNumbers = (input = []) => {
     .filter((item) => Boolean(item.num));
 };
 
+const normalizeEmails = (input = []) => {
+  if (!Array.isArray(input)) return [];
+  return input
+    .map((item) => {
+      const email = safeString(item.email || item.value || item);
+      return email ? { email } : null;
+    })
+    .filter(Boolean);
+};
+
 const normalizeAddresses = (input = []) => {
   if (!Array.isArray(input)) return [];
   let foundDomicilium = false;
@@ -207,6 +217,7 @@ const accountController = {
             isMainMember: person.is_main_member === 1,
             contactNumbers: person.contactNumbers || [],
             addresses: person.addresses || [],
+            emails: person.emails || [],
           };
           profile.profilePersons.push(personPayload);
         });
@@ -220,6 +231,7 @@ const accountController = {
             ...personObj,
             contactNumbers: details.contactNumbers || [],
             addresses: details.addresses || [],
+            emails: details.emails || [],
           };
         };
 
@@ -422,7 +434,7 @@ const accountController = {
 
     try {
       const requestIsFu = normalizeBooleanFlag(req.body?.is_fu);
-      const fu = requestIsFu ? await Batch.getForeignUrgentById(rawId) : await Batch.getForeignUrgentById(rawId);
+      const fu = requestIsFu ? await Batch.getForeignUrgentById(rawId) : null;
       const batch = fu || (await Batch.getBatchById(rawId));
       if (!batch) {
         return res.status(404).json({ error: `Batch #${rawId} not found` });
@@ -670,6 +682,7 @@ const accountController = {
       const personPayload = normalizePersonPayload(req.body?.person || {});
       const contactNumbers = normalizeContactNumbers(req.body?.contactNumbers || req.body?.person?.contactNumbers || []);
       const addresses = normalizeAddresses(req.body?.addresses || req.body?.person?.addresses || []);
+      const emails = normalizeEmails(req.body?.emails || req.body?.person?.emails || []);
       const isMainMember = normalizeBooleanFlag(req.body?.isMainMember);
       const dependentNumber = safeString(req.body?.dependentNumber || req.body?.person?.dependentNumber);
 
@@ -689,6 +702,7 @@ const accountController = {
         });
         await AccountModel.replaceContactNumbers(connection, recordId, contactNumbers);
         await AccountModel.replaceAddresses(connection, recordId, addresses);
+        await AccountModel.replaceEmails(connection, recordId, emails);
         await connection.commit();
         res.status(201).json({
           person: {
@@ -698,6 +712,7 @@ const accountController = {
             isMainMember,
             contactNumbers,
             addresses,
+            emails,
           },
         });
       } catch (err) {
@@ -724,6 +739,7 @@ const accountController = {
       const personPayload = normalizePersonPayload(req.body?.person || {});
       const contactNumbers = normalizeContactNumbers(req.body?.contactNumbers || req.body?.person?.contactNumbers || []);
       const addresses = normalizeAddresses(req.body?.addresses || req.body?.person?.addresses || []);
+      const emails = normalizeEmails(req.body?.emails || req.body?.person?.emails || []);
       const isMainMember = normalizeBooleanFlag(req.body?.isMainMember);
       const dependentNumber = safeString(req.body?.dependentNumber || req.body?.person?.dependentNumber);
 
@@ -739,6 +755,7 @@ const accountController = {
         });
         await AccountModel.replaceContactNumbers(connection, recordId, contactNumbers);
         await AccountModel.replaceAddresses(connection, recordId, addresses);
+        await AccountModel.replaceEmails(connection, recordId, emails);
         await connection.commit();
         res.json({
           person: {
@@ -748,6 +765,7 @@ const accountController = {
             isMainMember,
             contactNumbers,
             addresses,
+            emails,
           },
         });
       } catch (err) {

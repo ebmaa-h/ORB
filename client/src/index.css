@@ -172,6 +172,14 @@
     border-color: #5c63c2;
   }
 
+  .button-pill,
+  .tab-pill,
+  .tab-pill-link,
+  .tab-pill-dark {
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+
   .nav-dropdown-trigger {
     padding: 0.375rem 1rem;
     font-size: 0.875rem;

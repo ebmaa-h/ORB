@@ -240,7 +240,17 @@ export default function WorkflowEngine({ department = "none" }) {
       ) : (
         <div className="tab-pill4">
           {department === "reception" && showNewBatchForm && (
-            <NewBatch onBatchCreated={() => setShowNewBatchForm(false)} />
+            <NewBatch
+              onBatchCreated={(payload) => {
+                if (payload?.batch) {
+                  applyBatchUpdate(payload.batch);
+                }
+                if (Array.isArray(payload?.foreign_urgents)) {
+                  payload.foreign_urgents.forEach((fu) => applyBatchUpdate(fu));
+                }
+                setShowNewBatchForm(false);
+              }}
+            />
           )}
           <WorkflowTable
             columns={tableColumns}
