@@ -177,36 +177,54 @@ const BatchView = () => {
   const { batchId } = useParams();
   const navigate = useNavigate();
   const location = useLocation();
-  const batch = location.state?.batch || null;
+  const initialBatch = location.state?.batch || null;
+  const [batchState, setBatchState] = useState(initialBatch);
   const routeBatchId = useMemo(() => {
     if (!batchId) return null;
     const trimmed = String(batchId).trim();
     return trimmed || null;
   }, [batchId]);
-  const mainBatchId = getMainBatchId(batch) || routeBatchId;
+  const mainBatchId = getMainBatchId(batchState) || routeBatchId;
   const isFuRoute = location.pathname.startsWith("/fu-batches");
-  const isForeignUrgentChild = isForeignUrgentAccount(batch);
+  const explicitBatchType = (location.state?.batchType || "").toLowerCase();
+  const isForeignUrgentChild =
+    isForeignUrgentAccount(batchState) || isFuRoute || explicitBatchType === "foreign_urgent" || explicitBatchType === "fu";
+  const isFuHint = isForeignUrgentChild || isFuRoute;
+  const safeBatch =
+    batchState ||
+    {
+      batch_id: isFuHint ? null : mainBatchId,
+      foreign_urgent_batch_id: isFuHint ? mainBatchId : null,
+      current_department: "",
+      status: "",
+      is_fu: isFuHint,
+    };
   const [invoices, setInvoices] = useState([]);
   const [invoicesLoading, setInvoicesLoading] = useState(false);
   const [invoicesError, setInvoicesError] = useState("");
   const [activeTab, setActiveTab] = useState(TAB_KEYS.BATCH);
   const [searchTerm, setSearchTerm] = useState("");
+  const [batchLoading, setBatchLoading] = useState(false);
+  const [batchError, setBatchError] = useState("");
 
   const infoItems = useMemo(() => {
-    if (!batch) return [];
-    const typeLabel = isForeignOrUrgentBatch(batch) ? "Foreign & Urgent" : "Normal";
+    if (!mainBatchId) return [];
+    const typeLabel = isForeignOrUrgentBatch(batchState || safeBatch) ? "Foreign & Urgent" : "Normal";
     const batchLabel = mainBatchId
-      ? `${isForeignOrUrgentBatch(batch) ? "FU-Batch" : "Batch"} #${mainBatchId}`
+      ? `${isForeignOrUrgentBatch(batchState || safeBatch) ? "FU-Batch" : "Batch"} #${mainBatchId}`
       : "N/A";
+    const statusLabel = (safeBatch.status || "unknown").toString().toUpperCase();
     const items = [
-      { label: "Client", value: formatClientName(batch) },
+      { label: "Client", value: formatClientName(batchState || safeBatch) },
       { label: "Batch ID", value: batchLabel },
-      { label: "Batch Size", value: computeBatchSize(batch) },
-      { label: "Date Received", value: formatDate(batch.date_received) },
+      { label: "Batch Size", value: computeBatchSize(batchState || safeBatch) },
+      { label: "Date Received", value: formatDate((batchState || safeBatch)?.date_received) },
       { label: "Type", value: typeLabel },
+      { label: "Workflow", value: (safeBatch.current_department || "Unknown").toUpperCase() },
+      { label: "Tab", value: statusLabel },
     ];
     return items;
-  }, [batch, isForeignUrgentChild, mainBatchId]);
+  }, [batchState, safeBatch, mainBatchId]);
 
   useEffect(() => {
     if (!mainBatchId) {
@@ -243,6 +261,32 @@ const BatchView = () => {
     };
   }, [mainBatchId, isForeignUrgentChild]);
 
+  useEffect(() => {
+    if (batchState && batchState.client_first) return;
+    if (!mainBatchId) return;
+    let cancelled = false;
+    const fetchBatch = async () => {
+      setBatchLoading(true);
+      setBatchError("");
+      try {
+        const res = await axiosClient.get(ENDPOINTS.batchDetails(mainBatchId, isForeignUrgentChild));
+        if (cancelled) return;
+        if (res.data?.batch) {
+          setBatchState(res.data.batch);
+        }
+      } catch (err) {
+        if (cancelled) return;
+        setBatchError(err?.response?.data?.error || "Failed to load batch");
+      } finally {
+        if (!cancelled) setBatchLoading(false);
+      }
+    };
+    fetchBatch();
+    return () => {
+      cancelled = true;
+    };
+  }, [batchState, mainBatchId, isForeignUrgentChild]);
+
   const normalizedBatchId = Number(mainBatchId || 0);
   const relevantInvoices = useMemo(() => {
     if (!normalizedBatchId) return [];
@@ -262,7 +306,6 @@ const BatchView = () => {
   const foreignUrgentSequence = useMemo(() => toForeignUrgentSequence(relevantInvoices), [relevantInvoices]);
   const displayInvoices = isForeignUrgentChild ? filteredInvoices.slice(0, 1) : filteredInvoices;
   const invoiceCount = displayInvoices.length;
-  const batchSize = isForeignUrgentChild ? 1 : getNormalBatchSizeCount(batch);
   const isBatchTab = activeTab === TAB_KEYS.BATCH;
 
   const handleViewInvoice = useCallback(
@@ -273,13 +316,13 @@ const BatchView = () => {
       const basePath = isFuRoute || isForeignUrgentChild ? "/fu-batches" : "/batches";
       navigate(`${basePath}/${mainBatchId}/accounts/new`, {
         state: {
-          batch,
+          batch: safeBatch,
           invoice,
           from: fromState || currentPath,
         },
       });
     },
-    [batch, location.pathname, location.search, navigate, location.state?.from, isFuRoute, isForeignUrgentChild, mainBatchId],
+    [batchState, location.pathname, location.search, navigate, location.state?.from, isFuRoute, isForeignUrgentChild, mainBatchId],
   );
   const originFrom = location.state?.from || null;
   const backPath = typeof originFrom === "string" ? originFrom : originFrom?.path;
@@ -293,39 +336,11 @@ const BatchView = () => {
       : undefined;
   const handleBack = () => navigate(backTarget, backOptions);
 
-  if (!batch) {
-    return (
-      <section className="container-col">
-        <p className="text-gray-dark">
-          Batch with ID <strong>#{batchId}</strong> not found...
-        </p>
-        <div className="mt-4">
-          <button
-            type="button"
-            className="button-pill min-w-[100px] flex items-center justify-center"
-            onClick={handleBack}
-          >
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              viewBox="0 -960 960 960"
-              width="20"
-              height="20"
-              fill="currentColor"
-              aria-hidden="true"
-            >
-              <path d="M360-240 120-480l240-240 56 56-144 144h568v80H272l144 144-56 56Z" />
-            </svg>
-            <span className="sr-only">Back</span>
-          </button>
-        </div>
-      </section>
-    );
-  }
-
-  const batchType = isForeignOrUrgentBatch(batch) ? "Foreign & Urgent" : "Normal";
-  const departmentKey = (batch.current_department || "").toLowerCase();
-  const batchTypeKey = getBatchType(batch);
-  const entityType = getEntityType(batch);
+  const batchType = isForeignOrUrgentBatch(safeBatch) ? "Foreign & Urgent" : "Normal";
+  const departmentKey = (safeBatch.current_department || "").toLowerCase();
+  const batchTypeKey = getBatchType(safeBatch);
+  const entityType = getEntityType(safeBatch);
+  const batchSize = isForeignUrgentChild ? 1 : getNormalBatchSizeCount(safeBatch);
 
   return (
     <div className="flex flex-col">
@@ -501,7 +516,7 @@ const BatchView = () => {
             onClick={() =>
               navigate(`${isFuRoute || isForeignUrgentChild ? "/fu-batches" : "/batches"}/${mainBatchId}/accounts/new`, {
                 state: {
-                  batch,
+                  batch: safeBatch,
                   from: originFrom || { path: `${location.pathname}${location.search}`, activeStatus: location.state?.activeStatus },
                 },
               })

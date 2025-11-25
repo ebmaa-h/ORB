@@ -2,6 +2,7 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import ExpandedRowActions from "./ExpandedRowActions";
+import { getIdForBatchType } from "../../domain/batch";
 
 const METHOD_OPTIONS = [
   "email",
@@ -301,16 +302,13 @@ const Row = ({
   const location = useLocation();
 
   const handleViewBatch = (selected) => {
-    if (!entityId) return;
+    const batchType = filterType === "fu" ? "foreign_urgent" : "normal";
+    const basePath = batchType === "foreign_urgent" ? "/fu-batches" : "/batches";
+    const id = getIdForBatchType(selected, batchType) || entityId;
+    if (!id) return;
     const fromPath = `${location.pathname}${location.search}`;
-    const fromState = { path: fromPath, activeStatus, filterType };
-    const isFu = Boolean(
-      selected.is_fu ||
-        selected.foreign_urgent_batch_id ||
-        (selected.batch_type || "").toLowerCase() === "foreign_urgent",
-    );
-    const basePath = isFu ? "/fu-batches" : "/batches";
-    navigate(`${basePath}/${entityId}`, { state: { batch: selected, from: fromState } });
+    const fromState = { path: fromPath, activeStatus, filterType, batchType };
+    navigate(`${basePath}/${id}`, { state: { batch: selected, from: fromState, batchType } });
   };
 
   return (

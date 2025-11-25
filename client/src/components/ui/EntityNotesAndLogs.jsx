@@ -48,7 +48,11 @@ const toLogItem = (log) => ({
 });
 
 const getFuBatchId = (meta = {}) =>
-  meta.foreign_urgent_batch_id ?? meta.fu_batch_id ?? meta.foreignUrgentBatchId ?? null;
+  meta.foreign_urgent_batch_id ??
+  meta.foreign_urgent_id ??
+  meta.fu_batch_id ??
+  meta.foreignUrgentBatchId ??
+  null;
 
 const isForeignUrgentMeta = (meta = {}) => {
   const batchType = (meta.batch_type || "").toLowerCase();
@@ -62,7 +66,9 @@ const isForeignUrgentMeta = (meta = {}) => {
 
 const isForeignUrgentItem = (item, meta, batchTypeHint = null) =>
   batchTypeHint === "foreign_urgent" ||
+  batchTypeHint === "fu" ||
   item?.entity_type === "fu" ||
+  (meta?.entity_type || meta?.entityType) === "fu" ||
   isForeignUrgentMeta(meta || item?.metadata || {});
 
 const extractBatchId = (item) => {
@@ -70,7 +76,8 @@ const extractBatchId = (item) => {
   const fuId = getFuBatchId(metadata);
   const fallback = metadata.batch_id ?? metadata.batchId ?? item.entity_id ?? null;
   if (isForeignUrgentItem(item, metadata)) {
-    return fuId || fallback || null; // allow batch_id fallback when FU id is missing in metadata
+    const entityFuId = item?.entity_type === "fu" ? item.entity_id : null;
+    return fuId || entityFuId || fallback || null;
   }
   return fallback;
 };
@@ -354,19 +361,25 @@ export default function EntityNotesAndLogs({
   const handleBatchLink = useCallback(
     (itemOrId, explicitId = null) => {
       const meta = typeof itemOrId === "object" && itemOrId !== null ? itemOrId.metadata || {} : {};
-      const isFu = isForeignUrgentItem(itemOrId, meta, batchType);
+      const resolvedBatchType =
+        (batchType && batchType.toLowerCase()) ||
+        (meta.batch_type || meta.batchType || meta.entity_type || meta.entityType || "").toLowerCase() ||
+        (isForeignUrgentItem(itemOrId, meta) ? "foreign_urgent" : "normal");
+      const isFu = resolvedBatchType === "foreign_urgent" || resolvedBatchType === "fu";
       const batchId =
         explicitId ??
         (typeof itemOrId === "object" && itemOrId !== null ? extractBatchId(itemOrId) : String(itemOrId || ""));
       if (!batchId) return;
 
       if (typeof onBatchNavigate === "function") {
-        const handled = onBatchNavigate({ batchId, meta: { ...meta, is_fu: isFu } });
+        const handled = onBatchNavigate({ batchId, batchType: resolvedBatchType, meta: { ...meta, is_fu: isFu } });
         if (handled) return;
       }
       const fromPath = `${location.pathname}${location.search}`;
       const basePath = isFu ? "/fu-batches" : "/batches";
-      navigate(`${basePath}/${batchId}`, { state: { from: fromPath, meta: { ...meta, is_fu: isFu } } });
+      navigate(`${basePath}/${batchId}`, {
+        state: { from: fromPath, meta: { ...meta, is_fu: isFu }, batchType: resolvedBatchType },
+      });
     },
     [navigate, onBatchNavigate, location.pathname, location.search, batchType],
   );

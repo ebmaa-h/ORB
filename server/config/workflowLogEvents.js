@@ -2,7 +2,10 @@ const WORKFLOW_LOG_EVENT_CONFIG = {
   BATCH_CREATED: {
     action: 'batch_created',
     buildMessage: ({ batchId, department }) => `Batch #${batchId} created in ${department}`,
-    buildMetadata: ({ batchId }) => ({ batch_id: batchId }),
+    buildMetadata: ({ batchId, isPureForeignUrgent }) => ({
+      batch_id: batchId,
+      is_pure_foreign_urgent: isPureForeignUrgent || false,
+    }),
   },
   FOREIGN_URGENT_CREATED: {
     action: 'foreign_urgent_created',

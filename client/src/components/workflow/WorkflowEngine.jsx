@@ -105,7 +105,7 @@ export default function WorkflowEngine({ department = "none" }) {
         search: location.search,
       });
       if (!nav) return false;
-      navigate(nav.path, { state: nav.state });
+      navigate(nav.path, { state: { ...nav.state, batchType: nav.batchType } });
       return true;
     },
     [batches, fuBatches, navigate, location.pathname, location.search, activeStatus, filterType],

@@ -1,4 +1,4 @@
-import { getPrimaryId, isForeignUrgentEntity, normalizeIsFuFlag } from "../domain/batch";
+import { getIdForBatchType, getPrimaryId, isForeignUrgentEntity, normalizeIsFuFlag } from "../domain/batch";
 
 export const buildBatchPath = (batchId, isFu = false) => {
   const normalizedId = String(batchId ?? "").trim();
@@ -28,45 +28,41 @@ export const deriveBatchNavigation = ({
 }) => {
   const meta =
     target && typeof target === "object" ? target.meta || target.metadata || target : {};
-  const rawId = getPrimaryId(meta) ?? meta.fu_batch_id ?? meta.id ?? target ?? null;
-  if (rawId === null || rawId === undefined) return null;
+  const preferredType =
+    (meta.batchType || meta.batch_type || meta.entity_type || meta.entityType || "").toLowerCase() ||
+    (filterType === "fu" ? "foreign_urgent" : "normal");
 
-  const normalizedId = String(rawId).trim();
-  if (!normalizedId) return null;
+  const isFuPreferred = preferredType === "foreign_urgent" || preferredType === "fu";
 
   const from = buildFromState({ pathname, search, activeStatus, filterType });
-  const all = [...batches, ...fuBatches];
-  const found = all.find((entry) => getPrimaryId(entry) === normalizedId);
 
-  const isFuContext = filterType === "fu";
-  const metaBatchType = (meta.batch_type || "").toLowerCase();
-  const metaIsFu =
-    normalizeIsFuFlag(meta.is_fu) ||
-    normalizeIsFuFlag(meta.isFu) ||
-    normalizeIsFuFlag(meta.is_foreign_urgent) ||
-    normalizeIsFuFlag(meta.isForeignUrgent);
-  const isFu =
-    isFuContext ||
-    Boolean(
-      metaIsFu ||
-        meta.foreign_urgent_batch_id ||
-        meta.fu_batch_id ||
-        meta.foreignUrgentBatchId ||
-        metaBatchType === "foreign_urgent" ||
-        isForeignUrgentEntity(found),
-    );
+  const pool = isFuPreferred ? fuBatches : batches;
+  const idCandidate =
+    getIdForBatchType(meta, preferredType) ??
+    (preferredType === "foreign_urgent" || preferredType === "fu" ? meta.foreign_urgent_id : null) ??
+    meta.batchId ??
+    meta.batch_id ??
+    meta.id ??
+    (target && typeof target === "object" ? target.batchId || target.batch_id : target) ??
+    null;
+  const normalizedId =
+    idCandidate !== null && idCandidate !== undefined ? String(idCandidate).trim() : null;
+  if (!normalizedId) return null;
 
-  const path = buildBatchPath(getPrimaryId(found) || normalizedId, isFu);
+  const found = pool.find((entry) => getIdForBatchType(entry, preferredType) === normalizedId);
+
+  const path = buildBatchPath(normalizedId, isFuPreferred);
   if (!path) return null;
 
-  const state = found ? { batch: found, from } : { from };
+  const state = found ? { batch: found, from, batchType: preferredType } : { from, batchType: preferredType };
 
   return {
     path,
     state,
-    batchId: getPrimaryId(found) || normalizedId,
+    batchId: normalizedId,
     batch: found,
-    isFu,
+    isFu: isFuPreferred,
+    batchType: preferredType,
     from,
   };
 };

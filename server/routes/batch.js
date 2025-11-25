@@ -13,6 +13,7 @@ router.post('/archive', wc.archiveBatch);
 router.get('/clients', wc.listClients);
 router.patch('/:batchId/update', wc.updateReceptionBatch);
 router.get('/:batchId/invoices', invoiceController.getBatchInvoices);
+router.get('/:batchId/details', wc.getBatchDetails);
 router.post('/:batchId/accounts', accountController.createBatchAccount);
 router.put('/:batchId/invoices/:invoiceId', accountController.updateBatchInvoice);
 router.get('/:department', wc.departmentBatches);

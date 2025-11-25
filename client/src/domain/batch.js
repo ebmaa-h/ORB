@@ -55,3 +55,11 @@ export const normalizeBatchIdentity = (batch = {}, fallbackDepartment = null) =>
 
   return normalized;
 };
+
+export const getIdForBatchType = (batch = {}, batchType = "normal") => {
+  const typeKey = (batchType || "").toLowerCase();
+  if (typeKey === "foreign_urgent" || typeKey === "fu") {
+    return batch.foreign_urgent_batch_id ?? batch.foreignUrgentBatchId ?? batch.fu_batch_id ?? null;
+  }
+  return batch.batch_id ?? batch.batchId ?? null;
+};

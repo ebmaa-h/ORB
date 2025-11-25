@@ -18,7 +18,10 @@ const GET_WORKFLOW_LOGS = `
     l.created_at
   FROM logs l
   LEFT JOIN users u ON l.user_id = u.user_id
-  WHERE l.context = 'workflow' AND l.department = ? AND l.batch_type = ?
+  WHERE l.context = 'workflow'
+    AND l.department = ?
+    AND l.batch_type = ?
+    AND COALESCE(JSON_EXTRACT(l.metadata, '$.is_pure_foreign_urgent'), false) = false
   ORDER BY l.created_at DESC
 `;
 

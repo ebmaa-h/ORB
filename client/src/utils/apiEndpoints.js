@@ -31,6 +31,7 @@ const ENDPOINTS = {
   batchInvoices: (batchId) => `${API_URL}/batches/${batchId}/invoices`,
   batchAccountCreate: (batchId) => `${API_URL}/batches/${batchId}/accounts`,
   batchInvoiceUpdate: (batchId, invoiceId) => `${API_URL}/batches/${batchId}/invoices/${invoiceId}`,
+  batchDetails: (batchId, isFu = false) => `${API_URL}/batches/${batchId}/details${isFu ? "?is_fu=1" : ""}`,
   accountSearch: `${API_URL}/accounts/search`,
   createProfile: `${API_URL}/accounts/profiles`,
   createProfilePerson: (profileId) => `${API_URL}/accounts/profiles/${profileId}/persons`,

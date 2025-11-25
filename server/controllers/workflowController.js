@@ -19,8 +19,8 @@ const normalizeBatchType = (value = '') => {
   return WORKFLOW_BATCH_TYPES.NORMAL;
 };
 
-const resolveBatchTypeFromFlag = (isForeignUrgent = false) =>
-  isForeignUrgent ? WORKFLOW_BATCH_TYPES.FOREIGN : WORKFLOW_BATCH_TYPES.NORMAL;
+const resolveBatchTypeFromFlag = (isForeignUrgent = false, isPureForeignUrgent = false) =>
+  (isForeignUrgent || isPureForeignUrgent) ? WORKFLOW_BATCH_TYPES.FOREIGN : WORKFLOW_BATCH_TYPES.NORMAL;
 
 const normalizeBooleanFlag = (value) => {
   if (typeof value === 'boolean') return value;
@@ -31,6 +31,12 @@ const normalizeBooleanFlag = (value) => {
     if (['0', 'false', 'no', 'n', ''].includes(normalized)) return false;
   }
   return Boolean(value);
+};
+
+const toPositiveInt = (value) => {
+  const parsed = Number(value);
+  if (!Number.isInteger(parsed) || parsed <= 0) return null;
+  return parsed;
 };
 
 const emitWorkflowNote = (noteRow) => {
@@ -69,14 +75,19 @@ const workflowController = {
         is_pure_foreign_urgent: normalizeBooleanFlag(baseBatch?.is_pure_foreign_urgent),
       });
 
-      await logWorkflowEvent(WORKFLOW_LOG_EVENTS.BATCH_CREATED, {
-        userId: mainData.created_by || null,
-        department: 'reception',
-        batchType: WORKFLOW_BATCH_TYPES.NORMAL,
-        entityType: 'batch',
-        entityId: newBatch.batch_id,
-        batchId: newBatch.batch_id,
-      });
+      const isPure = normalizeBooleanFlag(baseBatch?.is_pure_foreign_urgent);
+      if (!isPure) {
+        await logWorkflowEvent(WORKFLOW_LOG_EVENTS.BATCH_CREATED, {
+          userId: mainData.created_by || null,
+          department: 'reception',
+          batchType: resolveBatchTypeFromFlag(false, isPure),
+          entityType: 'batch',
+          entityId: newBatch.batch_id,
+          batchId: newBatch.batch_id,
+          metadata: { is_pure_foreign_urgent: isPure },
+          isPureForeignUrgent: isPure,
+        });
+      }
 
       // Create foreign/urgent if present
       const createdForeignUrgents = [];
@@ -117,6 +128,7 @@ const workflowController = {
             entityId: newFu.batch_id,
             batchId: newBatch.batch_id,
             foreignUrgentId: newFu.batch_id,
+            metadata: { is_pure_foreign_urgent: isPure },
           });
         }
       }
@@ -129,6 +141,28 @@ const workflowController = {
     } catch (err) {
       console.error('❌ Error creating new batch:', err.message);
       res.status(400).json({ error: err.message });
+    }
+  },
+
+  getBatchDetails: async (req, res) => {
+    try {
+      const batchId = toPositiveInt(req.params.batchId);
+      const isFu = normalizeBooleanFlag(req.query?.is_fu);
+      if (!batchId) {
+        return res.status(400).json({ error: 'Invalid batch ID' });
+      }
+      const batch = isFu ? await Batch.getForeignUrgentById(batchId) : await Batch.getBatchById(batchId);
+      if (!batch) {
+        return res.status(404).json({ error: `Batch #${batchId} not found` });
+      }
+      return res.json({
+        batch,
+        batchType: isFu ? WORKFLOW_BATCH_TYPES.FOREIGN : WORKFLOW_BATCH_TYPES.NORMAL,
+        entityType: isFu ? 'fu' : 'batch',
+      });
+    } catch (err) {
+      console.error('Error fetching batch details:', err);
+      res.status(500).json({ error: 'Failed to fetch batch details' });
     }
   },
 
@@ -193,7 +227,7 @@ const workflowController = {
       };
 
       const newIsPure = Number(normalizedUpdate.batch_size || 0) === Number(existing.total_urgent_foreign || 0);
-      const batchTypeLabel = resolveBatchTypeFromFlag(newIsPure);
+      const batchTypeLabel = resolveBatchTypeFromFlag(false, newIsPure);
 
       await Batch.updateReceptionFields({
         batch_id: batchId,
@@ -275,7 +309,8 @@ const workflowController = {
       const io = getIO();
 
       const entity_type = is_fu ? 'fu' : 'batch';
-      const batchType = resolveBatchTypeFromFlag(is_fu);
+      const base = (is_fu ? await Batch.getForeignUrgentById(batch_id) : await Batch.getBatchById(batch_id)) || {};
+      const batchType = resolveBatchTypeFromFlag(is_fu, normalizeBooleanFlag(base?.is_pure_foreign_urgent));
       const main = await Batch.getWorkflowMainByEntity({ entity_type, entity_id: batch_id });
       if (!main) return res.status(404).json({ error: 'Workflow main row not found' });
 
@@ -315,7 +350,6 @@ const workflowController = {
       });
 
       // emit payloads
-      const base = (is_fu ? await Batch.getForeignUrgentById(batch_id) : await Batch.getBatchById(batch_id)) || {};
       const inboxPayload = {
         ...base,
         current_department: finalToDepartment,
@@ -375,7 +409,8 @@ const workflowController = {
       if (!batch_id) return res.status(400).json({ error: 'batch_id is required' });
 
       const entity_type = is_fu ? 'fu' : 'batch';
-      const batchType = resolveBatchTypeFromFlag(is_fu);
+      const base = is_fu ? await Batch.getForeignUrgentById(batch_id) : await Batch.getBatchById(batch_id);
+      const batchType = resolveBatchTypeFromFlag(is_fu, normalizeBooleanFlag(base?.is_pure_foreign_urgent));
       const main = await Batch.getWorkflowMainByEntity({ entity_type, entity_id: batch_id });
       if (!main) return res.status(404).json({ error: 'Workflow main row not found' });
 
@@ -400,7 +435,6 @@ const workflowController = {
       }
 
       const io = getIO();
-      const base = is_fu ? await Batch.getForeignUrgentById(batch_id) : await Batch.getBatchById(batch_id);
       const acceptedPayload = { ...base, current_department: toDept, status: finalStatus };
       io.to(toDept).emit('batchUpdated', acceptedPayload);
 
@@ -445,7 +479,8 @@ const workflowController = {
       if (!batch_id) return res.status(400).json({ error: 'batch_id is required' });
 
       const entity_type = is_fu ? 'fu' : 'batch';
-      const batchType = resolveBatchTypeFromFlag(is_fu);
+      const base = is_fu ? await Batch.getForeignUrgentById(batch_id) : await Batch.getBatchById(batch_id);
+      const batchType = resolveBatchTypeFromFlag(is_fu, normalizeBooleanFlag(base?.is_pure_foreign_urgent));
       const outbox = await Batch.getWorkflowOutboxByEntity({ entity_type, entity_id: batch_id });
       if (!outbox) return res.status(404).json({ error: 'Outbox entry not found' });
 
@@ -463,10 +498,9 @@ const workflowController = {
 
       await Batch.deleteWorkflowOutbox({ entity_type, entity_id: batch_id });
 
-      const base = (is_fu ? await Batch.getForeignUrgentById(batch_id) : await Batch.getBatchById(batch_id)) || {};
       const payload = {
-        ...base,
-        batch_id: base.batch_id || batch_id,
+        ...(base || {}),
+        batch_id: base?.batch_id || batch_id,
         current_department: originalDepartment,
         status: 'current',
       };
@@ -517,7 +551,10 @@ const workflowController = {
       if (!batch_id) return res.status(400).json({ error: 'batch_id is required' });
 
       const entity_type = is_fu ? 'fu' : 'batch';
-      const batchType = resolveBatchTypeFromFlag(is_fu);
+      const base = entity_type === 'fu'
+        ? await Batch.getForeignUrgentById(batch_id)
+        : await Batch.getBatchById(batch_id);
+      const batchType = resolveBatchTypeFromFlag(is_fu, normalizeBooleanFlag(base?.is_pure_foreign_urgent));
       const main = await Batch.getWorkflowMainByEntity({ entity_type, entity_id: batch_id });
       if (!main) return res.status(404).json({ error: 'Workflow main row not found' });
 
@@ -531,9 +568,6 @@ const workflowController = {
       }
 
       const io = getIO();
-      const base = entity_type === 'fu'
-        ? await Batch.getForeignUrgentById(batch_id)
-        : await Batch.getBatchById(batch_id);
 
       const payload = {
         ...(base || {}),
