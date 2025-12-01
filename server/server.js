@@ -68,10 +68,10 @@ app.use((req, res, next) => {
 // session / user check
 app.use((req, res, next) => {
   const safePaths = [
-    '/auth/google',
-    '/auth/google/callback',
-    '/auth/me',
-    '/auth/logout'
+    '/api/auth/google',
+    '/api/auth/google/callback',
+    '/api/auth/me',
+    '/api/auth/logout'
   ];
 
   const isSafe = safePaths.some(path => req.path.startsWith(path));
@@ -87,12 +87,12 @@ app.use((req, res, next) => {
 });
 
 // routes
-app.use('/auth', authRoutes);
+app.use('/api/auth', authRoutes);
 // app.use('/notes', noteRoutes);
 // app.use('/logs', logRoutes);
-app.use('/batches', batchRoutes);
-app.use('/workflow', workflowMetaRoutes);
-app.use('/accounts', accountRoutes);
+app.use('/api/batches', batchRoutes);
+app.use('/api/workflow', workflowMetaRoutes);
+app.use('/api/accounts', accountRoutes);
 
 // error Handling Middleware
 app.use((err, req, res, next) => {
