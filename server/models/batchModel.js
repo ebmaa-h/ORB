@@ -109,6 +109,11 @@ const Batch = {
     return rows[0] || null;
   },
 
+  getForeignUrgentIdsByParent: async (batch_id) => {
+    const [rows] = await db.query(queries.GET_FU_IDS_BY_PARENT, [batch_id]);
+    return rows;
+  },
+
   
 
   

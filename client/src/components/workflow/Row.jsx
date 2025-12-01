@@ -148,6 +148,8 @@ const Row = ({
     setEditValues((prev) => ({ ...prev, [field]: value }));
   };
 
+  const isForeignUrgentRow = filterType === "fu" || Boolean(batch?.foreign_urgent_batch_id);
+
   const handleSave = async () => {
     if (!canEdit || !isDirty || busy) return;
     setSaving(true);
@@ -162,6 +164,7 @@ const Row = ({
       added_on_drive: Boolean(editValues.added_on_drive),
       corrections: Boolean(editValues.corrections),
       cc_availability: editValues.cc_availability,
+      is_fu: isForeignUrgentRow,
     };
     const result = await onBatchUpdate(entityId, payload);
     if (!result?.success) {

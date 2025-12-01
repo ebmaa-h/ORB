@@ -142,6 +142,16 @@ const FIELD_LABELS = {
   "patient.dependent_number": "Patient Dep #",
 };
 
+const HIDE_DETAILS_FOR_ACTIONS = new Set([
+  "batch_sent",
+  "batch_received",
+  "batch_to_filing",
+  "batch_accepted",
+  "batch_accepted_downstream",
+  "transfer_cancelled",
+  "transfer_cancelled_remote",
+]);
+
 const formatChangeFieldLabel = (field) => {
   if (!field) return "Field";
   const raw = String(field).trim();
@@ -487,7 +497,8 @@ const renderLogDetails = () => null;
                 formatChangeFieldLabel(field),
                 { before: formatChangeValue(diff?.before), after: formatChangeValue(diff?.after) },
               ]);
-              const canOpenDetails = Boolean(transferInfo || changeRows.length);
+              const suppressDetails = HIDE_DETAILS_FOR_ACTIONS.has(item.action);
+              const canOpenDetails = !suppressDetails && Boolean(transferInfo || changeRows.length);
 
               return (
                 <div

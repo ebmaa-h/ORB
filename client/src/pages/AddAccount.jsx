@@ -246,7 +246,6 @@ const AddAccount = () => {
   const [memberForm, setMemberForm] = useState(defaultPerson);
   const [patientForm, setPatientForm] = useState(defaultPerson);
   const [isPatientSameAsMember, setIsPatientSameAsMember] = useState(false);
-  const [isMemberEditable, setIsMemberEditable] = useState(true);
   const [medicalAidForm, setMedicalAidForm] = useState({
     medicalAidId: "",
     planId: "",
@@ -265,6 +264,7 @@ const AddAccount = () => {
   const [saving, setSaving] = useState(false);
   const [saveError, setSaveError] = useState("");
   const [lastImported, setLastImported] = useState(null);
+  const lockedProfileId = lastImported?.profileId ? String(lastImported.profileId) : null;
   const [isStatusDropdownOpen, setIsStatusDropdownOpen] = useState(false);
   const statusDropdownRef = useRef(null);
   const isForeignUrgentBatch = useMemo(() => isForeignUrgentBatchType(batch) || isFuRoute, [batch, isFuRoute]);
@@ -281,9 +281,9 @@ const AddAccount = () => {
     return base;
   }, [existingInvoiceType]);
   const selectedInvoiceType = invoiceForm.type;
-  const memberFieldsDisabled = false;
-  const medicalAidFieldsDisabled = false;
-  const patientFieldsDisabled = isPatientSameAsMember;
+  const memberFieldsDisabled = true;
+  const medicalAidFieldsDisabled = true;
+  const patientFieldsDisabled = true;
   const canImportData = true;
 
   useEffect(() => {
@@ -406,7 +406,6 @@ const AddAccount = () => {
       authNr: existingInvoice.auth_nr || "",
       type: existingInvoiceType ? existingInvoiceType.toString() : "",
     });
-    setIsMemberEditable(false);
     if (existingInvoice.profile_id) {
       setLastImported({
         profileId: String(existingInvoice.profile_id),
@@ -456,7 +455,6 @@ const AddAccount = () => {
   const departmentKey = (batch.current_department || "").toLowerCase();
   const batchTypeKey = isForeignUrgentBatch ? "foreign_urgent" : "normal";
   const invoiceEntityId = existingInvoice?.invoice_id ? String(existingInvoice.invoice_id) : null;
-  const lockedProfileId = lastImported?.profileId ? String(lastImported.profileId) : null;
 
   const selectedMedicalAid = useMemo(() => {
     if (!medicalAidForm.medicalAidId) return null;
@@ -573,7 +571,7 @@ const hydratePersonForm = (data = {}) => ({
     });
     setMemberForm(hydratePersonForm(memberSource));
     setPatientForm(patientSource ? hydratePersonForm(patientSource) : defaultPerson());
-    setIsMemberEditable(!includeMember);
+    setIsPatientSameAsMember(!patientSource);
     setLastImported({
       profileId: normalizedProfileId,
       accountId: account?.accountId || null,
@@ -588,7 +586,6 @@ const hydratePersonForm = (data = {}) => ({
     });
     setMemberForm(defaultPerson());
     setPatientForm(defaultPerson());
-    setIsMemberEditable(true);
     setIsPatientSameAsMember(false);
     setLastImported(null);
   };
@@ -603,22 +600,34 @@ const hydratePersonForm = (data = {}) => ({
       typeof invoiceForm.balance === "string"
         ? invoiceForm.balance.trim() !== ""
         : invoiceForm.balance !== null && invoiceForm.balance !== undefined;
+    const hasProfileLink = Boolean(lockedProfileId);
+    const hasMemberRecord = Boolean(memberForm.recordId);
+    const hasPatientRecord = isPatientSameAsMember ? true : Boolean(patientForm.recordId);
 
     return (
       Boolean(invoiceForm.type) &&
-      Boolean(medicalAidForm.medicalAidNr) &&
-      Boolean(memberForm.first && memberForm.last) &&
       Boolean(invoiceForm.dateOfService) &&
-      hasBalanceInput
+      hasBalanceInput &&
+      hasProfileLink &&
+      hasMemberRecord &&
+      hasPatientRecord
     );
-  }, [medicalAidForm, memberForm, invoiceForm]);
+  }, [invoiceForm.type, invoiceForm.dateOfService, invoiceForm.balance, lockedProfileId, memberForm.recordId, patientForm.recordId, isPatientSameAsMember]);
+
+  const resolveRecordId = (value) => {
+    if (value === null || value === undefined) return null;
+    const parsed = Number(value);
+    return Number.isFinite(parsed) && parsed > 0 ? parsed : null;
+  };
 
   const handleSave = async () => {
     if (!canSave) return;
     setSaving(true);
     setSaveError("");
     try {
-      const patientPayload = buildPatientPayload();
+      const profileId = lockedProfileId ? resolveRecordId(lockedProfileId) : null;
+      const memberRecordId = resolveRecordId(memberForm.recordId);
+      const patientRecordId = isPatientSameAsMember ? memberRecordId : resolveRecordId(patientForm.recordId);
       const payload = {
         invoice: {
           nrInBatch: invoiceForm.nrInBatch ? Number(invoiceForm.nrInBatch) : null,
@@ -629,14 +638,11 @@ const hydratePersonForm = (data = {}) => ({
           authNr: invoiceForm.authNr,
           type: invoiceForm.type,
         },
-        member: memberForm,
-        patient: patientPayload,
-        medicalAid: {
-          medicalAidId: medicalAidForm.medicalAidId ? Number(medicalAidForm.medicalAidId) : null,
-          planId: medicalAidForm.planId ? Number(medicalAidForm.planId) : null,
-          medicalAidNr: medicalAidForm.medicalAidNr,
+        linkage: {
+          profileId,
+          memberRecordId,
+          patientRecordId,
         },
-        patientSameAsMember: isPatientSameAsMember,
       };
 
       if (existingInvoice?.invoice_id) {
@@ -705,21 +711,6 @@ const hydratePersonForm = (data = {}) => ({
       syncPatientFromMember();
     }
   };
-
-  // Avoid duplicating person records when patient/member are the same
-  const buildPatientPayload = useCallback(() => {
-    if (!isPatientSameAsMember) {
-      return patientForm;
-    }
-    const recordId = patientForm.recordId || memberForm.recordId || null;
-    if (recordId) {
-      return {
-        recordId,
-        dependentNumber: patientForm.dependentNumber || memberForm.dependentNumber || "",
-      };
-    }
-    return {};
-  }, [isPatientSameAsMember, patientForm, memberForm]);
 
   const handleImportProfilePerson = (person, target = "patient", profileId = null) => {
     if (!person || !selectedInvoiceType) return;
@@ -907,6 +898,7 @@ const hydratePersonForm = (data = {}) => ({
   };
 
   const handlePersonSave = async () => {
+    console.log('test')
     if (!personEditor.profileId) {
       setPersonEditor((prev) => ({ ...prev, error: "Select a profile before saving a person." }));
       return;
@@ -1550,7 +1542,7 @@ const hydratePersonForm = (data = {}) => ({
                       <label className="text-xs text-gray-blue-600">Medical Aid Number</label>
                       <input
                         type="text"
-                        className="input-pill"
+                        className={`input-pill ${medicalAidFieldsDisabled ? "bg-gray-100 cursor-not-allowed" : ""}`}
                         value={medicalAidForm.medicalAidNr}
                         onChange={(e) => setMedicalAidForm((prev) => ({ ...prev, medicalAidNr: e.target.value }))}
                         disabled={medicalAidFieldsDisabled}
@@ -1559,7 +1551,7 @@ const hydratePersonForm = (data = {}) => ({
                     <div className="flex flex-col gap-1">
                       <label className="text-xs text-gray-blue-600">Medical Aid</label>
                       <select
-                        className="input-pill"
+                        className={`input-pill ${medicalAidFieldsDisabled ? "bg-gray-100 cursor-not-allowed" : ""}`}
                         value={medicalAidForm.medicalAidId}
                         onChange={(e) => handleMedicalAidSelectChange(e.target.value)}
                         disabled={medicalAidFieldsDisabled || medicalAidCatalog.length === 0}
@@ -1575,7 +1567,7 @@ const hydratePersonForm = (data = {}) => ({
                     <div className="flex flex-col gap-1">
                       <label className="text-xs text-gray-blue-600">Plan</label>
                       <select
-                        className="input-pill"
+                        className={`input-pill ${medicalAidFieldsDisabled ? "bg-gray-100 cursor-not-allowed" : ""}`}
                         value={medicalAidForm.planId}
                         onChange={(e) => handleMedicalAidPlanSelectChange(e.target.value)}
                         disabled={medicalAidFieldsDisabled || !selectedMedicalAid || availablePlans.length === 0}
@@ -1604,7 +1596,7 @@ const hydratePersonForm = (data = {}) => ({
                       <label className="text-xs text-gray-blue-600">First Name</label>
                       <input
                         type="text"
-                        className="input-pill"
+                        className={`input-pill ${memberFieldsDisabled ? "bg-gray-100 cursor-not-allowed" : ""}`}
                         value={memberForm.first}
                         onChange={onPersonFieldChange(setMemberForm, "first")}
                         disabled={memberFieldsDisabled}
@@ -1614,7 +1606,7 @@ const hydratePersonForm = (data = {}) => ({
                       <label className="text-xs text-gray-blue-600">Last Name</label>
                       <input
                         type="text"
-                        className="input-pill"
+                        className={`input-pill ${memberFieldsDisabled ? "bg-gray-100 cursor-not-allowed" : ""}`}
                         value={memberForm.last}
                         onChange={onPersonFieldChange(setMemberForm, "last")}
                         disabled={memberFieldsDisabled}
@@ -1624,7 +1616,7 @@ const hydratePersonForm = (data = {}) => ({
                       <label className="text-xs text-gray-blue-600">ID Number</label>
                       <input
                         type="text"
-                        className="input-pill"
+                        className={`input-pill ${memberFieldsDisabled ? "bg-gray-100 cursor-not-allowed" : ""}`}
                         value={memberForm.idNumber}
                         onChange={onPersonFieldChange(setMemberForm, "idNumber")}
                         disabled={memberFieldsDisabled}
@@ -1634,7 +1626,7 @@ const hydratePersonForm = (data = {}) => ({
                       <label className="text-xs text-gray-blue-600">DOB</label>
                       <input
                         type="date"
-                        className="input-pill"
+                        className={`input-pill ${memberFieldsDisabled ? "bg-gray-100 cursor-not-allowed" : ""}`}
                         value={memberForm.dateOfBirth}
                         onChange={onPersonFieldChange(setMemberForm, "dateOfBirth")}
                         disabled={memberFieldsDisabled}
@@ -1644,7 +1636,7 @@ const hydratePersonForm = (data = {}) => ({
                       <label className="text-xs text-gray-blue-600">Dependent #</label>
                       <input
                         type="text"
-                        className="input-pill"
+                        className={`input-pill ${memberFieldsDisabled ? "bg-gray-100 cursor-not-allowed" : ""}`}
                         value={memberForm.dependentNumber}
                         onChange={onPersonFieldChange(setMemberForm, "dependentNumber")}
                         disabled={memberFieldsDisabled}

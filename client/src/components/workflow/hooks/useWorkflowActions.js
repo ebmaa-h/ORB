@@ -13,8 +13,17 @@ export const useWorkflowActions = ({ user, department, applyBatchUpdate }) => {
         };
         const res = await axiosClient.patch(ENDPOINTS.updateBatch(batchId), payload);
         if (res?.data) {
-          applyBatchUpdate(res.data);
-          return { success: true, batch: res.data };
+          const payload = res.data;
+          if (payload.batch) {
+            applyBatchUpdate(payload.batch);
+          }
+          if (Array.isArray(payload.foreignUrgents)) {
+            payload.foreignUrgents.forEach((fu) => applyBatchUpdate(fu));
+          }
+          if (!payload.batch && !Array.isArray(payload.foreignUrgents)) {
+            applyBatchUpdate(payload);
+          }
+          return { success: true, batch: payload.batch || payload };
         }
         return { success: false, error: "No data returned" };
       } catch (err) {

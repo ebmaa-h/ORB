@@ -168,8 +168,11 @@ const workflowController = {
 
   updateReceptionBatch: async (req, res) => {
     try {
-      const batchId = Number(req.params.batchId);
-      if (!batchId) return res.status(400).json({ error: 'Invalid batch_id' });
+      const rawId = toPositiveInt(req.params.batchId);
+      if (!rawId) return res.status(400).json({ error: 'Invalid batch_id' });
+
+      const isFu = normalizeBooleanFlag(req.body?.is_fu);
+      const entityType = isFu ? 'fu' : 'batch';
 
       const {
         batch_size,
@@ -183,67 +186,138 @@ const workflowController = {
         user_id,
       } = req.body || {};
 
-      if (!batch_size || Number.isNaN(Number(batch_size))) {
-        return res.status(400).json({ error: 'batch_size is required and must be numeric' });
-      }
-      if (!client_id || Number.isNaN(Number(client_id))) {
-        return res.status(400).json({ error: 'client_id is required and must be numeric' });
-      }
-      if (!date_received) {
-        return res.status(400).json({ error: 'date_received is required' });
-      }
-      if (!method_received) {
-        return res.status(400).json({ error: 'method_received is required' });
-      }
-
-      const existing = await Batch.getBatchById(batchId);
-      if (!existing) return res.status(404).json({ error: 'Batch not found' });
-
-      const main = await Batch.getWorkflowMainByEntity({ entity_type: 'batch', entity_id: batchId });
+      const main = await Batch.getWorkflowMainByEntity({ entity_type: entityType, entity_id: rawId });
       if (!main || main.status !== 'current' || !ALLOWED_DEPARTMENTS.includes(main.department)) {
         return res.status(409).json({ error: 'Batch cannot be edited in its current state' });
       }
       const activeDepartment = main.department;
 
       const boolFields = ['bank_statements', 'added_on_drive', 'corrections'];
-      const normalizedUpdate = {
-        batch_size: Number(batch_size),
-        client_id: Number(client_id),
-        date_received,
-        method_received,
-        bank_statements: Number(normalizeBooleanFlag(
-          bank_statements !== undefined ? bank_statements : existing.bank_statements
-        )),
-        added_on_drive: Number(normalizeBooleanFlag(
-          added_on_drive !== undefined ? added_on_drive : existing.added_on_drive
-        )),
-        corrections: Number(normalizeBooleanFlag(
-          corrections !== undefined ? corrections : existing.corrections
-        )),
-        cc_availability:
-          typeof cc_availability === 'string'
-            ? cc_availability
-            : (cc_availability ?? existing.cc_availability ?? ''),
+
+      let existingBatch = null;
+      let batchIdForUpdate = rawId;
+      if (isFu) {
+        const fuRow = await Batch.getForeignUrgentById(rawId);
+        if (!fuRow) {
+          return res.status(404).json({ error: 'Foreign/Urgent batch not found' });
+        }
+        const parentId = fuRow.parent_batch_id || fuRow.batch_id;
+        if (!parentId) {
+          return res.status(400).json({ error: 'Parent batch not associated with this foreign/urgent item' });
+        }
+        const parentBatch = await Batch.getBatchById(parentId);
+        if (!parentBatch) {
+          return res.status(404).json({ error: 'Parent batch not found' });
+        }
+        existingBatch = parentBatch;
+        batchIdForUpdate = parentId;
+      } else {
+        existingBatch = await Batch.getBatchById(rawId);
+        if (!existingBatch) return res.status(404).json({ error: 'Batch not found' });
+
+        if (!batch_size || Number.isNaN(Number(batch_size))) {
+          return res.status(400).json({ error: 'batch_size is required and must be numeric' });
+        }
+        if (!client_id || Number.isNaN(Number(client_id))) {
+          return res.status(400).json({ error: 'client_id is required and must be numeric' });
+        }
+        if (!date_received) {
+          return res.status(400).json({ error: 'date_received is required' });
+        }
+        if (!method_received) {
+          return res.status(400).json({ error: 'method_received is required' });
+        }
+      }
+
+      const resolveClientId = () => {
+        if (client_id === undefined || client_id === null || client_id === '') {
+          const fallback = Number(existingBatch.client_id);
+          if (Number.isNaN(fallback)) {
+            throw new Error('client_id_invalid');
+          }
+          return fallback;
+        }
+        if (Number.isNaN(Number(client_id))) {
+          throw new Error('client_id_invalid');
+        }
+        return Number(client_id);
       };
 
-      const newIsPure = Number(normalizedUpdate.batch_size || 0) === Number(existing.total_urgent_foreign || 0);
-      const batchTypeLabel = resolveBatchTypeFromFlag(false, newIsPure);
+      const normalizedUpdate = isFu
+        ? {
+            batch_size: Number(existingBatch.batch_size) || 1,
+            client_id: resolveClientId(),
+            date_received: date_received || existingBatch.date_received,
+            method_received: method_received || existingBatch.method_received,
+            bank_statements: Number(
+              normalizeBooleanFlag(
+                bank_statements !== undefined ? bank_statements : existingBatch.bank_statements,
+              ),
+            ),
+            added_on_drive: Number(
+              normalizeBooleanFlag(
+                added_on_drive !== undefined ? added_on_drive : existingBatch.added_on_drive,
+              ),
+            ),
+            corrections: Number(
+              normalizeBooleanFlag(corrections !== undefined ? corrections : existingBatch.corrections),
+            ),
+            cc_availability:
+              typeof cc_availability === 'string'
+                ? cc_availability
+                : cc_availability !== undefined
+                ? cc_availability
+                : existingBatch.cc_availability ?? '',
+          }
+        : {
+            batch_size: Number(batch_size),
+            client_id: Number(client_id),
+            date_received,
+            method_received,
+            bank_statements: Number(
+              normalizeBooleanFlag(
+                bank_statements !== undefined ? bank_statements : existingBatch.bank_statements,
+              ),
+            ),
+            added_on_drive: Number(
+              normalizeBooleanFlag(
+                added_on_drive !== undefined ? added_on_drive : existingBatch.added_on_drive,
+              ),
+            ),
+            corrections: Number(
+              normalizeBooleanFlag(corrections !== undefined ? corrections : existingBatch.corrections),
+            ),
+            cc_availability:
+              typeof cc_availability === 'string'
+                ? cc_availability
+                : cc_availability ?? existingBatch.cc_availability ?? '',
+          };
+
+      if (!isFu && normalizedUpdate.client_id === undefined) {
+        return res.status(400).json({ error: 'client_id is required and must be numeric' });
+      }
+
+      const newIsPure =
+        Number(normalizedUpdate.batch_size || 0) === Number(existingBatch.total_urgent_foreign || 0);
+      const parentBatchTypeLabel = WORKFLOW_BATCH_TYPES.NORMAL;
 
       await Batch.updateReceptionFields({
-        batch_id: batchId,
+        batch_id: batchIdForUpdate,
         ...normalizedUpdate,
         is_pure_foreign_urgent: newIsPure ? 1 : 0,
       });
 
-      const updated = await Batch.getBatchById(batchId);
-
+      const updatedParent = await Batch.getBatchById(batchIdForUpdate);
       const io = getIO();
-      io.to(activeDepartment).emit('batchUpdated', {
-        ...updated,
-        current_department: updated.current_department || activeDepartment,
-        status: updated.status || 'current',
-        is_pure_foreign_urgent: normalizeBooleanFlag(updated.is_pure_foreign_urgent),
-      });
+
+      if (updatedParent) {
+        io.to(activeDepartment).emit('batchUpdated', {
+          ...updatedParent,
+          current_department: updatedParent.current_department || activeDepartment,
+          status: updatedParent.status || 'current',
+          is_pure_foreign_urgent: normalizeBooleanFlag(updatedParent.is_pure_foreign_urgent),
+        });
+      }
 
       const changeSummary = {};
       const comparable = (field, value) => {
@@ -257,7 +331,7 @@ const workflowController = {
       };
 
       Object.entries(normalizedUpdate).forEach(([field, value]) => {
-        const before = comparable(field, existing[field]);
+        const before = comparable(field, existingBatch[field]);
         const after = comparable(field, value);
         if (before !== after) {
           changeSummary[field] = { before, after };
@@ -268,16 +342,51 @@ const workflowController = {
         await logWorkflowEvent(WORKFLOW_LOG_EVENTS.BATCH_UPDATED, {
           userId: user_id || null,
           department: activeDepartment,
-          batchType: batchTypeLabel,
+          batchType: parentBatchTypeLabel,
           entityType: 'batch',
-          entityId: batchId,
-          batchId,
+          entityId: batchIdForUpdate,
+          batchId: batchIdForUpdate,
+          parentBatchId: batchIdForUpdate,
           changes: changeSummary,
         });
       }
 
-      res.json(updated);
+      const relatedForeignUrgentIds = await Batch.getForeignUrgentIdsByParent(batchIdForUpdate);
+      const relatedForeignUrgents = [];
+      if (Array.isArray(relatedForeignUrgentIds) && relatedForeignUrgentIds.length) {
+        for (const row of relatedForeignUrgentIds) {
+          const fuRow = await Batch.getForeignUrgentById(row.foreign_urgent_batch_id);
+          if (!fuRow) continue;
+          relatedForeignUrgents.push(fuRow);
+          const fuDepartment = fuRow.current_department || activeDepartment;
+          io.to(fuDepartment).emit('batchUpdated', {
+            ...fuRow,
+            current_department: fuDepartment,
+            status: fuRow.status || 'current',
+          });
+          if (Object.keys(changeSummary).length) {
+            await logWorkflowEvent(WORKFLOW_LOG_EVENTS.BATCH_UPDATED, {
+              userId: user_id || null,
+              department: fuDepartment,
+              batchType: WORKFLOW_BATCH_TYPES.FOREIGN,
+              entityType: 'fu',
+              entityId: fuRow.foreign_urgent_batch_id,
+              batchId: fuRow.foreign_urgent_batch_id,
+              parentBatchId: batchIdForUpdate,
+              changes: changeSummary,
+            });
+          }
+        }
+      }
+
+      res.json({
+        batch: updatedParent,
+        foreignUrgents: relatedForeignUrgents,
+      });
     } catch (err) {
+      if (err.message === 'client_id_invalid') {
+        return res.status(400).json({ error: 'client_id is required and must be numeric' });
+      }
       console.error('Error updating batch:', err);
       res.status(500).json({ error: 'Failed to update batch' });
     }

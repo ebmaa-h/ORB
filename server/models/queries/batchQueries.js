@@ -289,6 +289,12 @@ const GET_FU_BY_ID = `
   WHERE fua.foreign_urgent_batch_id = ?
 `;
 
+const GET_FU_IDS_BY_PARENT = `
+  SELECT foreign_urgent_batch_id
+  FROM foreign_urgent_batches
+  WHERE batch_id = ?
+`;
+
 // Workflows
 const WF_UPSERT_MAIN = `
   INSERT INTO workflows (entity_type, entity_id, department, status, outbox_temp, created_by)
@@ -490,6 +496,7 @@ module.exports = {
   ARCHIVE_BATCH,
   ARCHIVE_FU,
   LIST_CLIENTS_SUMMARY,
+  GET_FU_IDS_BY_PARENT,
 };
 
  

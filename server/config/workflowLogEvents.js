@@ -18,8 +18,20 @@ const WORKFLOW_LOG_EVENT_CONFIG = {
   },
   BATCH_UPDATED: {
     action: 'batch_updated',
-    buildMessage: ({ batchId, department }) => `Batch #${batchId} updated in ${department}`,
-    buildMetadata: ({ batchId, changes }) => ({ batch_id: batchId, changes }),
+    buildMessage: ({ batchId, department, entityType }) => {
+      const prefix = entityType === 'fu' ? 'Foreign urgent' : 'Batch';
+      return `${prefix} #${batchId} updated in ${department}`;
+    },
+    buildMetadata: ({ batchId, changes, entityType, parentBatchId, batchType }) => ({
+      batch_id: batchId,
+      parent_batch_id: parentBatchId || null,
+      entity_type: entityType || null,
+      batch_type: batchType || null,
+      is_foreign_urgent:
+        entityType === 'fu' || (typeof batchType === 'string' && batchType.toLowerCase() === 'foreign_urgent'),
+      foreign_urgent_batch_id: entityType === 'fu' ? batchId : null,
+      changes: changes || {},
+    }),
   },
   BATCH_SENT: {
     action: 'batch_sent',
@@ -115,13 +127,19 @@ const WORKFLOW_LOG_EVENT_CONFIG = {
         ? `Invoice #${invoiceId} updated for account #${accountId}`
         : `Invoice #${invoiceId} updated`;
     },
-    buildMetadata: ({ batchId, invoiceId, accountId, profileId, changes }) => ({
-      batch_id: batchId,
-      invoice_id: invoiceId,
-      account_id: accountId,
-      profile_id: profileId,
-      changes: changes || {},
-    }),
+    buildMetadata: ({ batchId, invoiceId, accountId, profileId, changes, batchType }) => {
+      const isForeignUrgent = (batchType || '').toLowerCase() === 'foreign_urgent';
+      return {
+        batch_id: batchId,
+        invoice_id: invoiceId,
+        account_id: accountId,
+        profile_id: profileId,
+        changes: changes || {},
+        batch_type: batchType || null,
+        entity_type: isForeignUrgent ? 'fu' : 'batch',
+        is_foreign_urgent: isForeignUrgent,
+      };
+    },
   },
 };
 

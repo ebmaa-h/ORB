@@ -103,7 +103,14 @@ const normalizeBatchFlag = (value) => {
 
 const getBatchTypeKey = (batch) => {
   if (!batch) return 'normal';
-  if (batch.foreign_urgent_batch_id) return 'foreign_urgent';
+  if (
+    batch.foreign_urgent_batch_id ||
+    batch.parent_batch_id ||
+    normalizeBatchFlag(batch?.is_fu) ||
+    normalizeBatchFlag(batch?.is_foreign_urgent)
+  ) {
+    return 'foreign_urgent';
+  }
   return normalizeBatchFlag(batch?.is_pure_foreign_urgent) ? 'foreign_urgent' : 'normal';
 };
 

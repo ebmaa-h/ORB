@@ -189,16 +189,6 @@ const AccountModel = {
     return rows;
   },
 
-  updateProfile: async (connection, { profileId, medicalAidId, planId, medicalAidNr }) => {
-    if (!profileId) return;
-    await connection.query(queries.UPDATE_PROFILE, [
-      medicalAidId || null,
-      planId || null,
-      medicalAidNr,
-      profileId,
-    ]);
-  },
-
   updatePersonRecord: async (connection, recordId, person) => {
     if (!recordId) return;
     const {

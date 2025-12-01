@@ -86,12 +86,6 @@ const normalizeAddresses = (input = []) => {
   }));
 };
 
-const normalizeMedicalAid = (input = {}) => ({
-  medicalAidId: toPositiveInt(input.medicalAidId) || null,
-  planId: toPositiveInt(input.planId) || null,
-  medicalAidNr: safeString(input.medicalAidNr),
-});
-
 const normalizeInvoicePayload = (input = {}) => ({
   nrInBatch: toPositiveInt(input.nrInBatch),
   dateOfService: safeString(input.dateOfService),
@@ -110,6 +104,22 @@ const shouldCreatePerson = (person) => {
 };
 
 const ALLOWED_INVOICE_TYPES = new Set(['NORMAL', 'WCA', 'RAF']);
+
+const getLinkagePayload = (body = {}) => body?.linkage || body?.links || {};
+
+const validationError = (message) => {
+  const err = new Error(message);
+  err.statusCode = 400;
+  return err;
+};
+
+const assertPersonOnProfile = async (connection, { profileId, recordId, label }) => {
+  if (!profileId || !recordId) return;
+  const existingMap = await AccountModel.hasProfilePersonMap(connection, { profileId, recordId });
+  if (!existingMap) {
+    throw validationError(`${label || 'Person'} is not linked to the selected profile`);
+  }
+};
 
 const accountController = {
   searchProfiles: async (req, res) => {
@@ -275,82 +285,33 @@ const accountController = {
       const isForeignUrgent = requestIsFu && Boolean(fu);
       const batchId = rawId;
       const clientIdFromBatch = batch.client_id;
-      const {
-        invoice: invoiceInput = {},
-        member: memberInput = {},
-        patient: patientInput = {},
-        medicalAid: medicalAidInput = {},
-        patientSameAsMember = false,
-      } = req.body || {};
-
-      const member = normalizePersonPayload(memberInput);
-      const patient = normalizePersonPayload(patientInput);
-      const medicalAid = normalizeMedicalAid(medicalAidInput);
+      const { invoice: invoiceInput = {} } = req.body || {};
+      const linkage = getLinkagePayload(req.body);
       const invoice = normalizeInvoicePayload(invoiceInput);
-      const isPatientSameAsMember = normalizeBooleanFlag(patientSameAsMember);
+      const profileId = toPositiveInt(linkage.profileId);
+      const memberRecordId = toPositiveInt(linkage.memberRecordId);
+      let patientRecordId = toPositiveInt(linkage.patientRecordId);
 
-      if (!medicalAid.medicalAidNr) {
-        return res.status(400).json({ error: 'Medical aid number is required' });
+      if (!profileId) {
+        return res.status(400).json({ error: 'Profile selection is required' });
       }
-      if (!member.recordId && !shouldCreatePerson(member)) {
-        return res.status(400).json({ error: 'Member details are required' });
+      if (!memberRecordId) {
+        return res.status(400).json({ error: 'Main member is required' });
       }
       if (!invoice.type || !ALLOWED_INVOICE_TYPES.has(invoice.type)) {
         return res.status(400).json({ error: 'Invoice type is required' });
+      }
+      if (!patientRecordId) {
+        patientRecordId = memberRecordId;
       }
 
       const connection = await db.getConnection();
       try {
         await connection.beginTransaction();
 
-        let memberRecordId = member.recordId;
-        let memberRecordCreated = false;
-        if (!memberRecordId) {
-          memberRecordId = await AccountModel.insertPersonRecord(connection, member);
-          memberRecordCreated = true;
-        }
-
-        let patientRecordId = patient.recordId || null;
-        let patientRecordCreated = false;
-        if (isPatientSameAsMember) {
-          patientRecordId = memberRecordId;
-        } else if (!patientRecordId && shouldCreatePerson(patient)) {
-          patientRecordId = await AccountModel.insertPersonRecord(connection, patient);
-          patientRecordCreated = true;
-        }
-
-        let profile = await AccountModel.findProfileByMedicalAidNr(connection, medicalAid.medicalAidNr);
-        let profileId = profile?.profile_id || null;
-        let profileCreated = false;
-
-        if (!profileId) {
-          profileId = await AccountModel.createProfile(connection, {
-            medicalAidId: medicalAid.medicalAidId,
-            planId: medicalAid.planId,
-            medicalAidNr: medicalAid.medicalAidNr,
-          });
-          profileCreated = true;
-        }
-
-        const ensureMap = async ({ recordId, isMainMember, dependentNr }) => {
-          if (!recordId) return;
-          const existingMap = await AccountModel.hasProfilePersonMap(connection, {
-            profileId,
-            recordId,
-          });
-          if (!existingMap) {
-            await AccountModel.insertProfilePersonMap(connection, {
-              profileId,
-              recordId,
-              isMainMember,
-              dependentNr,
-            });
-          }
-        };
-
-        await ensureMap({ recordId: memberRecordId, isMainMember: true, dependentNr: member.dependent_nr });
-        if (!isPatientSameAsMember) {
-          await ensureMap({ recordId: patientRecordId, isMainMember: false, dependentNr: patient.dependent_nr });
+        await assertPersonOnProfile(connection, { profileId, recordId: memberRecordId, label: 'Main member' });
+        if (patientRecordId && patientRecordId !== memberRecordId) {
+          await assertPersonOnProfile(connection, { profileId, recordId: patientRecordId, label: 'Patient' });
         }
 
         let account = await AccountModel.findAccountByKeys(connection, {
@@ -360,7 +321,6 @@ const accountController = {
           patientId: patientRecordId,
         });
         let accountId = account?.account_id || null;
-        let accountCreated = false;
 
         if (!accountId) {
           accountId = await AccountModel.createAccount(connection, {
@@ -369,7 +329,6 @@ const accountController = {
             mainMemberId: memberRecordId,
             patientId: patientRecordId,
           });
-          accountCreated = true;
         }
 
         const invoiceId = await AccountModel.createInvoice(connection, {
@@ -404,16 +363,13 @@ const accountController = {
           meta: {
             profileId,
             accountId,
-            created: {
-              profile: profileCreated,
-              account: accountCreated,
-              memberRecord: memberRecordCreated,
-              patientRecord: patientRecordCreated,
-            },
           },
         });
       } catch (err) {
         await connection.rollback();
+        if (err?.statusCode === 400) {
+          return res.status(400).json({ error: err.message });
+        }
         console.error('Error creating batch account:', err);
         res.status(500).json({ error: 'Failed to create account/invoice' });
       } finally {
@@ -454,93 +410,45 @@ const accountController = {
         return res.status(400).json({ error: 'Invoice does not belong to this batch' });
       }
 
-      const {
-        invoice: invoiceInput = {},
-        member: memberInput = {},
-        patient: patientInput = {},
-        medicalAid: medicalAidInput = {},
-        patientSameAsMember = false,
-      } = req.body || {};
-
-      const member = normalizePersonPayload(memberInput);
-      const patient = normalizePersonPayload(patientInput);
-      const medicalAid = normalizeMedicalAid(medicalAidInput);
+      const { invoice: invoiceInput = {} } = req.body || {};
+      const linkage = getLinkagePayload(req.body);
       const invoice = normalizeInvoicePayload(invoiceInput);
-      const isPatientSameAsMember = normalizeBooleanFlag(patientSameAsMember);
+      const requestedProfileId = toPositiveInt(linkage.profileId);
+      const fallbackProfileId = toPositiveInt(existingInvoice.profile_id);
+      const profileId = requestedProfileId || fallbackProfileId;
+      const requestedMemberId = toPositiveInt(linkage.memberRecordId);
+      const fallbackMemberId = toPositiveInt(existingInvoice.main_member_record_id);
+      const memberRecordId = requestedMemberId || fallbackMemberId;
+      const existingPatientId = toPositiveInt(existingInvoice.patient_record_id);
+      let patientRecordId = toPositiveInt(linkage.patientRecordId);
 
-      if (!medicalAid.medicalAidNr) {
-        return res.status(400).json({ error: 'Medical aid number is required' });
+      if (!profileId) {
+        return res.status(400).json({ error: 'Profile selection is required' });
       }
-      if (!member.recordId && !existingInvoice.main_member_record_id) {
-        return res.status(400).json({ error: 'Member details are required' });
+      if (!memberRecordId) {
+        return res.status(400).json({ error: 'Main member is required' });
       }
       if (!invoice.type || !ALLOWED_INVOICE_TYPES.has(invoice.type)) {
         return res.status(400).json({ error: 'Invoice type is required' });
+      }
+      if (!patientRecordId) {
+        patientRecordId = existingPatientId || memberRecordId;
       }
 
       const connection = await db.getConnection();
       try {
         await connection.beginTransaction();
 
-        const profileId = existingInvoice.profile_id;
-        if (profileId) {
-          await AccountModel.updateProfile(connection, {
-            profileId,
-            medicalAidId: medicalAid.medicalAidId,
-            planId: medicalAid.planId,
-            medicalAidNr: medicalAid.medicalAidNr,
-          });
-        }
-
-        const resolvePersonId = async (providedId, fallbackId, payload, allowCreate = false) => {
-          if (toPositiveInt(providedId)) return toPositiveInt(providedId);
-          if (toPositiveInt(fallbackId)) return toPositiveInt(fallbackId);
-          if (allowCreate && shouldCreatePerson(payload)) {
-            const newId = await AccountModel.insertPersonRecord(connection, payload);
-            return newId;
-          }
-          return null;
-        };
-
-        const memberRecordId = await resolvePersonId(member.recordId, existingInvoice.main_member_record_id, member, false);
-        if (!memberRecordId) {
-          throw new Error('Missing member record for invoice update');
-        }
-
-        let patientRecordId = await resolvePersonId(
-          isPatientSameAsMember ? memberRecordId : patient.recordId,
-          existingInvoice.patient_record_id,
-          patient,
-          false,
-        );
-        const targetPatientRecordId = isPatientSameAsMember ? memberRecordId : patientRecordId || null;
-
-        const ensureMap = async ({ recordId, isMainMember, dependentNr }) => {
-          if (!profileId || !recordId) return;
-          const existingMap = await AccountModel.hasProfilePersonMap(connection, {
-            profileId,
-            recordId,
-          });
-          if (!existingMap) {
-            await AccountModel.insertProfilePersonMap(connection, {
-              profileId,
-              recordId,
-              isMainMember,
-              dependentNr,
-            });
-          }
-        };
-
-        await ensureMap({ recordId: memberRecordId, isMainMember: true, dependentNr: member.dependent_nr });
-        if (targetPatientRecordId && targetPatientRecordId !== memberRecordId) {
-          await ensureMap({ recordId: targetPatientRecordId, isMainMember: false, dependentNr: patient.dependent_nr });
+        await assertPersonOnProfile(connection, { profileId, recordId: memberRecordId, label: 'Main member' });
+        if (patientRecordId && patientRecordId !== memberRecordId) {
+          await assertPersonOnProfile(connection, { profileId, recordId: patientRecordId, label: 'Patient' });
         }
 
         let targetAccount = await AccountModel.findAccountByKeys(connection, {
           profileId,
           clientId: batch.client_id,
           mainMemberId: memberRecordId,
-          patientId: targetPatientRecordId,
+          patientId: patientRecordId,
         });
         let targetAccountId = targetAccount?.account_id || null;
         if (!targetAccountId) {
@@ -548,7 +456,7 @@ const accountController = {
             profileId,
             clientId: batch.client_id,
             mainMemberId: memberRecordId,
-            patientId: targetPatientRecordId,
+            patientId: patientRecordId,
           });
         }
 
@@ -583,6 +491,9 @@ const accountController = {
         });
       } catch (err) {
         await connection.rollback();
+        if (err?.statusCode === 400) {
+          return res.status(400).json({ error: err.message });
+        }
         console.error('Error updating batch invoice:', err);
         res.status(500).json({ error: 'Failed to update invoice' });
       } finally {
