@@ -204,6 +204,7 @@ const BatchView = () => {
   const [invoicesError, setInvoicesError] = useState("");
   const [activeTab, setActiveTab] = useState(TAB_KEYS.BATCH);
   const [searchTerm, setSearchTerm] = useState("");
+  const [notesSearchTerm, setNotesSearchTerm] = useState("");
   const [batchLoading, setBatchLoading] = useState(false);
   const [batchError, setBatchError] = useState("");
 
@@ -378,6 +379,13 @@ const BatchView = () => {
         <span className="hidden h-6 w-px bg-gray-blue-100 md:block" aria-hidden="true" />
 
         <div className="flex gap-2 flex-wrap items-center ml-auto">
+          {activeTab === TAB_KEYS.NOTES && (
+            <SearchBar
+              searchTerm={notesSearchTerm}
+              setSearchTerm={setNotesSearchTerm}
+              classes="max-w-xs"
+            />
+          )}
           <button
             type="button"
             className="button-pill min-w-[100px] flex items-center justify-center"
@@ -537,8 +545,8 @@ const BatchView = () => {
           department={departmentKey}
           batchType={batchTypeKey}
           title="Batch Notes & Logs"
-          searchTermOverride={searchTerm}
-          onSearchTermChange={setSearchTerm}
+          searchTermOverride={notesSearchTerm}
+          onSearchTermChange={setNotesSearchTerm}
           showSearchInput={false}
           showBatchLink={false}
         />

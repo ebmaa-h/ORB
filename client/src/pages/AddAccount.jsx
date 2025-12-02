@@ -217,6 +217,7 @@ const AddAccount = () => {
 
   const [activeTab, setActiveTab] = useState(TAB_KEYS.ACCOUNT);
   const [searchTerm, setSearchTerm] = useState("");
+  const [notesSearchTerm, setNotesSearchTerm] = useState("");
   const latestSearchTermRef = useRef("");
   const handleSearchTermChange = useCallback((value) => {
     latestSearchTermRef.current = value;
@@ -1087,6 +1088,13 @@ const hydratePersonForm = (data = {}) => ({
         <span className="hidden h-6 w-px bg-gray-blue-100 md:block" aria-hidden="true" />
 
         <div className="flex gap-2 flex-wrap items-center ml-auto">
+          {activeTab === TAB_KEYS.NOTES && invoiceEntityId && (
+            <SearchBar
+              searchTerm={notesSearchTerm}
+              setSearchTerm={setNotesSearchTerm}
+              classes="max-w-xs"
+            />
+          )}
           <button type="button" className="button-pill min-w-[100px] flex items-center justify-center" onClick={handleBack}>
             <svg
               xmlns="http://www.w3.org/2000/svg"
@@ -2164,6 +2172,8 @@ const hydratePersonForm = (data = {}) => ({
           batchType={batchTypeKey}
           title="Account Notes & Logs"
           headerDescription={`Tracking updates for invoice #${invoiceEntityId}`}
+          searchTermOverride={notesSearchTerm}
+          onSearchTermChange={setNotesSearchTerm}
           showSearchInput={false}
           className="mt-4"
           showBatchLink={false}
